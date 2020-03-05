@@ -28,7 +28,7 @@
 #include "firmwares/rotorcraft/navigation.h"
 
 
-int CIRCLE_L = 1434;
+int CIRCLE_L = 1334;
 int CIRCLE_D = 7;
 
 
@@ -50,7 +50,7 @@ int r = CIRCLE_L/2 - CIRCLE_D;
 
 double dt = 0.001;
 current_time += dt;
-double e = 0.7;
+double e = 1;
 
  int32_t x = r * cos(current_time);
  int32_t y = e * r * sin(current_time);
