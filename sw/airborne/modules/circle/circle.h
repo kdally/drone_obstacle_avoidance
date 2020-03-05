@@ -30,9 +30,9 @@
 // settings
 extern int CIRCLE_L;
 extern int CIRCLE_D;
-extern int i;
-extern double x;
-extern double y;
+extern int CIRCLE_I;
+extern float CIRCLE_X;
+extern float CIRCLE_Y;
 
 // functions
 extern void circle_init();
