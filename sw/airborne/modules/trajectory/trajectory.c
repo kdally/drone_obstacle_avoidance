@@ -37,7 +37,7 @@ float AVOID_safety_angle=10;
 float TRAJECTORY_X;
 float TRAJECTORY_Y;
 
-double current_time = 0;
+float current_time = 0;
 int square_mode = 1;
 int mode=1;
 
@@ -46,14 +46,12 @@ void trajectory_init(void)
 {
 }
 
-
-
 void trajectory_periodic(void)
 {
 
 nav_set_heading_towards_waypoint(WP_STDBY);
 
-double dt = 0.0001;
+float dt = 0.0002;
 current_time += dt;
 int V = 70;
 int r = TRAJECTORY_L/2 - TRAJECTORY_D;   
