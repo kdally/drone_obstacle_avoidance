@@ -25,7 +25,14 @@
 
 #include "modules/observer/observer.h"
 
-// void observer_init() {}
-// void observer_look() {}
+void observer_init() {
+  // Define color filter ranges
+
+
+}
+
+void observer_look() {
+
+}
 
 

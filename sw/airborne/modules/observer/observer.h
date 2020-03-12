@@ -26,8 +26,17 @@
 #ifndef OBSERVER_H
 #define OBSERVER_H
 
+#include "opencv/cv.h"
+
 // extern void observer_init();
 // extern void observer_look();
+
+void observer_init();
+void observer_look();
+
+int color_filters[1][6];
+
+void convolve();
 
 #endif
 
