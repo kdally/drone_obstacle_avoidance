@@ -61,6 +61,8 @@ color_filters = [[105, 205, 52, 140, 180, 255], \
 
 
 color_filters = [[150, 255, 100, 255, 100, 255]]
+
+# color_filters = [green, orange]
 color_filters = [[70, 100, 70, 100, 70, 100], \
                  [20, 205, 52, 140, 80, 220]]
 # color_filters = [[0, 150, 0, 100, 0, 100]]
