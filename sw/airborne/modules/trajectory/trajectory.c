@@ -28,14 +28,14 @@
 #include "firmwares/rotorcraft/navigation.h"
 
 
-int TRAJECTORY_L = 1434; //1434 for circle
+int TRAJECTORY_L = 1534; //1434 for circle
 int TRAJECTORY_D = 7;
 int AVOID_number_of_objects = 0;
 float AVOID_h1,AVOID_h2;
 float AVOID_d;
 float AVOID_safety_angle=10;
-float TRAJECTORY_X;
-float TRAJECTORY_Y;
+float TRAJECTORY_X=0;
+float TRAJECTORY_Y=0;
 
 float current_time = 0;
 int square_mode = 1;
@@ -56,59 +56,58 @@ current_time += dt;
 int V = 70;
 int r = TRAJECTORY_L/2 - TRAJECTORY_D;   
 
-TRAJECTORY_X = r * cos(current_time);
-TRAJECTORY_Y = r * sin(current_time);
-  
+if(mode==1)
+{
+  TRAJECTORY_X = r * cos(current_time);
+  TRAJECTORY_Y = r * sin(current_time);
+  if (NavBlockTime() > 200){
+    mode=2;
+    TRAJECTORY_Y=0;
+    TRAJECTORY_X=0;   
+  }
 
+}
+else
+{
+//square(dt, &TRAJECTORY_X, &TRAJECTORY_Y);
+  dt=0.002;
+   if(square_mode==1){
+     TRAJECTORY_X = r;
+     TRAJECTORY_Y += dt*V;
 
-// if (mode==1)
-// {
-//   //circle(current_time, &TRAJECTORY_X, &TRAJECTORY_Y);
+     if (TRAJECTORY_Y > r){
+       square_mode=2;
+     }
+   }
+
+   if(square_mode==2){
+     TRAJECTORY_X -= dt*V;
+     TRAJECTORY_Y=r;
+
+     if (TRAJECTORY_X<-r){
+       square_mode=3;
+     }
+   }
+
+   if(square_mode==3){
+     TRAJECTORY_X=-r;
+     TRAJECTORY_Y-=dt*V;
+
+     if (TRAJECTORY_Y<-r){
+       square_mode=4;
+     }
+   }
+
+   if(square_mode==4){
+     TRAJECTORY_X+=dt*V;
+     TRAJECTORY_Y=-r;
+
+     if (TRAJECTORY_X>r){
+       square_mode=1;
+     }
+   }
  
-//   if (current_time > 200)
-//     mode=1;
-// }
-
-// else
-// {
-//   //square(dt, &TRAJECTORY_X, &TRAJECTORY_Y);
-//   if(square_mode==1){
-//     TRAJECTORY_X = r;
-//     TRAJECTORY_Y += dt*V;
-
-//     if (TRAJECTORY_Y > r){
-//       square_mode=2;
-//     }
-//   }
-
-//   if(square_mode==2){
-//     TRAJECTORY_X -= dt*V;
-//     TRAJECTORY_Y=r;
-
-//     if (TRAJECTORY_X<-r){
-//       square_mode=3;
-//     }
-//   }
-
-//   if(square_mode==3){
-//     TRAJECTORY_X=-r;
-//     TRAJECTORY_Y-=dt*V;
-
-//     if (TRAJECTORY_Y<-r){
-//       square_mode=4;
-//     }
-//   }
-
-//   if(square_mode==4){
-//     TRAJECTORY_X+=dt*V;
-//     TRAJECTORY_Y=-r;
-
-//     if (TRAJECTORY_X>r){
-//       square_mode=1;
-//     }
-//   }
- 
-// }
+  }
 
 float x_rotated=TRAJECTORY_X*0.5+TRAJECTORY_Y*0.866025;
 float y_rotated=-TRAJECTORY_X*0.866025+TRAJECTORY_Y*0.5;
