@@ -194,3 +194,5 @@ tests/results/*
 
 # K-develop
 *.kate-swp
+
+conf/userconf/tudelft/course2019_conf.xml
