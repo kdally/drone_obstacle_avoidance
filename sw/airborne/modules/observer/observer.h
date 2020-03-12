@@ -26,17 +26,32 @@
 #ifndef OBSERVER_H
 #define OBSERVER_H
 
-#include "opencv/cv.h"
+#include <stdint.h>
+#include <stdio.h>
 
-// extern void observer_init();
+// #include "opencv/cv.h"
+// #include "opencv/highgui.h"
+#include "subsystems/abi.h"
+#include "modules/computer_vision/cv.h"
+#include "modules/computer_vision/lib/vision/image.h"
+
+
+extern void observer_init();
 // extern void observer_look();
 
-void observer_init();
-void observer_look();
+struct image_t *colorfilter_f(struct image_t *img);
 
-int color_filters[1][6];
 
-void convolve();
+void filter_color(struct image_t *input, 
+                             struct image_t *output);
+
+
+
+
+
+struct video_listener *listener;
+struct image_t *dest_img;
+
 
 #endif
 
