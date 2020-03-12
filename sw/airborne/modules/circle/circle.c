@@ -33,6 +33,9 @@ int CIRCLE_D = 7;
 int CIRCLE_I = 1;
 float CIRCLE_X = 0;
 float CIRCLE_Y = 0;
+int AVOID_number_of_objects = 0;
+float AVOID_h1,AVOID_h2;
+float AVOID_d;
 
 void circle_init(void)
 {}
@@ -43,6 +46,19 @@ void circle_periodic(void)
 {
 
 int r = CIRCLE_L/2 - CIRCLE_D;
+
+if(number_of_objects!=0)
+{
+  float r_reduced=0;
+  offset=asin(AVOID_d/(2*r))*180/PI_M; 
+  heading=(h1+h2)/2;
+  safety_angle=-10;
+  if(-1*safety_angle<heading-offset && heading-offset<safety_angle)
+  {
+    r_reduced=r*h2*PI_M/180;
+  }
+  r -= r_reduced;
+}
 
 double dt = 0.001;
 current_time += dt;
