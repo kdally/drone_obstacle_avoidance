@@ -1,0 +1,16 @@
+<!DOCTYPE module SYSTEM "module.dtd">
+
+<module name="trajectory" dir="trajectory">
+  <doc>
+    <description>Just pathing in trajectory</description>
+  </doc>
+  <header>
+    <file name="trajectory.h"/>
+  </header>
+  <init fun="trajectory_init()"/>
+  <periodic fun="trajectory_periodic()" freq="512"/>
+  <makefile>
+    <file name="trajectory.c"/>
+  </makefile>
+</module>
+
