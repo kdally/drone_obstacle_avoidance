@@ -34,9 +34,10 @@ int AVOID_number_of_objects = 0;
 float AVOID_h1,AVOID_h2;
 float AVOID_d;
 float AVOID_safety_angle=10;
-float current_time = 0;
-float TRAJECTORY_X = 0;
-float TRAJECTORY_Y = 0;
+float TRAJECTORY_X;
+float TRAJECTORY_Y;
+
+double current_time = 0;
 int square_mode = 1;
 int mode=1;
 
@@ -52,13 +53,14 @@ void trajectory_periodic(void)
 
 nav_set_heading_towards_waypoint(WP_STDBY);
 
-double dt = 0.001;
+double dt = 0.0001;
 current_time += dt;
 int V = 70;
 int r = TRAJECTORY_L/2 - TRAJECTORY_D;   
 
-
-circle(current_time, &TRAJECTORY_X, &TRAJECTORY_Y,r);
+TRAJECTORY_X = r * cos(current_time);
+TRAJECTORY_Y = r * sin(current_time);
+  
 
 
 // if (mode==1)
@@ -110,18 +112,17 @@ circle(current_time, &TRAJECTORY_X, &TRAJECTORY_Y,r);
  
 // }
 
- // circle(current_time,  TRAJECTORY_X, & TRAJECTORY_Y);
-
-int32_t x_rotated=TRAJECTORY_X*0.5+TRAJECTORY_Y*0.866025;
-int32_t y_rotated=-TRAJECTORY_X*0.866025+TRAJECTORY_Y*0.5;
+float x_rotated=TRAJECTORY_X*0.5+TRAJECTORY_Y*0.866025;
+float y_rotated=-TRAJECTORY_X*0.866025+TRAJECTORY_Y*0.5;
 
 waypoint_set_xy_i(WP_STDBY,x_rotated,y_rotated);
 }
 
+/*
 void circle(float current_time, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r)
 {
   double e = 1;
-/*    if(AVOID_number_of_objects!=0)
+    if(AVOID_number_of_objects!=0)
   {
     float r_reduced=0;
     float offset=asin(AVOID_d/(2*r))*180/M_PI; //offset in degrees
@@ -130,13 +131,13 @@ void circle(float current_time, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r)
       r_reduced=r*(AVOID_h2-offset)*M_PI/180;
     }
     r -= r_reduced;
-  }  */
+  }  
 
     *TRAJECTORY_X = r * cos(current_time);
     *TRAJECTORY_Y = e * r * sin(current_time);
   
   return;
-}
+}*/
 
 // void square(double dt, float *TRAJECTORY_X, float *TRAJECTORY_Y)
 // {

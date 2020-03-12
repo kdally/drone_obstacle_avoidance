@@ -34,11 +34,9 @@ extern int AVOID_number_of_objects;
 extern float AVOID_h1,AVOID_h2;
 extern float AVOID_d;
 extern float AVOID_safety_angle;
-extern float current_time;
 extern float TRAJECTORY_X;
 extern float TRAJECTORY_Y;
-extern int square_mode;
-extern int mode;
+
 
 // functions
 extern void trajectory_init();
