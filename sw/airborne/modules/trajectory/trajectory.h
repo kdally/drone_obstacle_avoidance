@@ -18,26 +18,27 @@
  * <http://www.gnu.org/licenses/>.
  */
 /**
- * @file "modules/circle/circle.h"
+ * @file "modules/TRAJECTORY/TRAJECTORY.h"
  * @author Team Wonder
- * Just pathing in circle
+ * Just pathing in TRAJECTORY
  */
 
-#ifndef CIRCLE_H
-#define CIRCLE_H
-
+#ifndef TRAJECTORY_H
+#define TRAJECTORY_H
 
 
 // settings
-extern int CIRCLE_L;
-extern int CIRCLE_D;
-extern int CIRCLE_I;
-extern float CIRCLE_X;
-extern float CIRCLE_Y;
+extern int TRAJECTORY_L;
+extern int TRAJECTORY_D;
 extern int AVOID_number_of_objects;
 extern float AVOID_h1,AVOID_h2;
 extern float AVOID_d;
 extern float AVOID_safety_angle;
+extern float current_time;
+extern float TRAJECTORY_X;
+extern float TRAJECTORY_Y;
+extern int square_mode;
+extern int mode;
 
 // functions
 extern void trajectory_init();

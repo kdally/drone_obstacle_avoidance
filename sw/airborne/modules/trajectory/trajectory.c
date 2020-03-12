@@ -28,19 +28,24 @@
 #include "firmwares/rotorcraft/navigation.h"
 
 
-int TRAJECTORY_L = 1034; //1434 for circle
+int TRAJECTORY_L = 1434; //1434 for circle
 int TRAJECTORY_D = 7;
-float TRAJECTORY_X = 0;
-float TRAJECTORY_Y = 0;
 int AVOID_number_of_objects = 0;
 float AVOID_h1,AVOID_h2;
 float AVOID_d;
 float AVOID_safety_angle=10;
+float current_time = 0;
+float TRAJECTORY_X = 0;
+float TRAJECTORY_Y = 0;
+int square_mode = 1;
+int mode=1;
+
 
 void trajectory_init(void)
-{}
+{
+}
 
-float current_time = 0;
+
 
 void trajectory_periodic(void)
 {
@@ -49,34 +54,74 @@ nav_set_heading_towards_waypoint(WP_STDBY);
 
 double dt = 0.001;
 current_time += dt;
+int V = 70;
+int r = TRAJECTORY_L/2 - TRAJECTORY_D;   
 
 
-int mode=1;
+circle(current_time, &TRAJECTORY_X, &TRAJECTORY_Y,r);
 
-switch (mode)
-{
-case 1:
-  circle();
-  if (NavBlockTime() > 20)
-    mode=2;
-  break;
 
-case 2:
-  square(dt);
-  break;
-}
+// if (mode==1)
+// {
+//   //circle(current_time, &TRAJECTORY_X, &TRAJECTORY_Y);
+ 
+//   if (current_time > 200)
+//     mode=1;
+// }
 
-float x_rotated=TRAJECTORY_X*0.5+TRAJECTORY_Y*0.866025;
-float y_rotated=-TRAJECTORY_X*0.866025+TRAJECTORY_Y*0.5;
+// else
+// {
+//   //square(dt, &TRAJECTORY_X, &TRAJECTORY_Y);
+//   if(square_mode==1){
+//     TRAJECTORY_X = r;
+//     TRAJECTORY_Y += dt*V;
+
+//     if (TRAJECTORY_Y > r){
+//       square_mode=2;
+//     }
+//   }
+
+//   if(square_mode==2){
+//     TRAJECTORY_X -= dt*V;
+//     TRAJECTORY_Y=r;
+
+//     if (TRAJECTORY_X<-r){
+//       square_mode=3;
+//     }
+//   }
+
+//   if(square_mode==3){
+//     TRAJECTORY_X=-r;
+//     TRAJECTORY_Y-=dt*V;
+
+//     if (TRAJECTORY_Y<-r){
+//       square_mode=4;
+//     }
+//   }
+
+//   if(square_mode==4){
+//     TRAJECTORY_X+=dt*V;
+//     TRAJECTORY_Y=-r;
+
+//     if (TRAJECTORY_X>r){
+//       square_mode=1;
+//     }
+//   }
+ 
+// }
+
+ // circle(current_time,  TRAJECTORY_X, & TRAJECTORY_Y);
+
+int32_t x_rotated=TRAJECTORY_X*0.5+TRAJECTORY_Y*0.866025;
+int32_t y_rotated=-TRAJECTORY_X*0.866025+TRAJECTORY_Y*0.5;
 
 waypoint_set_xy_i(WP_STDBY,x_rotated,y_rotated);
 }
 
-void circle()
+void circle(float current_time, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r)
 {
-  double e = 0.7;
-  int r = TRAJECTORY_L/2 - TRAJECTORY_D;   
-  if(AVOID_number_of_objects!=0)
+  double e = 1;
+/*    if(AVOID_number_of_objects!=0)
   {
     float r_reduced=0;
     float offset=asin(AVOID_d/(2*r))*180/M_PI; //offset in degrees
@@ -85,54 +130,54 @@ void circle()
       r_reduced=r*(AVOID_h2-offset)*M_PI/180;
     }
     r -= r_reduced;
-  }
+  }  */
 
-    int32_t TRAJECTORY_X = r * cos(current_time);
-    int32_t TRAJECTORY_Y = e * r * sin(current_time);
+    *TRAJECTORY_X = r * cos(current_time);
+    *TRAJECTORY_Y = e * r * sin(current_time);
   
   return;
 }
 
-void square(double dt)
-{
-  int r = TRAJECTORY_L/2 - TRAJECTORY_D;   
-  int V = 70;
-  int square_mode;
+// void square(double dt, float *TRAJECTORY_X, float *TRAJECTORY_Y)
+// {
+//   int r = TRAJECTORY_L/2 - TRAJECTORY_D;   
+//   int V = 70;
 
-  if(square_mode==1){
-    TRAJECTORY_X = r;
-    TRAJECTORY_Y += dt*V;
 
-    if (TRAJECTORY_Y > r){
-      square_mode=2;
-    }
-  }
+//   if(square_mode==1){
+//     *TRAJECTORY_X = r;
+//     *TRAJECTORY_Y += dt*V;
 
-  if(square_mode==2){
-    TRAJECTORY_X -= dt*V;
-    TRAJECTORY_Y=r;
+//     if (*TRAJECTORY_Y > r){
+//       square_mode=2;
+//     }
+//   }
 
-    if (TRAJECTORY_X<-r){
-      square_mode=3;
-    }
-  }
+//   if(square_mode==2){
+//     *TRAJECTORY_X -= dt*V;
+//     *TRAJECTORY_Y=r;
 
-  if(square_mode==3){
-    TRAJECTORY_X=-r;
-    TRAJECTORY_Y-=dt*V;
+//     if (*TRAJECTORY_X<-r){
+//       square_mode=3;
+//     }
+//   }
 
-    if (TRAJECTORY_Y<-r){
-      square_mode=4;
-    }
-  }
+//   if(square_mode==3){
+//     *TRAJECTORY_X=-r;
+//     *TRAJECTORY_Y-=dt*V;
 
-  if(square_mode==4){
-    TRAJECTORY_X+=dt*V;
-    TRAJECTORY_Y=-r;
+//     if (*TRAJECTORY_Y<-r){
+//       square_mode=4;
+//     }
+//   }
 
-    if (TRAJECTORY_X>r){
-      square_mode=1;
-    }
-  }
-    return;
-}
+//   if(square_mode==4){
+//     *TRAJECTORY_X+=dt*V;
+//     *TRAJECTORY_Y=-r;
+
+//     if (*TRAJECTORY_X>r){
+//       square_mode=1;
+//     }
+//   }
+//     return;
+// }
