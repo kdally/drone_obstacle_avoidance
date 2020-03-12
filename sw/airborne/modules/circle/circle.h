@@ -27,15 +27,16 @@
 #define CIRCLE_H
 
 
+
 // settings
 extern int CIRCLE_L;
 extern int CIRCLE_D;
 extern int CIRCLE_I;
 extern float CIRCLE_X;
 extern float CIRCLE_Y;
-int AVOID_number_of_objects;
-float AVOID_h1,AVOID_h2;
-float AVOID_d;
+extern int AVOID_number_of_objects;
+extern float AVOID_h1,AVOID_h2;
+extern float AVOID_d;
 extern float AVOID_safety_angle;
 
 // functions

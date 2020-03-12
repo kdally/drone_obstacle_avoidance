@@ -26,9 +26,10 @@
 #include "modules/circle/circle.h"
 #include "generated/flight_plan.h"
 #include "firmwares/rotorcraft/navigation.h"
+//#include "math.h"
 
 
-int CIRCLE_L = 1034; //1434 for circle
+int CIRCLE_L = 1434; //1434 for circle
 int CIRCLE_D = 7;
 int CIRCLE_I = 1;
 float CIRCLE_X = 0;
@@ -46,16 +47,17 @@ float current_time = 0;
 void circle_periodic(void)
 {
 
+nav_set_heading_towards_waypoint(WP_STDBY);
+
 int r = CIRCLE_L/2 - CIRCLE_D;
 
 if(AVOID_number_of_objects!=0)
 {
   float r_reduced=0;
-  float offset=asin(AVOID_d/(2*r))*180/PI_M; //offset in degrees
-  float heading=(AVOID_h1+AVOID_h2)/2;
-  if(-1*AVOID_safety_angle<heading-offset && heading-offset<AVOID_safety_angle)
+  float offset=asin(AVOID_d/(2*r))*180/M_PI; //offset in degrees
+  if( AVOID_h1-offset<AVOID_safety_angle ||-1*AVOID_safety_angle<AVOID_h2-offset)
   {
-    r_reduced=r*(AVOID_h2-offset)*PI_M/180;
+    r_reduced=r*(AVOID_h2-offset)*M_PI/180;
   }
   r -= r_reduced;
 }
@@ -64,10 +66,10 @@ double dt = 0.001;
 current_time += dt;
 double e = 0.7;
 
-//  int32_t CIRCLE_X = r * cos(current_time);
-//  int32_t CIRCLE_Y = e * r * sin(current_time);
+  int32_t CIRCLE_X = r * cos(current_time);
+  int32_t CIRCLE_Y = e * r * sin(current_time);
 
-
+/*
 int V = 70;
 
 if(CIRCLE_I==1){
@@ -105,6 +107,8 @@ if(CIRCLE_I==4){
     CIRCLE_I=1;
   }
 }
+
+*/
 
 float x_rotated=CIRCLE_X*0.5+CIRCLE_Y*0.866025;
 float y_rotated=-CIRCLE_X*0.866025+CIRCLE_Y*0.5;
