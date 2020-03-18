@@ -44,5 +44,6 @@ extern void trajectory_init();
 extern void trajectory_periodic();
 extern void circle(float current_time, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r);
 extern void square(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r);
+extern void lace(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r);
 #endif
 

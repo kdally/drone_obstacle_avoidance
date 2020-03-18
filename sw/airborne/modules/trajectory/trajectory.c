@@ -36,10 +36,11 @@ float AVOID_d;
 float AVOID_safety_angle=10;
 float TRAJECTORY_X=0;
 float TRAJECTORY_Y=0;
-float TRAJECTORY_SWITCHING_TIME=6;
+float TRAJECTORY_SWITCHING_TIME=10;
 
 float current_time = 0;
 int square_mode = 1;
+int lace_mode = 1;
 int mode=1;
 float dt=0.0002;
 
@@ -58,9 +59,6 @@ int r = TRAJECTORY_L/2 - TRAJECTORY_D;
 
 if(mode==1)
 {
-  // TRAJECTORY_X = r * cos(current_time);
-  // TRAJECTORY_Y = r * sin(current_time);
-
   circle(current_time, &TRAJECTORY_X, &TRAJECTORY_Y, r);
   
   if (current_time > TRAJECTORY_SWITCHING_TIME){ //move to another mode
@@ -77,48 +75,24 @@ if(mode==2)
 square(dt, &TRAJECTORY_X, &TRAJECTORY_Y, r);
 
   if (current_time > TRAJECTORY_SWITCHING_TIME){ //move to another mode
+    mode=3;
+    current_time=0;
+    TRAJECTORY_Y=0;
+    TRAJECTORY_X=0; 
+    lace_mode=1;
+  }
+}
+
+if(mode==3)
+{
+lace(dt, &TRAJECTORY_X, &TRAJECTORY_Y, r);
+
+  if (current_time > TRAJECTORY_SWITCHING_TIME){ //move to another mode
     current_time=0;
     mode=1;
   }
+}
 
-  
-// if(square_mode==1){
-//   TRAJECTORY_X = r;
-//   TRAJECTORY_Y += dt*V;
-
-//   if (TRAJECTORY_Y > r){
-//     square_mode=2;
-//   }
-// }
-
-// if(square_mode==2){
-//   TRAJECTORY_X -= dt*V;
-//   TRAJECTORY_Y=r;
-
-//   if (TRAJECTORY_X<-r){
-//     square_mode=3;
-//   }
-// }
-
-// if(square_mode==3){
-//   TRAJECTORY_X=-r;
-//   TRAJECTORY_Y-=dt*V;
-
-//   if (TRAJECTORY_Y<-r){
-//     square_mode=4;
-//   }
-// }
-
-// if(square_mode==4){
-//   TRAJECTORY_X+=dt*V;
-//   TRAJECTORY_Y=-r;
-
-//   if (TRAJECTORY_X>r){
-//     square_mode=1;
-//   }
-// }
- 
-  }
 
 float x_rotated=TRAJECTORY_X*0.5+TRAJECTORY_Y*0.866025;
 float y_rotated=-TRAJECTORY_X*0.866025+TRAJECTORY_Y*0.5;
@@ -185,6 +159,49 @@ void square(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r)
 
     if (*TRAJECTORY_X>r){
       square_mode=1;
+    }
+  }
+    return;
+}
+
+void lace(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r)
+{
+  int V = 600;
+
+
+  if(lace_mode==1){
+    *TRAJECTORY_X = r;
+    *TRAJECTORY_Y -= dt*V;
+
+    if (*TRAJECTORY_Y < -r){
+      lace_mode=2;
+    }
+  }
+
+  if(lace_mode==2){
+    *TRAJECTORY_X -= dt*V;
+    *TRAJECTORY_Y=-1 * *TRAJECTORY_X;
+
+    if (*TRAJECTORY_X<-r){
+      lace_mode=3;
+    }
+  }
+
+  if(lace_mode==3){
+    *TRAJECTORY_X=-r;
+    *TRAJECTORY_Y-=dt*V;
+
+    if (*TRAJECTORY_Y<-r){
+      lace_mode=4;
+    }
+  }
+
+  if(lace_mode==4){
+    *TRAJECTORY_X+=dt*V;
+    *TRAJECTORY_Y=*TRAJECTORY_X;
+
+    if (*TRAJECTORY_X>r){
+      lace_mode=1;
     }
   }
     return;
