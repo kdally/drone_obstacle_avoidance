@@ -41,6 +41,6 @@ extern float TRAJECTORY_Y;
 // functions
 extern void trajectory_init();
 extern void trajectory_periodic();
-
+extern void circle(float current_time, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r);
 #endif
 

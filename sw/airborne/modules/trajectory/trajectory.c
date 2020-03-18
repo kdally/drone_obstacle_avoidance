@@ -58,8 +58,11 @@ int r = TRAJECTORY_L/2 - TRAJECTORY_D;
 
 if(mode==1)
 {
-  TRAJECTORY_X = r * cos(current_time);
-  TRAJECTORY_Y = r * sin(current_time);
+  // TRAJECTORY_X = r * cos(current_time);
+  // TRAJECTORY_Y = r * sin(current_time);
+
+  circle(current_time, &TRAJECTORY_X, &TRAJECTORY_Y, r);
+  
   if (NavBlockTime() > 200){
     mode=2;
     TRAJECTORY_Y=0;
@@ -115,26 +118,26 @@ float y_rotated=-TRAJECTORY_X*0.866025+TRAJECTORY_Y*0.5;
 waypoint_set_xy_i(WP_STDBY,x_rotated,y_rotated);
 }
 
-/*
+
 void circle(float current_time, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r)
 {
   double e = 1;
-    if(AVOID_number_of_objects!=0)
-  {
-    float r_reduced=0;
-    float offset=asin(AVOID_d/(2*r))*180/M_PI; //offset in degrees
-    if( AVOID_h1-offset<AVOID_safety_angle ||-1*AVOID_safety_angle<AVOID_h2-offset)
-    {
-      r_reduced=r*(AVOID_h2-offset)*M_PI/180;
-    }
-    r -= r_reduced;
-  }  
+  //   if(AVOID_number_of_objects!=0)
+  // {
+  //   float r_reduced=0;
+  //   float offset=asin(AVOID_d/(2*r))*180/M_PI; //offset in degrees
+  //   if( AVOID_h1-offset<AVOID_safety_angle ||-1*AVOID_safety_angle<AVOID_h2-offset)
+  //   {
+  //     r_reduced=r*(AVOID_h2-offset)*M_PI/180;
+  //   }
+  //   r -= r_reduced;
+  // }  
 
     *TRAJECTORY_X = r * cos(current_time);
     *TRAJECTORY_Y = e * r * sin(current_time);
   
   return;
-}*/
+}
 
 // void square(double dt, float *TRAJECTORY_X, float *TRAJECTORY_Y)
 // {
