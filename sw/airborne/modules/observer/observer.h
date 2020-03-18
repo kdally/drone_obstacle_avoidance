@@ -29,14 +29,29 @@
 #include <stdint.h>
 #include <stdio.h>
 
-// #include "opencv/cv.h"
-// #include "opencv/highgui.h"
-#include "subsystems/abi.h"
+// #include <opencv2/imgproc/imgproc_c.h>
+// #include <opencv2/core/core_c.h>
+// #include <opencv2/highgui/highgui_c.h>
+
 #include "modules/computer_vision/cv.h"
-#include "modules/computer_vision/lib/vision/image.h"
+// #include <opencv/cv.h>
+
+// #include <opencv2/highgui/highgui_c.h>
+// #include ""
+
+#include "opencv/highgui.h"
+// #include <opencv2/core/core_c.h>
+// #include "opencv2/highgui/highgui_c.h"
+// #include <opencv2/highgui/highgui_c.h>
+// #include "subsystems/abi.h"
+// #include "modules/computer_vision/opencv_image_functions.h"
+// #include "modules/computer_vision/opticflow/"
+// #include "modules/computer_vision/"
+// #include "modules/computer_vision/lib/vision/image.h"
 
 
-extern void observer_init();
+
+extern void observer_init(void);
 // extern void observer_look();
 
 struct image_t *colorfilter_f(struct image_t *img);
@@ -44,9 +59,6 @@ struct image_t *colorfilter_f(struct image_t *img);
 
 void filter_color(struct image_t *input, 
                              struct image_t *output);
-
-
-
 
 
 struct video_listener *listener;

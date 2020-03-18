@@ -24,6 +24,17 @@
  */
 
 #include "modules/observer/observer.h"
+// #include "modules/computer_vision/opencv_image_functions.h"
+
+// #include "opencv/highgui.h"
+// #include "opencv2/core/types_c.h"
+
+// #include <opencv2/core/core_c.h>
+
+// #include "opencv/include/opencv/highgui.h"
+// #include "opencv/include/opencv/"
+// #include "opencv2/highgui/highgui_c.h"
+
 
 
 #ifndef COLORFILTER_FPS
@@ -36,7 +47,28 @@
 
 
 struct image_t *colorfilter_f(struct image_t *img){
-  filter_color(img, img);
+
+  *dest_img = *img;
+
+  // filter_color(img, dest_img);
+  // cvShowImage("image", &dest_img);
+
+
+
+  // uint8_t blur[3][3] = {{1/9.0, 1/9.0, 1/9.0},
+  //                       {1/9.0, 1/9.0, 1/9.0},
+  //                       {1/9.0, 1/9.0, 1/9.0}}; 
+
+  // cvMat M(3, 3, uint8_t, 1/9.0);
+  // cvMat a = cvMat(3, 3, uint8_t, 1);
+
+
+
+  // cvFilter2D(dest_img, -1, );
+
+  // cvWaitKey(0);
+  // cvReleaseImage(&dest_img);
+  // cvDestroyAllWindows();
 
 
   // cvNamedWindow("image");
@@ -50,9 +82,10 @@ struct image_t *colorfilter_f(struct image_t *img){
 }
 
 
-void observer_init() {
-  listener = cv_add_to_device(&COLORFILTER_CAMERA, colorfilter_f, COLORFILTER_FPS);
-
+void observer_init(void) {
+  listener = cv_add_to_device(&COLORFILTER_CAMERA, colorfilter_f, 
+                              COLORFILTER_FPS);
+  // cvNamedWindow("image", 0);
 }
 
 void filter_color(struct image_t *input, 
@@ -110,5 +143,3 @@ void filter_color(struct image_t *input,
 
 // void observer_look() {
 // }
-
-
