@@ -36,10 +36,12 @@ float AVOID_d;
 float AVOID_safety_angle=10;
 float TRAJECTORY_X=0;
 float TRAJECTORY_Y=0;
+float TRAJECTORY_SWITCHING_TIME=6;
 
 float current_time = 0;
 int square_mode = 1;
 int mode=1;
+float dt=0.0002;
 
 
 void trajectory_init(void)
@@ -51,9 +53,7 @@ void trajectory_periodic(void)
 
 nav_set_heading_towards_waypoint(WP_STDBY);
 
-float dt = 0.0002;
 current_time += dt;
-int V = 70;
 int r = TRAJECTORY_L/2 - TRAJECTORY_D;   
 
 if(mode==1)
@@ -63,18 +63,23 @@ if(mode==1)
 
   circle(current_time, &TRAJECTORY_X, &TRAJECTORY_Y, r);
   
-  if (NavBlockTime() > 20){
+  if (current_time > TRAJECTORY_SWITCHING_TIME){ //move to another mode
     mode=2;
+    current_time=0;
     TRAJECTORY_Y=0;
-    TRAJECTORY_X=0;   
+    TRAJECTORY_X=0;  
+    square_mode=1; 
   }
-
 }
-else
-{
-float dt = 0.002;
 
+if(mode==2)
+{
 square(dt, &TRAJECTORY_X, &TRAJECTORY_Y, r);
+
+  if (current_time > TRAJECTORY_SWITCHING_TIME){ //move to another mode
+    current_time=0;
+    mode=1;
+  }
 
   
 // if(square_mode==1){
@@ -144,7 +149,7 @@ void circle(float current_time, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r)
 
 void square(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r)
 {
-  int V = 70;
+  int V = 700;
 
 
   if(square_mode==1){

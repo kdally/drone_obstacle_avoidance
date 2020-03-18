@@ -36,6 +36,7 @@ extern float AVOID_d;
 extern float AVOID_safety_angle;
 extern float TRAJECTORY_X;
 extern float TRAJECTORY_Y;
+extern float TRAJECTORY_SWITCHING_TIME;
 
 
 // functions
