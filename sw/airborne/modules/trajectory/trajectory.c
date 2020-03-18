@@ -63,7 +63,7 @@ if(mode==1)
 
   circle(current_time, &TRAJECTORY_X, &TRAJECTORY_Y, r);
   
-  if (NavBlockTime() > 200){
+  if (NavBlockTime() > 20){
     mode=2;
     TRAJECTORY_Y=0;
     TRAJECTORY_X=0;   
@@ -72,43 +72,46 @@ if(mode==1)
 }
 else
 {
-//square(dt, &TRAJECTORY_X, &TRAJECTORY_Y);
-  dt=0.002;
-   if(square_mode==1){
-     TRAJECTORY_X = r;
-     TRAJECTORY_Y += dt*V;
+float dt = 0.002;
 
-     if (TRAJECTORY_Y > r){
-       square_mode=2;
-     }
-   }
+square(dt, &TRAJECTORY_X, &TRAJECTORY_Y, r);
 
-   if(square_mode==2){
-     TRAJECTORY_X -= dt*V;
-     TRAJECTORY_Y=r;
+  
+// if(square_mode==1){
+//   TRAJECTORY_X = r;
+//   TRAJECTORY_Y += dt*V;
 
-     if (TRAJECTORY_X<-r){
-       square_mode=3;
-     }
-   }
+//   if (TRAJECTORY_Y > r){
+//     square_mode=2;
+//   }
+// }
 
-   if(square_mode==3){
-     TRAJECTORY_X=-r;
-     TRAJECTORY_Y-=dt*V;
+// if(square_mode==2){
+//   TRAJECTORY_X -= dt*V;
+//   TRAJECTORY_Y=r;
 
-     if (TRAJECTORY_Y<-r){
-       square_mode=4;
-     }
-   }
+//   if (TRAJECTORY_X<-r){
+//     square_mode=3;
+//   }
+// }
 
-   if(square_mode==4){
-     TRAJECTORY_X+=dt*V;
-     TRAJECTORY_Y=-r;
+// if(square_mode==3){
+//   TRAJECTORY_X=-r;
+//   TRAJECTORY_Y-=dt*V;
 
-     if (TRAJECTORY_X>r){
-       square_mode=1;
-     }
-   }
+//   if (TRAJECTORY_Y<-r){
+//     square_mode=4;
+//   }
+// }
+
+// if(square_mode==4){
+//   TRAJECTORY_X+=dt*V;
+//   TRAJECTORY_Y=-r;
+
+//   if (TRAJECTORY_X>r){
+//     square_mode=1;
+//   }
+// }
  
   }
 
@@ -139,46 +142,45 @@ void circle(float current_time, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r)
   return;
 }
 
-// void square(double dt, float *TRAJECTORY_X, float *TRAJECTORY_Y)
-// {
-//   int r = TRAJECTORY_L/2 - TRAJECTORY_D;   
-//   int V = 70;
+void square(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r)
+{
+  int V = 70;
 
 
-//   if(square_mode==1){
-//     *TRAJECTORY_X = r;
-//     *TRAJECTORY_Y += dt*V;
+  if(square_mode==1){
+    *TRAJECTORY_X = r;
+    *TRAJECTORY_Y += dt*V;
 
-//     if (*TRAJECTORY_Y > r){
-//       square_mode=2;
-//     }
-//   }
+    if (*TRAJECTORY_Y > r){
+      square_mode=2;
+    }
+  }
 
-//   if(square_mode==2){
-//     *TRAJECTORY_X -= dt*V;
-//     *TRAJECTORY_Y=r;
+  if(square_mode==2){
+    *TRAJECTORY_X -= dt*V;
+    *TRAJECTORY_Y=r;
 
-//     if (*TRAJECTORY_X<-r){
-//       square_mode=3;
-//     }
-//   }
+    if (*TRAJECTORY_X<-r){
+      square_mode=3;
+    }
+  }
 
-//   if(square_mode==3){
-//     *TRAJECTORY_X=-r;
-//     *TRAJECTORY_Y-=dt*V;
+  if(square_mode==3){
+    *TRAJECTORY_X=-r;
+    *TRAJECTORY_Y-=dt*V;
 
-//     if (*TRAJECTORY_Y<-r){
-//       square_mode=4;
-//     }
-//   }
+    if (*TRAJECTORY_Y<-r){
+      square_mode=4;
+    }
+  }
 
-//   if(square_mode==4){
-//     *TRAJECTORY_X+=dt*V;
-//     *TRAJECTORY_Y=-r;
+  if(square_mode==4){
+    *TRAJECTORY_X+=dt*V;
+    *TRAJECTORY_Y=-r;
 
-//     if (*TRAJECTORY_X>r){
-//       square_mode=1;
-//     }
-//   }
-//     return;
-// }
+    if (*TRAJECTORY_X>r){
+      square_mode=1;
+    }
+  }
+    return;
+}
