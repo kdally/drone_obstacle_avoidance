@@ -88,9 +88,23 @@ if(mode==3)
 lace(dt, &TRAJECTORY_X, &TRAJECTORY_Y, r);
 
   if (current_time > TRAJECTORY_SWITCHING_TIME){ //move to another mode
+    mode=4;
+    current_time=0;
+    TRAJECTORY_Y=0;
+    TRAJECTORY_X=0; 
+    lace_mode=1;
+  }
+}
+
+if(mode==4)
+{
+lace_inverted(dt, &TRAJECTORY_X, &TRAJECTORY_Y, r);
+
+  if (current_time > TRAJECTORY_SWITCHING_TIME){ //move to another mode
     current_time=0;
     mode=1;
   }
+
 }
 
 
@@ -115,6 +129,14 @@ void circle(float current_time, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r)
   //   r -= r_reduced;
   // }  
 
+    if(AVOID_number_of_objects!=0)
+    {
+      if(AVOID_h1<AVOID_safety_angle ||-1*AVOID_safety_angle<AVOID_h2)
+     {
+       r-=AVOID_h2*1; //adjust gain - we have tune this experimentaly!!
+     }
+    }
+
     *TRAJECTORY_X = r * cos(current_time);
     *TRAJECTORY_Y = e * r * sin(current_time);
   
@@ -125,6 +147,13 @@ void square(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r)
 {
   int V = 700;
 
+  if(AVOID_number_of_objects!=0)
+  {
+    if(AVOID_h1<AVOID_safety_angle ||-1*AVOID_safety_angle<AVOID_h2)
+    {
+      r-=AVOID_h2*1; //adjust gain - we have tune this experimentaly!!
+    }
+  }
 
   if(square_mode==1){
     *TRAJECTORY_X = r;
@@ -166,8 +195,15 @@ void square(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r)
 
 void lace(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r)
 {
-  int V = 600;
-
+  int V = 700;
+  
+  if(AVOID_number_of_objects!=0)
+  {
+    if(AVOID_h1<AVOID_safety_angle ||-1*AVOID_safety_angle<AVOID_h2)
+    {
+      r-=AVOID_h2*1; //adjust gain - we have tune this experimentaly!!
+    }
+  }
 
   if(lace_mode==1){
     *TRAJECTORY_X = r;
@@ -179,7 +215,7 @@ void lace(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r)
   }
 
   if(lace_mode==2){
-    *TRAJECTORY_X -= dt*V;
+    *TRAJECTORY_X -= dt*V*0.70710678;
     *TRAJECTORY_Y=-1 * *TRAJECTORY_X;
 
     if (*TRAJECTORY_X<-r){
@@ -197,10 +233,60 @@ void lace(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r)
   }
 
   if(lace_mode==4){
-    *TRAJECTORY_X+=dt*V;
+    *TRAJECTORY_X+=dt*V*0.70710678;
     *TRAJECTORY_Y=*TRAJECTORY_X;
 
     if (*TRAJECTORY_X>r){
+      lace_mode=1;
+    }
+  }
+    return;
+}
+
+void lace_inverted(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r)
+{
+  int V = 700;
+
+  if(AVOID_number_of_objects!=0)
+  {
+    if(AVOID_h1<AVOID_safety_angle ||-1*AVOID_safety_angle<AVOID_h2)
+    {
+      r-=AVOID_h2*1; //adjust gain - we have tune this experimentaly!!
+    }
+  }
+
+  if(lace_mode==1){
+    *TRAJECTORY_Y = r;
+    *TRAJECTORY_X -= dt*V;
+
+    if (*TRAJECTORY_X < -r){
+      lace_mode=2;
+    }
+  }
+
+  if(lace_mode==2){
+    *TRAJECTORY_Y -= dt*V*0.70710678;
+    *TRAJECTORY_X=-1 * *TRAJECTORY_Y;
+
+    if (*TRAJECTORY_Y<-r){
+      lace_mode=3;
+    }
+  }
+
+  if(lace_mode==3){
+    *TRAJECTORY_Y=-r;
+    *TRAJECTORY_X-=dt*V;
+
+    if (*TRAJECTORY_X<-r){
+      lace_mode=4;
+    }
+  }
+
+  if(lace_mode==4){
+    *TRAJECTORY_Y+=dt*V*0.70710678;
+    *TRAJECTORY_X=*TRAJECTORY_Y;
+
+    if (*TRAJECTORY_Y>r){
       lace_mode=1;
     }
   }
