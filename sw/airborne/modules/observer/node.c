@@ -18,43 +18,41 @@
  * <http://www.gnu.org/licenses/>.
  */
 /**
- * @file "modules/computer_vision/cv_opencvdemo.h"
+ * @file "modules/computer_vision/cv_opencvdemo.c"
  * @author C. De Wagter
  * A simple module showing what you can do with opencv on the bebop.
  */
 
+#include "modules/observer/node.h"
 
-#ifndef OBSERVER_H
-#define OBSERVER_H
-
-#ifdef __cplusplus
-extern "C" {
+#ifndef OPENCVDEMO_FPS
+#define OPENCVDEMO_FPS 0       ///< Default FPS (zero means run at camera fps)
 #endif
-// Define stuff C++ style?
 
-void observer(char *img, int width, int height);
+#ifndef COLORFILTER_CAMERA
+#define COLORFILTER_CAMERA front_camera
+#endif
 
-void obs(struct image_t *img);
-
-void initialize_observer();
-
+PRINT_CONFIG_VAR(OPENCVDEMO_FPS)
 
 
+struct image_t *opencv_func(struct image_t *img){
 
-void colorfilter_f(struct image_t *img);
+  if (img->type == IMAGE_YUV422) {
 
-void filter_color(struct image_t *input, struct image_t *output);
+    // call the C++ interface
+    // observer((char *) img->buf, img->w, img->h);
 
+    obs(img);
+  }
 
+// opencv_example(NULL, 10,10);
 
-// struct image_t dest_img;
-
-
-
-
-#ifdef __cplusplus
+  return NULL;
 }
-#endif
 
-#endif
+void observer_node_init(void)
+{
+  cv_add_to_device(&COLORFILTER_CAMERA, opencv_func, OPENCVDEMO_FPS);
+}
 

@@ -19,7 +19,7 @@ def convolve(image, kernel):
     # print('pad:', pad)
     # print('output:', output)
 
-    max_k = 0
+    max_k = 0a
     min_k = 1e9
 
     for y in np.arange(pad, iH + pad):

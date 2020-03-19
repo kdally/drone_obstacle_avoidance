@@ -20,41 +20,19 @@
 /**
  * @file "modules/computer_vision/cv_opencvdemo.h"
  * @author C. De Wagter
- * A simple module showing what you can do with opencv on the bebop.
+ * opencv
  */
 
+#include "modules/computer_vision/cv.h"
+#include "modules/observer/observer.h"
+#include <stdio.h>
 
-#ifndef OBSERVER_H
-#define OBSERVER_H
+#ifndef OBSERVER_NODE_H
+#define OBSERVER_NODE_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-// Define stuff C++ style?
-
-void observer(char *img, int width, int height);
-
-void obs(struct image_t *img);
-
-void initialize_observer();
-
-
-
-
-void colorfilter_f(struct image_t *img);
-
-void filter_color(struct image_t *input, struct image_t *output);
-
-
-
-// struct image_t dest_img;
-
-
-
-
-#ifdef __cplusplus
-}
-#endif
+extern void observer_node_init(void);
+struct image_t *opencv_func(struct image_t *img);
 
 #endif
+
 

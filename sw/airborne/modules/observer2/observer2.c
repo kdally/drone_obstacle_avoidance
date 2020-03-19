@@ -23,7 +23,7 @@
  * First version of computer vision algorithm for MAVLAB course
  */
 
-#include "modules/observer/observer.h"
+#include "modules/observer2/observer2.h"
 // #include "modules/computer_vision/opencv_image_functions.h"
 
 // #include "opencv/highgui.h"
@@ -45,14 +45,20 @@
 #define COLORFILTER_CAMERA front_camera
 #endif
 
+#define PRINT(string,...) fprintf(stderr, "[orange_avoider->%s()] " string,__FUNCTION__ , ##__VA_ARGS__)
+#if ORANGE_AVOIDER_VERBOSE
+#define VERBOSE_PRINT PRINT
+#else
+#define VERBOSE_PRINT(...)
+#endif
 
 struct image_t *colorfilter_f(struct image_t *img){
 
   *dest_img = *img;
 
-  // filter_color(img, dest_img);
-  // cvShowImage("image", &dest_img);
-
+  filter_color(img, dest_img);
+  cvShowImage("image", &dest_img);
+  VERBOSE_PRINT("UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP");
 
 
   // uint8_t blur[3][3] = {{1/9.0, 1/9.0, 1/9.0},
@@ -85,7 +91,8 @@ struct image_t *colorfilter_f(struct image_t *img){
 void observer_init(void) {
   listener = cv_add_to_device(&COLORFILTER_CAMERA, colorfilter_f, 
                               COLORFILTER_FPS);
-  // cvNamedWindow("image", 0);
+  cvNamedWindow("image", 0);
+  VERBOSE_PRINT("UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP");
 }
 
 void filter_color(struct image_t *input, 
