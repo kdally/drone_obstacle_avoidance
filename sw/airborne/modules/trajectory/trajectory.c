@@ -150,7 +150,7 @@ void circle(float current_time, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r)
 
     if(AVOID_number_of_objects!=0)
     {
-      if(AVOID_h1<AVOID_safety_angle ||-1*AVOID_safety_angle<AVOID_h2)
+      if(abs(AVOID_h1)<AVOID_safety_angle || abs(AVOID_h2)<AVOID_safety_angle)
      {
        r-=AVOID_h2*1; //adjust gain - we have tune this experimentaly!!
      }
@@ -168,7 +168,7 @@ void square(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r)
 
   if(AVOID_number_of_objects!=0)
   {
-    if(AVOID_h1<AVOID_safety_angle ||-1*AVOID_safety_angle<AVOID_h2)
+    if(abs(AVOID_h1)<AVOID_safety_angle || abs(AVOID_h2)<AVOID_safety_angle)
     {
       r-=AVOID_h2*1; //adjust gain - we have tune this experimentaly!!
     }
@@ -218,7 +218,7 @@ void lace(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r)
   
   if(AVOID_number_of_objects!=0)
   {
-    if(AVOID_h1<AVOID_safety_angle ||-1*AVOID_safety_angle<AVOID_h2)
+    if(abs(AVOID_h1)<AVOID_safety_angle || abs(AVOID_h2)<AVOID_safety_angle)
     {
       r-=AVOID_h2*1; //adjust gain - we have tune this experimentaly!!
     }
@@ -268,7 +268,7 @@ void lace_inverted(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r)
 
   if(AVOID_number_of_objects!=0)
   {
-    if(AVOID_h1<AVOID_safety_angle ||-1*AVOID_safety_angle<AVOID_h2)
+    if(abs(AVOID_h1)<AVOID_safety_angle || abs(AVOID_h2)<AVOID_safety_angle)
     {
       r-=AVOID_h2*1; //adjust gain - we have tune this experimentaly!!
     }
