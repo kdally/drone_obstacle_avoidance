@@ -35,8 +35,9 @@ enum trajectory_mode_t {
 };
 
 enum trajectory_mode_t trajectory_mode = CIRCLE;
-int TRAJECTORY_L = 1534; //1434 for circle
-int TRAJECTORY_D = 7;
+int TRAJECTORY_L = 1750; //for a dt f 0.0011, razor thin margins
+int TRAJECTORY_L = 1550; //for a dt f 0.0004
+int TRAJECTORY_D = 0;
 int AVOID_number_of_objects = 0;
 float AVOID_h1,AVOID_h2;
 float AVOID_d;
@@ -49,7 +50,8 @@ float current_time = 0;
 int square_mode = 1;
 int lace_mode = 1;
 int mode=1;
-float dt=0.0004;
+// float dt=0.0004; // 0.6 m/s
+float dt=0.0011; // up to 1.6 m/s
 // float dt=0.0015; //very fast
 
 
@@ -312,7 +314,22 @@ void avoidance_straight_path(float AVOID_h1, float AVOID_h2){
 // h1 and h2 are the left and right headings of the obstable in a realtive 
 // reference frame w/ origin in the center of the FOV 
 
+if(AVOID_h1 > 0){
 
+
+}
+
+
+if(AVOID_h2 < 0){
+
+  
+}
+
+
+else{
+
+
+}
 
 
 float current_heading = stateGetNedToBodyEulers_f()->psi;
