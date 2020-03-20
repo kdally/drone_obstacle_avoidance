@@ -27,7 +27,14 @@
 #include "generated/flight_plan.h"
 #include "firmwares/rotorcraft/navigation.h"
 
+enum trajectory_mode_t {
+  CIRCLE,
+  SQUARE,
+  LACE,
+  INVERTED_LACE
+};
 
+enum trajectory_mode_t trajectory_mode = CIRCLE;
 int TRAJECTORY_L = 1534; //1434 for circle
 int TRAJECTORY_D = 7;
 int AVOID_number_of_objects = 0;
@@ -36,13 +43,15 @@ float AVOID_d;
 float AVOID_safety_angle=10;
 float TRAJECTORY_X=0;
 float TRAJECTORY_Y=0;
-float TRAJECTORY_SWITCHING_TIME=10;
+float TRAJECTORY_SWITCHING_TIME=20;
 
 float current_time = 0;
 int square_mode = 1;
 int lace_mode = 1;
 int mode=1;
-float dt=0.0002;
+float dt=0.0004;
+// float dt=0.0015; //very fast
+
 
 
 void trajectory_init(void)
@@ -57,62 +66,67 @@ nav_set_heading_towards_waypoint(WP_STDBY);
 current_time += dt;
 int r = TRAJECTORY_L/2 - TRAJECTORY_D;   
 
-if(mode==1)
-{
-  circle(current_time, &TRAJECTORY_X, &TRAJECTORY_Y, r);
-  
-  if (current_time > TRAJECTORY_SWITCHING_TIME){ //move to another mode
-    mode=2;
-    current_time=0;
-    TRAJECTORY_Y=0;
-    TRAJECTORY_X=0;  
-    square_mode=1; 
+switch (trajectory_mode){
+  case CIRCLE:
+
+    circle(current_time, &TRAJECTORY_X, &TRAJECTORY_Y, r);
+    
+    if (current_time > TRAJECTORY_SWITCHING_TIME){ //move to another mode
+        current_time=0;
+        TRAJECTORY_Y=0;
+        TRAJECTORY_X=0;  
+        square_mode=1; 
+        trajectory_mode = SQUARE;
+      }
+
+    break;
+  case SQUARE:
+
+    square(dt, &TRAJECTORY_X, &TRAJECTORY_Y, r);
+
+    if (current_time > TRAJECTORY_SWITCHING_TIME){ //move to another mode
+      current_time=0;
+      TRAJECTORY_Y=0;
+      TRAJECTORY_X=0; 
+      lace_mode=1;
+      trajectory_mode = LACE;
+    }
+
+    break;
+  case LACE:
+
+    lace(dt, &TRAJECTORY_X, &TRAJECTORY_Y, r);
+
+      if (current_time > TRAJECTORY_SWITCHING_TIME){ //move to another mode
+        current_time=0;
+        TRAJECTORY_Y=0;
+        TRAJECTORY_X=0; 
+        lace_mode=1;
+        trajectory_mode = INVERTED_LACE;
+      }
+
+      break;
+  case INVERTED_LACE:
+
+    lace_inverted(dt, &TRAJECTORY_X, &TRAJECTORY_Y, r);
+
+      if (current_time > TRAJECTORY_SWITCHING_TIME){ //move to another mode
+        current_time=0;
+        trajectory_mode = CIRCLE;
+      }
+
+      break;
+  default:
+    break;
   }
-}
-
-if(mode==2)
-{
-square(dt, &TRAJECTORY_X, &TRAJECTORY_Y, r);
-
-  if (current_time > TRAJECTORY_SWITCHING_TIME){ //move to another mode
-    mode=3;
-    current_time=0;
-    TRAJECTORY_Y=0;
-    TRAJECTORY_X=0; 
-    lace_mode=1;
-  }
-}
-
-if(mode==3)
-{
-lace(dt, &TRAJECTORY_X, &TRAJECTORY_Y, r);
-
-  if (current_time > TRAJECTORY_SWITCHING_TIME){ //move to another mode
-    mode=4;
-    current_time=0;
-    TRAJECTORY_Y=0;
-    TRAJECTORY_X=0; 
-    lace_mode=1;
-  }
-}
-
-if(mode==4)
-{
-lace_inverted(dt, &TRAJECTORY_X, &TRAJECTORY_Y, r);
-
-  if (current_time > TRAJECTORY_SWITCHING_TIME){ //move to another mode
-    current_time=0;
-    mode=1;
-  }
-
-}
-
 
 float x_rotated=TRAJECTORY_X*0.5+TRAJECTORY_Y*0.866025;
 float y_rotated=-TRAJECTORY_X*0.866025+TRAJECTORY_Y*0.5;
 
 waypoint_set_xy_i(WP_STDBY,x_rotated,y_rotated);
+
 }
+
 
 
 void circle(float current_time, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r)
@@ -291,4 +305,18 @@ void lace_inverted(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r)
     }
   }
     return;
+}
+
+void avoidance_straight_path(float AVOID_h1, float AVOID_h2){
+
+// h1 and h2 are the left and right headings of the obstable in a realtive 
+// reference frame w/ origin in the center of the FOV 
+
+
+
+
+float current_heading = stateGetNedToBodyEulers_f()->psi;
+
+
+
 }
