@@ -36,12 +36,13 @@ enum trajectory_mode_t {
 
 enum trajectory_mode_t trajectory_mode = CIRCLE;
 int TRAJECTORY_L = 1750; //for a dt f 0.0011, razor thin margins
-int TRAJECTORY_L = 1550; //for a dt f 0.0004
+// int TRAJECTORY_L = 1550; //for a dt f 0.0004
 int TRAJECTORY_D = 0;
 int AVOID_number_of_objects = 0;
 float AVOID_h1,AVOID_h2;
 float AVOID_d;
-float AVOID_safety_angle=10;
+float AVOID_safety_angle = 10;
+float AVOID_FOV = 80;
 float TRAJECTORY_X=0;
 float TRAJECTORY_Y=0;
 float TRAJECTORY_SWITCHING_TIME=20;
@@ -53,6 +54,8 @@ int mode=1;
 // float dt=0.0004; // 0.6 m/s
 float dt=0.0011; // up to 1.6 m/s
 // float dt=0.0015; //very fast
+
+
 
 
 
@@ -311,29 +314,33 @@ void lace_inverted(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r)
 
 void avoidance_straight_path(float AVOID_h1, float AVOID_h2){
 
-// h1 and h2 are the left and right headings of the obstable in a realtive 
+// h1 and h2 are the left and right headings in degrees of the obstable in a realtive 
 // reference frame w/ origin in the center of the FOV 
 
-if(AVOID_h1 > 0){
+if(AVOID_number_of_objects!=0){
+  float heading_increment = 0;
 
+  if(AVOID_h1 > 0 && AVOID_h1 < AVOID_safety_angle){
+    heading_increment = AVOID_h1 - AVOID_safety_angle; // linear function to adapt heading change
+  }
 
-}
+  if(AVOID_h2 < 0 && AVOID_h2 > -1*AVOID_safety_angle){
+    heading_increment = AVOID_h1 + AVOID_safety_angle; // linear function to adapt heading change
+  }
 
+  if(AVOID_h2 > -1*AVOID_safety_angle && AVOID_h2 < AVOID_safety_angle){
 
-if(AVOID_h2 < 0){
+    if(abs(AVOID_h1) > abs(AVOID_h2)){
+      heading_increment = AVOID_safety_angle;
+    }
+    else{
+      heading_increment = -AVOID_safety_angle;
+    }
+  }
 
-  
-}
+  float new_heading = stateGetNedToBodyEulers_f()->psi + RadOfDeg(heading_increment); 
+  FLOAT_ANGLE_NORMALIZE(new_heading);
+  nav_heading = ANGLE_BFP_OF_REAL(new_heading);
 
-
-else{
-
-
-}
-
-
-float current_heading = stateGetNedToBodyEulers_f()->psi;
-
-
-
+  }
 }
