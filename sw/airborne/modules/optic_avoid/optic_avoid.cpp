@@ -35,6 +35,7 @@
 #include <opencv2/highgui.hpp> //#include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/video/tracking.hpp>
+#include "opencv2/objdetect/objdetect.hpp"
 
 #include <iostream>
 #include <cmath>
@@ -57,11 +58,13 @@ cv::Mat flow; // Flow Storage
 const float resolution_step_down = 3.0; // TODO: This needs to be changed to a define setting in xml file
 const int lower_width = (int)(240./resolution_step_down);
 const int lower_height = (int)(520./resolution_step_down);
+// Blurring
+const int GB_parameter = 33;
 
 
 // Create global variable for heading safety
 std::vector<float> normalised_heading_flow (lower_height, 0); // Create std::vecotr of shape (1,lower_height) filled with zeros
-std::vector<float> *optic_avoid_heading_pointer = &normalised_heading_flow; // pointer to heading information vector for access from other files
+std::vector<float> smoothed_normalised_heading_flow (lower_height, 0); // Create std::vecotr of shape (1,lower_height) filled with zeros
 
 float optic_avoid_heading_information[lower_height] = {0};
 extern "C" float *GLOBAL_OF_VECTOR = optic_avoid_heading_information;
@@ -117,14 +120,28 @@ void optic_avoid(char *img, int width, int height) {
     }
   }
 
+  // Find minimum of sum_flow_row
+  float min_flow_sum{max_flow_sum}; // Initialise minimum to maximum
+  for(int i = 0; i < lower_height; i++) {
+    if (sum_flow_row[i] < min_flow_sum)
+    {
+        min_flow_sum = sum_flow_row[i];
+    }
+  }
+
   // Create Normalised heading flow vector
   for(int i = 0; i < lower_height; i++) {
-    normalised_heading_flow[i] = (sum_flow_row[i]/max_flow_sum); // Become percentage from 0 to 1
+    normalised_heading_flow[i] = ((sum_flow_row[i]-min_flow_sum)/(max_flow_sum-min_flow_sum)); // Become percentage from 0 to 1
   }
+
+  // Smoothing filter
+  cv::GaussianBlur(normalised_heading_flow, smoothed_normalised_heading_flow, cv::Size(GB_parameter, GB_parameter), 0);
+
+
 
   // Write to external array
   for (int i = 0; i < lower_height; i++) {
-    optic_avoid_heading_information[i] = normalised_heading_flow[i];
+    optic_avoid_heading_information[i] = smoothed_normalised_heading_flow[i];
   }
 
   // for (int i = 0; i < lower_height; i++) {
