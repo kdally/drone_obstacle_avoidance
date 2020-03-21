@@ -38,11 +38,6 @@ enum trajectory_mode_t trajectory_mode = CIRCLE;
 int TRAJECTORY_L = 1750; //for a dt f 0.0011, razor thin margins
 // int TRAJECTORY_L = 1550; //for a dt f 0.0004
 int TRAJECTORY_D = 0;
-int AVOID_number_of_objects = 0;
-float AVOID_h1,AVOID_h2;
-float AVOID_d;
-float AVOID_safety_angle = 10;
-float AVOID_FOV = 80;
 float TRAJECTORY_X=0;
 float TRAJECTORY_Y=0;
 float TRAJECTORY_SWITCHING_TIME=20;
@@ -55,13 +50,23 @@ int mode=1;
 float dt=0.0011; // up to 1.6 m/s
 // float dt=0.0015; //very fast
 
+int AVOID_number_of_objects = 0;
+float AVOID_h1,AVOID_h2;
+float AVOID_d;
+float AVOID_safety_angle = 10;
+float AVOID_FOV = 80;
 
 void trajectory_init(void)
 {
 }
 
+
+void trajectory_init(void){}
+
 void trajectory_periodic(void)
 {
+
+safety_check_optical_flow(GLOBAL_OF_VECTOR);
 
 nav_set_heading_towards_waypoint(WP_STDBY);
 
@@ -404,3 +409,25 @@ int partition(float array[], int indecis[], int low, int high)
   
   return (i + 1);
 }
+
+
+
+void safety_check_optical_flow(float *AVOID_safety_optical_flow){
+
+
+// for(int i=0; i< 173; i++){
+//   printf("%.6f", *(AVOID_safety_optical_flow+i));
+// }
+
+
+
+// float indices[] = AVOID_safety_optical_flow[];
+
+// float OF_values[] = AVOID_safety_optical_flow[];
+
+// for (i = 0; i < 10; i++) {
+//     sum += array[i];
+// }
+  
+}
+
