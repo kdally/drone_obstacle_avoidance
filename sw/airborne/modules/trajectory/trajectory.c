@@ -348,8 +348,11 @@ if(AVOID_number_of_objects!=0){
 void safety_check_optical_flow(float *AVOID_safety_optical_flow){
 
 
+// for(int i=0; i< 173; i++){
+//   printf("%.6f", *(AVOID_safety_optical_flow+i));
+// }
 
-printf("%.6f", *(AVOID_safety_optical_flow+10));
+
 
 // float indices[] = AVOID_safety_optical_flow[];
 

@@ -70,6 +70,7 @@ float optic_avoid_heading_information[lower_height] = {0};
 float *GLOBAL_OF_VECTOR{ optic_avoid_heading_information };
 
 
+
 void optic_avoid(char *img, int width, int height) {
   // float start = cv::getTickCount();
 
@@ -139,15 +140,14 @@ void optic_avoid(char *img, int width, int height) {
   cv::GaussianBlur(normalised_heading_flow, smoothed_normalised_heading_flow, cv::Size(GB_parameter, GB_parameter), 0);
 
 
-
   // Write to external array
   for (int i = 0; i < lower_height; i++) {
     optic_avoid_heading_information[i] = smoothed_normalised_heading_flow[i];
   }
 
-  // for (int i = 0; i < lower_height; i++) {
-  //   std::cout << "i" << i << " :" << GLOBAL_OF_VECTOR[i] << std::endl;
-  // }
+  for (int i = 0; i < lower_height; i++) {
+    std::cout << "i" << i << " :" << optic_avoid_heading_information[i] << std::endl;
+  }
 
 
 
