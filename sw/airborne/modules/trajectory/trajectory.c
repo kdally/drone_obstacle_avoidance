@@ -56,9 +56,6 @@ float dt=0.0011; // up to 1.6 m/s
 // float dt=0.0015; //very fast
 
 
-
-
-
 void trajectory_init(void)
 {
 }
@@ -67,6 +64,16 @@ void trajectory_periodic(void)
 {
 
 nav_set_heading_towards_waypoint(WP_STDBY);
+
+/*
+//array with the positions
+int indecis[OF_NUMBER_ELEMENTS];
+for(int i=0;i<OF_NUMBER_ELEMENTS;i++){
+    indecis[i]=i;
+}
+//to call sorting uncoment next line
+//quickSort(OF_array,indecis,0,7);
+*/
 
 current_time += dt;
 int r = TRAJECTORY_L/2 - TRAJECTORY_D;   
@@ -354,4 +361,46 @@ float convert_index_to_heading(int index, int N){
 int convert_heading_to_index(float heading, int N){
   int index=(1+sin(heading))/(N-1)*2;
   return index; 
+}
+
+void quickSort(float array[],int indecis[], int low,int high)
+{
+    if (low < high)
+    {
+        /* pi is partitioning index, arr[pi] is now
+           at right place */
+        int pi = partition(array, indecis, low, high);
+
+        quickSort(array, indecis, low, pi - 1);  // Before pi
+        quickSort(array, indecis, pi + 1, high); // After pi
+    }
+    return;
+}
+
+int partition(float array[], int indecis[], int low, int high)
+{
+  int pivot = array[high];
+  int i = (low - 1);
+
+  for (int j = low; j < high; j++)
+  {
+    if (array[j] <= pivot)
+    {
+      i++;
+      float aux=array[i];
+      array[i]=array[j];
+      array[j]=aux;
+      int aux2=indecis[i];
+      indecis[i]=indecis[j];
+      indecis[j]=aux2;
+    }
+  }
+  float aux = array[i+1];
+  array[i+1]=array[high];
+  array[high]=aux;
+  int aux2 = indecis[i+1];
+  indecis[i+1]=indecis[high];
+  indecis[high]=aux2;
+  
+  return (i + 1);
 }
