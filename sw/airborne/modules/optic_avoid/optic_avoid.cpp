@@ -25,6 +25,7 @@
 
 
 #include "optic_avoid.h"
+// #include "modules/trajectory/trajectory.h"
 #include "modules/computer_vision/lib/vision/image.h"
 
 #include <opencv2/core/core.hpp>
@@ -53,14 +54,17 @@ cv::UMat flowUmat; // Temporary variable to store flow
 cv::Mat flow; // Flow Storage
 
 // Find resolution factor changes
-float resolution_step_down = 3.0; // TODO: This needs to be changed to a define setting in xml file
-// TODO: This doesn't have to be done every iteration
-float lower_width = 240./resolution_step_down;
-float lower_height = 520./resolution_step_down;
+const float resolution_step_down = 3.0; // TODO: This needs to be changed to a define setting in xml file
+const int lower_width = (int)(240./resolution_step_down);
+const int lower_height = (int)(520./resolution_step_down);
+
 
 // Create global variable for heading safety
-std::vector<float> normalised_heading_flow ((int)lower_height, 0); // Create std::vecotr of shape (1,lower_height) filled with zeros
+std::vector<float> normalised_heading_flow (lower_height, 0); // Create std::vecotr of shape (1,lower_height) filled with zeros
 std::vector<float> *optic_avoid_heading_pointer = &normalised_heading_flow; // pointer to heading information vector for access from other files
+
+float optic_avoid_heading_information[lower_height] = {0};
+extern "C" float *GLOBAL_OF_VECTOR = optic_avoid_heading_information;
 
 void optic_avoid(char *img, int width, int height) {
   // float start = cv::getTickCount();
@@ -72,7 +76,7 @@ void optic_avoid(char *img, int width, int height) {
   cv::cvtColor(M, im2_optic_avoid_grey, CV_YUV2GRAY_Y422);
 
   // Lower the resolution of the image by a factor (better to keep this integer valued)
-  cv::resize(im2_optic_avoid_grey, im2_optic_avoid_low, cv::Size((int)lower_width, (int)lower_height), 0, 0, 1);
+  cv::resize(im2_optic_avoid_grey, im2_optic_avoid_low, cv::Size((int)lower_width, lower_height), 0, 0, 1);
 
 
 
@@ -89,12 +93,12 @@ void optic_avoid(char *img, int width, int height) {
 
 
   // Sum up flow per row (in vertical direction in normal frame)
-  std::vector<float> sum_flow_row ((int)lower_height, 0); // Vector to store values of the flow
+  std::vector<float> sum_flow_row (lower_height, 0); // Vector to store values of the flow
   float row_total = 0.0; // Temporary variable to hold row flow sum
 
   // Loop through every point in the flow field
   // TODO: Try get the flowatxy declared outside of the loop
-  for (int y = 0; y < (int)lower_height; y++) {
+  for (int y = 0; y < lower_height; y++) {
       for (int x = 0; x < (int)lower_width; x++)
       {
           const cv::Point2f flowatxy = flow.at<cv::Point2f>(y, x); // Extract flow information
@@ -106,7 +110,7 @@ void optic_avoid(char *img, int width, int height) {
 
   // Find maximum of sum_flow_row
   float max_flow_sum{0}; // Initialise maximum to zero
-  for(int i = 0; i < (int)lower_height; i++) {
+  for(int i = 0; i < lower_height; i++) {
     if (sum_flow_row[i] > max_flow_sum)
     {
         max_flow_sum = sum_flow_row[i];
@@ -114,9 +118,20 @@ void optic_avoid(char *img, int width, int height) {
   }
 
   // Create Normalised heading flow vector
-  for(int i = 0; i < (int)lower_height; i++) {
+  for(int i = 0; i < lower_height; i++) {
     normalised_heading_flow[i] = (sum_flow_row[i]/max_flow_sum); // Become percentage from 0 to 1
   }
+
+  // Write to external array
+  for (int i = 0; i < lower_height; i++) {
+    optic_avoid_heading_information[i] = normalised_heading_flow[i];
+  }
+
+  // for (int i = 0; i < lower_height; i++) {
+  //   std::cout << "i" << i << " :" << GLOBAL_OF_VECTOR[i] << std::endl;
+  // }
+
+
 
   // Set previous image to current image for next iteration
   im2_optic_avoid_low.copyTo(im1_optic_avoid_low);
