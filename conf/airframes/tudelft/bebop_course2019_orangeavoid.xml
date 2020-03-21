@@ -90,6 +90,7 @@
       <define name="VIEWVIDEO_QUALITY_FACTOR" value="40"/>
     </module>
     <!-- <module name="optic_avoid"/> -->
+     <module name="trajectory"/>
   </firmware>
 
 
@@ -224,19 +225,19 @@
     <define name="HOVER_KP" value="283"/>
     <define name="HOVER_KD" value="82"/>
     <define name="HOVER_KI" value="20"/>
-    <define name="NOMINAL_HOVER_THROTTLE" value="0.68"/>
+    <define name="NOMINAL_HOVER_THROTTLE" value="0.99"/>
     <define name="ADAPT_THROTTLE_ENABLED" value="TRUE"/>
 
-    <define name="ADAPT_INITIAL_HOVER_THROTTLE" value="0.68" />
+    <define name="ADAPT_INITIAL_HOVER_THROTTLE" value="0.70" />
     <define name="ADAPT_MIN_HOVER_THROTTLE" value="0.55" />
-    <define name="ADAPT_MAX_HOVER_THROTTLE" value="0.82" />
+    <define name="ADAPT_MAX_HOVER_THROTTLE" value="0.99" />
     <!-- <define name="ADAPT_NOISE_FACTOR" value="0.8" /> -->
   </section>
 
   <section name="GUIDANCE_H" prefix="GUIDANCE_H_">
     <!-- Good weather -->
-    <define name="MAX_BANK" value="20" unit="deg"/>
-    <define name="REF_MAX_SPEED" value="1" unit="m/s"/>
+    <define name="MAX_BANK" value="45" unit="deg"/>
+    <define name="REF_MAX_SPEED" value="10" unit="m/s"/>
     <!-- Bad weather -->
     <!-- define name="MAX_BANK" value="32" unit="deg"/ -->
     <define name="PGAIN" value="120"/>
