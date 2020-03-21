@@ -344,3 +344,14 @@ if(AVOID_number_of_objects!=0){
 
   }
 }
+
+float convert_index_to_heading(int index, int N){
+  float heading=2*index/(N-1)-1;  //normalize the index 
+  heading=asin(heading); 
+  return heading; //heading in radians
+}
+
+int convert_heading_to_index(float heading, int N){
+  int index=(1+sin(heading))/(N-1)*2;
+  return index; 
+}

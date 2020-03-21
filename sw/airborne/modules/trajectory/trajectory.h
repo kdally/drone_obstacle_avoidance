@@ -47,5 +47,7 @@ extern void square(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r);
 extern void lace(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r);
 extern void lace_inverted(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r);
 extern void avoidance_straight_path(float AVOID_h1, float AVOID_h2);
+extern float convert_index_to_heading(int index, int N);
+extern int convert_heading_to_index(float heading, int N);
 #endif
 
