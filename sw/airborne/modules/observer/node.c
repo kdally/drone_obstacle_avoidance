@@ -38,7 +38,7 @@ struct image_t *observer_func(struct image_t *img){
   // Copy input image to processed
 
   if (img->type == IMAGE_YUV422) {
-    clock_t begin = clock();
+    // clock_t begin = clock();
     create_img(img, &processed);
 
     // Filter orange
@@ -55,22 +55,22 @@ struct image_t *observer_func(struct image_t *img){
     // }
     // printf("\n");
 
-    // Remove floor (blue and greem)
-    for (uint8_t cf_i = 0; cf_i < n_cf; cf_i++) {
-      color = (n_cf-1) - cf_i;
-      color = true;
+    // // Remove floor (blue and greem)
+    // for (uint8_t cf_i = 0; cf_i < n_cf; cf_i++) {
+    //   color = (n_cf-1) - cf_i;
+    //   color = true;
 
-      image_bgfilt(img, img, bg_cf[cf_i][0], bg_cf[cf_i][1], bg_cf[cf_i][2], 
-                      bg_cf[cf_i][3], bg_cf[cf_i][4], bg_cf[cf_i][5], color);
-    }
+    //   image_bgfilt(img, img, bg_cf[cf_i][0], bg_cf[cf_i][1], bg_cf[cf_i][2], 
+    //                   bg_cf[cf_i][3], bg_cf[cf_i][4], bg_cf[cf_i][5], color);
+    // }
 
     // // call the C++ interface
     // observer((char *) img->buf, img->w, img->h);
 
 
-  clock_t end = clock();
-  double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
-  printf("Time: %lf \n", time_spent);
+  // clock_t end = clock();
+  // double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+  // printf("Time: %lf \n", time_spent);
   }
   return img;
 }
