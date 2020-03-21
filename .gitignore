@@ -197,3 +197,4 @@ tests/results/*
 
 # VSCode
 .vscode/*
+conf/userconf/tudelft/course2019_conf.xml

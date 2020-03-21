@@ -27,30 +27,18 @@
 #ifndef OBSERVER_H
 #define OBSERVER_H
 
+// #include <opencv2/imgproc/imgproc.hpp>
+// #include <opencv2/highgui/highgui.hpp>
+
+// #include "observer_lib.h"
+// #include <stdlib.h>
+// #include <opencv2/core/core.hpp>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-// Define stuff C++ style?
 
 void observer(char *img, int width, int height);
-
-void obs(struct image_t *img);
-
-void initialize_observer();
-
-
-
-
-void colorfilter_f(struct image_t *img);
-
-void filter_color(struct image_t *input, struct image_t *output);
-
-
-
-// struct image_t dest_img;
-
-
-
 
 #ifdef __cplusplus
 }

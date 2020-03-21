@@ -11,13 +11,26 @@
     <define name="OPENCVDEMO_CAMERA" value="front_camera|bottom_camera" description="Video device to use"/>
     <define name="OPENCVDEMO_FPS" value="0" description="The (maximum) frequency to run the calculations at. If zero, it will max out at the camera frame rate"/>
   </doc>
+  <!-- <settings target="ap|nps">
+    <dl_settings>
+      <dl_settings NAME="Color filters">
+        <dl_setting var="blue_y_m" min="0" step="1" max="255" shortname="y_m" param="BLUE_y_m" persistent="true" module="observer"/>
+        <dl_setting var="blue_y_M" min="0" step="1" max="255" shortname="y_M" param="BLUE_y_M" persistent="true" module="observer"/>
+        <dl_setting var="blue_u_m" min="0" step="1" max="255" shortname="u_m" param="BLUE_u_m" persistent="true" module="observer"/>
+        <dl_setting var="blue_u_M" min="0" step="1" max="255" shortname="u_M" param="BLUE_u_M" persistent="true" module="observer"/>
+        <dl_setting var="blue_v_m" min="0" step="1" max="255" shortname="v_m" param="BLUE_v_m" persistent="true" module="observer"/>
+        <dl_setting var="blue_u_M" min="0" step="5" max="255" shortname="v_M" param="BLUE_v_M" persistent="true" module="observer"/>
+      </dl_settings>
+    </dl_settings>
+  </settings> -->
+
   <header>
     <file name="node.h"/>
   </header>
   <init fun="observer_node_init()"/>
   <makefile target="ap">
     <file name="node.c"/>
-    <file name="observer.cpp"/>
+    <!-- <file name="observer.cpp"/>
     <file name="observer_lib.cpp"/>
     <flag name="CXXFLAGS" value="I$(PAPARAZZI_SRC)/sw/ext/opencv_bebop/install_arm/include"/>
     
@@ -34,11 +47,11 @@
 	<flag name="LDFLAGS" value="ldl" />
 	<flag name="LDFLAGS" value="lm" />
 	<flag name="LDFLAGS" value="lpthread" />
-	<flag name="LDFLAGS" value="lrt" />
+	<flag name="LDFLAGS" value="lrt" /> -->
   </makefile>
   <makefile target="nps">
     <file name="node.c"/>
-    <file name="observer.cpp"/>
+    <!-- <file name="observer.cpp"/>
     <file name="observer_lib.cpp"/>
     
     <flag name="CXXFLAGS" value="I$(PAPARAZZI_SRC)/sw/ext/opencv_bebop/install_pc/include"/>
@@ -55,6 +68,6 @@
     <flag name="LDFLAGS" value="ldl"/>
     <flag name="LDFLAGS" value="lm"/>
     <flag name="LDFLAGS" value="lpthread"/>
-    <flag name="LDFLAGS" value="lrt"/>
+    <flag name="LDFLAGS" value="lrt"/> -->
   </makefile>
 </module>

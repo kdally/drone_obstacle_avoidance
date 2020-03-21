@@ -27,6 +27,8 @@ def convolve(image, kernel):
             roi = image[y - pad:y + pad + 1, x - pad:x + pad + 1]
             k = (roi * kernel).sum()
             output[y - pad, x - pad] = k
+
+
             if k > max_k:
                 max_k = k
             if k < min_k:
@@ -58,7 +60,6 @@ path = "//home//alejandro//Downloads//mavlab_pics//94615887.jpg"
 # color_filters = [orange]
 color_filters = [[105, 205, 52, 140, 180, 255], \
                  [0, 150, 0, 100, 0, 100]]
-
 
 color_filters = [[150, 255, 100, 255, 100, 255]]
 

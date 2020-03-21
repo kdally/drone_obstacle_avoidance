@@ -74,23 +74,24 @@
       <define name="VIDEO_CAPTURE_CAMERA" value="front_camera"/>
       <define name="VIDEO_CAPTURE_FPS" value="10"/>
     </module>
-    <module name="cv_detect_color_object">
+    <!-- <module name="cv_detect_color_object">
       <define name="COLOR_OBJECT_DETECTOR_CAMERA1" value="front_camera"/>
       <define name="COLOR_OBJECT_DETECTOR_FPS1" value="0"/>
       <define name="COLOR_OBJECT_DETECTOR_DRAW1" value="1"/>
-    </module>
-    <module name="orange_avoider">
+    </module> -->
+    <!-- <module name="orange_avoider">
       <define name="ORANGE_AVOIDER_VISUAL_DETECTION_ID" value="COLOR_OBJECT_DETECTION1_ID"/>
-    </module>
+    </module> -->
+    <module name="observer"/>
     <module name="video_rtp_stream">
       <define name="VIEWVIDEO_CAMERA" value="front_camera"/>
       <define name="VIEWVIDEO_CAMERA2" value="bottom_camera"/>
       <define name="VIEWVIDEO_DOWNSIZE_FACTOR" value="1"/>
       <define name="VIEWVIDEO_QUALITY_FACTOR" value="40"/>
     </module>
-    <module name="observer"/>
-    <module name="optic_avoid"/>
+    <!-- <module name="optic_avoid"/> -->
   </firmware>
+
 
   <commands>
     <axis name="PITCH" failsafe_value="0"/>
@@ -108,7 +109,7 @@
 
   <section name="MIXING" prefix="MOTOR_MIXING_">
     <define name="TRIM_ROLL" value="0"/>
-    <define name="TRIM_PITCH" value="0"/>
+    <define name="TRIM_PITCH" value="0"/>  
     <define name="TRIM_YAW" value="0"/>
     <define name="TYPE" value="QUAD_X"/>
   </section>
@@ -228,20 +229,21 @@
 
     <define name="ADAPT_INITIAL_HOVER_THROTTLE" value="0.68" />
     <define name="ADAPT_MIN_HOVER_THROTTLE" value="0.55" />
-    <define name="ADAPT_MAX_HOVER_THROTTLE" value="0.72" />
+    <define name="ADAPT_MAX_HOVER_THROTTLE" value="0.82" />
     <!-- <define name="ADAPT_NOISE_FACTOR" value="0.8" /> -->
   </section>
 
   <section name="GUIDANCE_H" prefix="GUIDANCE_H_">
     <!-- Good weather -->
     <define name="MAX_BANK" value="20" unit="deg"/>
-    <define name="REF_MAX_SPEED" value="0.5" unit="m/s"/>
+    <define name="REF_MAX_SPEED" value="1" unit="m/s"/>
     <!-- Bad weather -->
     <!-- define name="MAX_BANK" value="32" unit="deg"/ -->
     <define name="PGAIN" value="120"/>
     <define name="DGAIN" value="230"/>
     <define name="IGAIN" value="40"/>
   </section>
+
 
   <section name="NAVIGATION" prefix="NAV_">
     <define name="CLIMB_VSPEED" value="1.0"/>

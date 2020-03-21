@@ -1,38 +1,48 @@
-/*
- * Copyright (C) C. De Wagter
- *
- * This file is part of paparazzi
- *
- * paparazzi is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2, or (at your option)
- * any later version.
- *
- * paparazzi is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with paparazzi; see the file COPYING.  If not, see
- * <http://www.gnu.org/licenses/>.
- */
-/**
- * @file "modules/computer_vision/cv_opencvdemo.h"
- * @author C. De Wagter
- * opencv
- */
 
 #include "modules/computer_vision/cv.h"
 #include "modules/observer/observer.h"
-#include <stdio.h>
+// #include <stdio.h>
 
 #ifndef OBSERVER_NODE_H
 #define OBSERVER_NODE_H
 
+
+////////////////////////////////////////////////////////////////////////////////
+// DEFINE FUNCTIONS
+
+// Main function
+struct image_t *observer_func(struct image_t *img);
+
+// Image processing functions
+void create_img(struct image_t *input, struct image_t *output);
+void image_orangefilt(struct image_t *input, struct image_t *output, uint8_t y_m, 
+                     uint8_t y_M, uint8_t u_m, uint8_t u_M, uint8_t v_m, 
+                     uint8_t v_M, uint8_t *mask);
+void image_bgfilt(struct image_t *input, struct image_t *output, uint8_t y_m, 
+                     uint8_t y_M, uint8_t u_m, uint8_t u_M, uint8_t v_m, 
+                     uint8_t v_M, bool color);
+void convolve(struct image_t *input, struct image_t *output);
+void image_convolve(struct image_t *input, struct image_t *output);
+void find_poles(struct image_t *input);
+
+// Init function
 extern void observer_node_init(void);
-struct image_t *opencv_func(struct image_t *img);
+
+
+////////////////////////////////////////////////////////////////////////////////
+// DEFINE PARAMETERS
+
+// Output image
+// struct image_t *outimg;
+
+// // Color filters
+// const int n_cf = 2;
+// const int n_cols = 6;
+//                     // y_m  y_M  u_m  u_M  v_m  v_M 
+// const extern uint8_t cf[n_cf][n_cols] = {{0,   255, 0,   255, 0,   255},
+//                                   {100, 255, 100, 255, 100, 255}};
+
+// Other shit
+
 
 #endif
-
-

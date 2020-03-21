@@ -1,35 +1,11 @@
-/*
- * Copyright (C) C. De Wagter
- *
- * This file is part of paparazzi
- *
- * paparazzi is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2, or (at your option)
- * any later version.
- *
- * paparazzi is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with paparazzi; see the file COPYING.  If not, see
- * <http://www.gnu.org/licenses/>.
- */
-/**
- * @file "modules/computer_vision/opencv_example.cpp"
- * @author C. De Wagter
- * A simple module showing what you can do with opencv on the bebop.
- */
-
 
 #include "observer.h"
+#include "observer.hpp"
 #include "modules/computer_vision/lib/vision/image.h"
 
-#include <opencv2/core/core.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/highgui/highgui.hpp>
+// #include <opencv2/core/core.hpp>
+// #include <opencv2/imgproc/imgproc.hpp>
+// #include <opencv2/highgui/highgui.hpp>
 // #include <opencv2/highgui.hpp>
 // #include <opencv2/highgui/highgui_c.h>
 #include "observer_lib.h"
@@ -40,51 +16,30 @@ bool init_obs = false;
 
 void observer(char *img, int width, int height) {
 
-  std::cout << "Observeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeer" << std::endl;
-  std::cout << *img << std::endl;
+  // Create a new image, using the original bebop image.
+  std::cout << "Issue here" << std::endl;
 
-  // for(int i=0; i<sizeof(&img)/sizeof(&img[0]); i++){
-  //   std::cout << &img[i] << std::endl;
-  // }
+  cv::Mat M(height, width, CV_8UC2, img);
 
+  std::cout << "Yes" << std::endl;
+  cv::Mat processed;
+  cv::Mat mask;
 
-  if (!init_obs) {
-    initialize_observer();
-  } else {
-
-    // Create a new image, using the original bebop image.
-    cv::Mat M(height, width, CV_8UC2, img);
-    cv::Mat image;
-
-
-
+  // filter_color(M, processed, mask);
 
   // Color image example
   // Convert the image to an OpenCV Mat
-  cv::cvtColor(M, image, CV_YUV2BGR_Y422);
+  // cv::cvtColor(M, processed, CV_YUV2BGR_Y422);
   // Blur it, because we can
-  cv::blur(image, image, cv::Size(5, 5));
+  // cv::blur(image, image, cv::Size(5, 5));
+
+  std::cout << "Issue here" << std::endl;
   // Convert back to YUV422 and put it in place of the original image
-  colorbgr_opencv_to_yuv422(image, img, width, height);
-  // #endif // OPENCVDEMO_GRAYSCALE
-  }
+  // colorbgr_opencv_to_yuv422(processed, img, width, height);
+  std::cout << "Yes" << std::endl;
 }
 
-void obs(struct image_t *img) {
 
-  std::cout << "TTTTTTTTTTTTTTTTTTTTTTTTTTOOOOOOOOOOOOOOOOOOOOOOO" << std::endl;
-
-  for(int i=0; i<img->buf_size; i++) {
-    std::cout << img->buf << std::cout;
-  }
-}
-
-// Initialize observer functionality
-void initialize_observer() {
-  // cv::namedWindow("named_window", cv::WINDOW_AUTOSIZE);
-  init_obs = true;
-  // cv::destroyAllWindows();
-}
 
 // void colorfilter_f(struct image_t &img){
 
@@ -119,28 +74,55 @@ void initialize_observer() {
 // }
 
 
-// void filter_color(struct image_t &input, 
-//                              struct image_t &output){
+// void filter_color(cv::Mat &input, cv::Mat &output, cv::Mat &msk){
+ 
+//   for (uint8_t cf_i=0; cf_i < n_cf; cf_i++) {
+//     std::cout << " YYYYYYYYYYYYYYYYYYYYYEEEEEEEEEEEEEEEEEEEEEEEE " << std::endl;
+//     // for (int x=0; x<3; x++){
+//     //   std::cout << color_filters[cf_i][0][x] << std::endl;
+//     // }
 
+//     cv::inRange(input, color_filters[cf_i][0], color_filters[cf_i][1], msk);
+//     std::cout << " YYYYYYYYYYYYYYYYYYYYYEEEEEEEEEEEEEEEEEEEEEEEE " << std::endl;
+//     cv::bitwise_and(input, input, output, msk);
+//     std::cout << " YYYYYYYYYYYYYYYYYYYYYEEEEEEEEEEEEEEEEEEEEEEEE " << std::endl;
+//   }
+// }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// void shitty_cf(){
 //   uint16_t cnt = 0;
-//   uint8_t temp = input.;
+//   uint8_t temp = input;
 //   uint8_t *source = (uint8_t *)input->buf;
 //   uint8_t *dest = (uint8_t *)output->buf;
 
 //   // Copy the creation timestamp (stays the same)
 //   output->ts = input->ts;
 
-//   uint8_t n_cf = 2;
-//   uint8_t color_filters[2][6] = {{1,2,3,4,5,6},
-//                                 {1,2,3,4,5,6}};
+//   Go trough all the pixels
 
-//   // Go trough all the pixels
-//   for (uint16_t y = 0; y < output->h; y++) {
-//     for (uint16_t x = 0; x < output->w; x += 2) {
+//   for (uint16_t y = 0; y < input.rows; y++) {
+//     for (uint16_t x = 0; x < input.cols; x ++) {
 //       for (uint8_t cf_i = 0; cf_i < n_cf; cf_i++){
 //         // Check if the color is inside the specified values
 //         if (
-//           (dest[1] >= color_filters[cf_i][0])
+//           (input.at(y, x) >= color_filters[cf_i][0])
 //           && (dest[1] <= color_filters[cf_i][1])
 //           && (dest[0] >= color_filters[cf_i][2])
 //           && (dest[0] <= color_filters[cf_i][3])
@@ -171,7 +153,4 @@ void initialize_observer() {
 //       }
 //     }
 //   }
-// }
-
-// void observer_look() {
 // }
