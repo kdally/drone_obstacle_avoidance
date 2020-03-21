@@ -20,34 +20,17 @@
 /**
  * @file "modules/computer_vision/cv_opencvdemo.h"
  * @author C. De Wagter
- * A simple module showing what you can do with opencv on the bebop.
+ * opencv
  */
 
+#include "modules/computer_vision/cv.h"
+#include "modules/optic_avoid/optic_avoid.h"
+#include <stdio.h>
 
-#ifndef OBSERVER_H
-#define OBSERVER_H
+#ifndef OPTIC_AVOID_NODE_H
+#define OPTIC_AVOID_NODE_H
 
-// #include <opencv2/imgproc/imgproc.hpp>
-// #include <opencv2/highgui/highgui.hpp>
-
-// #include "observer_lib.h"
-// #include <stdlib.h>
-// #include <opencv2/core/core.hpp>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-
-
-void observer(char *img, int width, int height);
-
-
-
-
-#ifdef __cplusplus
-}
-#endif
+extern void optic_avoid_node_init(void);
+struct image_t *optic_avoid_func(struct image_t *img);
 
 #endif
-

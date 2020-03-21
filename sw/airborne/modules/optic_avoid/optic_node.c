@@ -18,36 +18,41 @@
  * <http://www.gnu.org/licenses/>.
  */
 /**
- * @file "modules/computer_vision/cv_opencvdemo.h"
+ * @file "modules/computer_vision/cv_opencvdemo.c"
  * @author C. De Wagter
  * A simple module showing what you can do with opencv on the bebop.
  */
 
+#include "modules/optic_avoid/optic_node.h"
 
-#ifndef OBSERVER_H
-#define OBSERVER_H
-
-// #include <opencv2/imgproc/imgproc.hpp>
-// #include <opencv2/highgui/highgui.hpp>
-
-// #include "observer_lib.h"
-// #include <stdlib.h>
-// #include <opencv2/core/core.hpp>
-
-#ifdef __cplusplus
-extern "C" {
+#ifndef OPENCVDEMO_FPS
+#define OPENCVDEMO_FPS 0       ///< Default FPS (zero means run at camera fps)
 #endif
 
+#ifndef COLORFILTER_CAMERA
+#define COLORFILTER_CAMERA front_camera
+#endif
+
+PRINT_CONFIG_VAR(OPENCVDEMO_FPS)
 
 
-void observer(char *img, int width, int height);
+struct image_t *optic_avoid_func(struct image_t *img){
 
+  if (img->type == IMAGE_YUV422) {
 
+    // call the C++ interface
+    optic_avoid((char *) img->buf, img->w, img->h);
 
+    // obs(img);
+    return img;
+  }
 
-#ifdef __cplusplus
+// opencv_example(NULL, 10,10);
+
+  return NULL;
 }
-#endif
 
-#endif
-
+void optic_avoid_node_init(void)
+{
+  cv_add_to_device(&COLORFILTER_CAMERA, optic_avoid_func, OPENCVDEMO_FPS);
+}
