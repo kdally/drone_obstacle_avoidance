@@ -55,5 +55,6 @@ extern void quickSort(float array[],int indecis[], int low,int high);
 extern int partition(float array[], int indecis[], int low, int high);
 extern void safety_check_optical_flow(float *AVOID_safety_optical_flow);
 extern void safety_check_optical_flow(float *AVOID_safety_optical_flow);
+extern void safety_check_optical_flow(float *AVOID_safety_optical_flow);
 #endif
 

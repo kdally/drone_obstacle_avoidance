@@ -56,10 +56,6 @@ float AVOID_d;
 float AVOID_safety_angle = 10;
 float AVOID_FOV = 80;
 
-void trajectory_init(void)
-{
-}
-
 
 void trajectory_init(void){}
 
@@ -356,6 +352,29 @@ if(AVOID_number_of_objects!=0){
 
   }
 }
+
+
+
+void safety_check_optical_flow(float *AVOID_safety_optical_flow){
+
+
+// for(int i=0; i< 173; i++){
+//   printf("%.6f", *(AVOID_safety_optical_flow+i));
+// }
+
+
+
+// float indices[] = AVOID_safety_optical_flow[];
+
+// float OF_values[] = AVOID_safety_optical_flow[];
+
+// for (i = 0; i < 10; i++) {
+//     sum += array[i];
+// }
+  
+}
+
+
 
 float convert_index_to_heading(int index, int N){
   float heading=2*index/(N-1)-1;  //normalize the index 
