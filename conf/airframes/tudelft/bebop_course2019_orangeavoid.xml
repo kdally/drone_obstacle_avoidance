@@ -9,7 +9,7 @@
     <target name="ap" board="bebop">
       <define name="VIDEO_CAPTURE_PATH" value="/data/ftp/internal_000/images"/>
       <define name="FILE_LOGGER_PATH" value="/data/ftp/internal_000/log"/>
-      
+
       <!-- Detect orange -->
       <define name="COLOR_OBJECT_DETECTOR_LUM_MIN1" value="40"/>
       <define name="COLOR_OBJECT_DETECTOR_LUM_MAX1" value="145"/>
@@ -22,7 +22,7 @@
       <module name="fdm" type="gazebo"/>
       <define name="VIDEO_CAPTURE_PATH" value="/tmp/paparazzi/images"/>
       <define name="FILE_LOGGER_PATH" value="/tmp/paparazzi/log"/>
-      
+
       <!-- Detect orange -->
       <define name="COLOR_OBJECT_DETECTOR_LUM_MIN1" value="41"/>
       <define name="COLOR_OBJECT_DETECTOR_LUM_MAX1" value="183"/>
@@ -31,7 +31,7 @@
       <define name="COLOR_OBJECT_DETECTOR_CR_MIN1" value="134"/>
       <define name="COLOR_OBJECT_DETECTOR_CR_MAX1" value="249"/>
     </target>
-    
+
     <define name="ARRIVED_AT_WAYPOINT" value="0.5"/><!-- Detect arrival at waypoint when within 0.5m -->
 
     <!-- Front Camera parameters -->
@@ -74,21 +74,23 @@
       <define name="VIDEO_CAPTURE_CAMERA" value="front_camera"/>
       <define name="VIDEO_CAPTURE_FPS" value="10"/>
     </module>
-    <module name="cv_detect_color_object">
+    <!-- <module name="cv_detect_color_object">
       <define name="COLOR_OBJECT_DETECTOR_CAMERA1" value="front_camera"/>
       <define name="COLOR_OBJECT_DETECTOR_FPS1" value="0"/>
       <define name="COLOR_OBJECT_DETECTOR_DRAW1" value="1"/>
-    </module>
+    </module> -->
     <!-- <module name="orange_avoider">
       <define name="ORANGE_AVOIDER_VISUAL_DETECTION_ID" value="COLOR_OBJECT_DETECTION1_ID"/>
     </module> -->
+    <module name="observer"/>
     <module name="video_rtp_stream">
       <define name="VIEWVIDEO_CAMERA" value="front_camera"/>
       <define name="VIEWVIDEO_CAMERA2" value="bottom_camera"/>
       <define name="VIEWVIDEO_DOWNSIZE_FACTOR" value="1"/>
       <define name="VIEWVIDEO_QUALITY_FACTOR" value="40"/>
-    </module>
-     <module name="trajectory"/>
+    </module> 
+    <module name="optic_avoid"/>
+    <module name="trajectory"/>
   </firmware>
 
   <commands>

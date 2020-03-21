@@ -195,3 +195,7 @@ tests/results/*
 # K-develop
 *.kate-swp
 
+# VSCode
+.vscode/*
+
+opencv

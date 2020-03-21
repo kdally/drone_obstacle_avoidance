@@ -1,39 +1,23 @@
 <!DOCTYPE module SYSTEM "module.dtd">
 
-<module name="observer" dir="observer">
+<module name="optic_avoid" dir="optic_avoid">
   <doc>
-    <description>This example shows how opencv can be used on (for example) the Bebop drone.
-    Important to know is that sw/ext/opencv_bebop must be downloaded, and made.
-    After this is done the folder sw/ext/opencv_bebop/install has a opencv.xml file.
-    The LDFLAGS in this file should be the same as in this conf file.
+    <description>This is the conf file for the optic avoid node that uses optical flow to determine safest path to fly
     </description>
 
     <define name="OPENCVDEMO_CAMERA" value="front_camera|bottom_camera" description="Video device to use"/>
     <define name="OPENCVDEMO_FPS" value="0" description="The (maximum) frequency to run the calculations at. If zero, it will max out at the camera frame rate"/>
   </doc>
-  <!-- <settings target="ap|nps">
-    <dl_settings>
-      <dl_settings NAME="Color filters">
-        <dl_setting var="blue_y_m" min="0" step="1" max="255" shortname="y_m" param="BLUE_y_m" persistent="true" module="observer"/>
-        <dl_setting var="blue_y_M" min="0" step="1" max="255" shortname="y_M" param="BLUE_y_M" persistent="true" module="observer"/>
-        <dl_setting var="blue_u_m" min="0" step="1" max="255" shortname="u_m" param="BLUE_u_m" persistent="true" module="observer"/>
-        <dl_setting var="blue_u_M" min="0" step="1" max="255" shortname="u_M" param="BLUE_u_M" persistent="true" module="observer"/>
-        <dl_setting var="blue_v_m" min="0" step="1" max="255" shortname="v_m" param="BLUE_v_m" persistent="true" module="observer"/>
-        <dl_setting var="blue_u_M" min="0" step="5" max="255" shortname="v_M" param="BLUE_v_M" persistent="true" module="observer"/>
-      </dl_settings>
-    </dl_settings>
-  </settings> -->
-
   <header>
-    <file name="node.h"/>
+    <file name="optic_node.h"/>
   </header>
-  <init fun="observer_node_init()"/>
+  <init fun="optic_avoid_node_init()"/>
   <makefile target="ap">
-    <file name="node.c"/>
-    <file name="observer.cpp"/>
-    <file name="observer_lib.cpp"/>
+    <file name="optic_node.c"/>
+    <file name="optic_avoid.cpp"/>
+    <!-- <file name="observer_lib.cpp"/> -->
     <flag name="CXXFLAGS" value="I$(PAPARAZZI_SRC)/sw/ext/opencv_bebop/install_arm/include"/>
-    
+
 	<flag name="LDFLAGS" value="L$(PAPARAZZI_HOME)/sw/ext/opencv_bebop/install_arm/lib" />
 	<flag name="LDFLAGS" value="lopencv_world" />
 	<flag name="LDFLAGS" value="L$(PAPARAZZI_HOME)/sw/ext/opencv_bebop/install_arm/share/OpenCV/3rdparty/lib" />
@@ -50,12 +34,12 @@
 	<flag name="LDFLAGS" value="lrt" />
   </makefile>
   <makefile target="nps">
-    <file name="node.c"/>
-    <file name="observer.cpp"/>
-    <file name="observer_lib.cpp"/>
-    
+    <file name="optic_node.c"/>
+    <file name="optic_avoid.cpp"/>
+    <!-- <file name="observer_lib.cpp"/> -->
+
     <flag name="CXXFLAGS" value="I$(PAPARAZZI_SRC)/sw/ext/opencv_bebop/install_pc/include"/>
-    
+
     <flag name="LDFLAGS" value="L$(PAPARAZZI_HOME)/sw/ext/opencv_bebop/install_pc/lib" />
     <flag name="LDFLAGS" value="lopencv_world" />
     <flag name="LDFLAGS" value="L$(PAPARAZZI_HOME)/sw/ext/opencv_bebop/install_pc/share/OpenCV/3rdparty/lib" />
