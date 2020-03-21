@@ -56,18 +56,13 @@ float AVOID_d;
 float AVOID_safety_angle = 10;
 float AVOID_FOV = 80;
 
-//GLOBAL_OF_vector = &AVOID_OF_vector[0];
 
-
-float *GLOBAL_OF_VECTOR = NULL;
-
-
-void trajectory_init(void)
-{
-}
+void trajectory_init(void){}
 
 void trajectory_periodic(void)
 {
+
+safety_check_optical_flow(GLOBAL_OF_VECTOR);
 
 nav_set_heading_towards_waypoint(WP_STDBY);
 
@@ -350,8 +345,11 @@ if(AVOID_number_of_objects!=0){
 
 
 
-void safety_check_optical_flow(float AVOID_safety_optical_flow[]){
+void safety_check_optical_flow(float *AVOID_safety_optical_flow){
 
+
+
+printf("%.6f", *(AVOID_safety_optical_flow+10));
 
 // float indices[] = AVOID_safety_optical_flow[];
 

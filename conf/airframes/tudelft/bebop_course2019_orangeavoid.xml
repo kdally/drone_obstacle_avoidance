@@ -82,7 +82,6 @@
     <!-- <module name="orange_avoider">
       <define name="ORANGE_AVOIDER_VISUAL_DETECTION_ID" value="COLOR_OBJECT_DETECTION1_ID"/>
     </module> -->
-    <module name="trajectory"/>
     <module name="observer"/>
     <module name="video_rtp_stream">
       <define name="VIEWVIDEO_CAMERA" value="front_camera"/>
@@ -91,6 +90,7 @@
       <define name="VIEWVIDEO_QUALITY_FACTOR" value="40"/>
     </module> 
     <module name="optic_avoid"/>
+    <module name="trajectory"/>
   </firmware>
 
   <commands>

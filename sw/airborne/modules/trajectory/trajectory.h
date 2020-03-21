@@ -38,11 +38,7 @@ extern float TRAJECTORY_X;
 extern float TRAJECTORY_Y;
 extern float TRAJECTORY_SWITCHING_TIME;
 
-
-// float AVOID_OF_vector[173] = {0};
 extern float *GLOBAL_OF_VECTOR;
-
-
 
 // functions
 extern void trajectory_init();
@@ -52,6 +48,6 @@ extern void square(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r);
 extern void lace(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r);
 extern void lace_inverted(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r);
 extern void avoidance_straight_path(float AVOID_h1, float AVOID_h2);
-extern void safety_check_optical_flow();
+extern void safety_check_optical_flow(float *AVOID_safety_optical_flow);
 #endif
 
