@@ -323,23 +323,6 @@ void image_convolve(struct image_t *input, struct image_t *output) {
   }
 }
 
-void find_poles(struct image_t *input){
-
-  uint8_t *source = (uint8_t *)input->buf;
-
-  for (uint16_t y = 0; y < input->h; y++){
-    for (uint16_t x = 0; x < input->w; x++){
-
-      // If pixel is white
-      if ( (source[1] >= 100)){
-
-      } else {
-
-      }
-    }
-  }
-}
-
 void observer_node_init(void)
 {
   cv_add_to_device(&COLORFILTER_CAMERA, observer_func, OPENCVDEMO_FPS);
