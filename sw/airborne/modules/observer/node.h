@@ -23,7 +23,7 @@ void image_bgfilt(struct image_t *input, struct image_t *output, uint8_t y_m,
                      uint8_t v_M, bool color);
 void convolve(struct image_t *input, struct image_t *output);
 void image_convolve(struct image_t *input, struct image_t *output);
-void detect_poles(struct image_t *input, uint16_t poles[100][3]);
+void detect_poles(uint16_t *poles);
 
 // Init function
 extern void observer_node_init(void);

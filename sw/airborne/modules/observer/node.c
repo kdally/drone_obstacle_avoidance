@@ -48,7 +48,7 @@ struct image_t *observer_func(struct image_t *img){
     image_orangefilt(img, &processed, orange_cf[0], orange_cf[1], orange_cf[2],
                     orange_cf[3], orange_cf[4], orange_cf[5], &mask);
 
-    detect_poles(&processed, poles);
+    detect_poles(&poles);
 
     // This is just to show the mask
     // for (uint16_t x=0; x<520; x++){
@@ -60,16 +60,13 @@ struct image_t *observer_func(struct image_t *img){
     // printf("\n");
 
     // Remove floor (blue and greem)
-    // for (uint8_t cf_i = 0; cf_i < n_cf; cf_i++) {
-    //   color = (n_cf-1) - cf_i;
-    //   color = true;
+    for (uint8_t cf_i = 0; cf_i < n_cf; cf_i++) {
+      color = (n_cf-1) - cf_i; // if last in the list, turn to grey
+      color = true;
 
-    //   image_bgfilt(&processed, &processed, bg_cf[cf_i][0], bg_cf[cf_i][1], bg_cf[cf_i][2], 
-    //                   bg_cf[cf_i][3], bg_cf[cf_i][4], bg_cf[cf_i][5], color);
-    // }
-
-    // // call the C++ interface
-    // observer((char *) img->buf, img->w, img->h);
+      image_bgfilt(&processed, &processed, bg_cf[cf_i][0], bg_cf[cf_i][1], bg_cf[cf_i][2], 
+                      bg_cf[cf_i][3], bg_cf[cf_i][4], bg_cf[cf_i][5], color);
+    }
 
 
   clock_t end = clock();
@@ -199,7 +196,7 @@ void image_bgfilt(struct image_t *input, struct image_t *output, uint8_t y_m,
   }
 }
 
-void detect_poles(struct image_t *input, uint16_t poles[100][3]){
+void detect_poles(uint16_t *poles){
 
 }
 
