@@ -314,6 +314,7 @@ void lace_inverted(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r)
     *TRAJECTORY_X=*TRAJECTORY_Y;
 
     if (*TRAJECTORY_Y>r){
+
       lace_mode=1;
     }
   }
@@ -428,25 +429,3 @@ int partition(float array[], int indecis[], int low, int high)
   
   return (i + 1);
 }
-
-
-
-void safety_check_optical_flow(float *AVOID_safety_optical_flow){
-
-
-// for(int i=0; i< 173; i++){
-//   printf("%.6f", *(AVOID_safety_optical_flow+i));
-// }
-
-
-
-// float indices[] = AVOID_safety_optical_flow[];
-
-// float OF_values[] = AVOID_safety_optical_flow[];
-
-// for (i = 0; i < 10; i++) {
-//     sum += array[i];
-// }
-  
-}
-
