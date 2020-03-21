@@ -20,8 +20,8 @@ uint8_t orange_cf[6] = {26,  164,  45, 130, 160, 192};
 uint8_t mask[520][240];
 
 // background filter
-uint8_t n_cf = 3;
-uint8_t bg_cf[3][6] = {{26,  164,  74, 112, 173, 192}, {67, 255, 120, 255,  0, 130},  // blue
+uint8_t n_cf = 2;
+uint8_t bg_cf[2][6] = {{67, 255, 120, 255,  0, 130},  // blue
                     {70,   255,   0, 130,   0, 130}}; // green
 
 // kernel
@@ -31,6 +31,9 @@ uint8_t kernel[3][3] = {{0, 1, 0},
                         {0, 1, 0}};
 bool color;
 
+// detected poles (max 100 at a time)
+uint16_t poles[100][3];
+
 struct image_t processed;
 
 struct image_t *observer_func(struct image_t *img){
@@ -38,13 +41,14 @@ struct image_t *observer_func(struct image_t *img){
   // Copy input image to processed
 
   if (img->type == IMAGE_YUV422) {
-    // clock_t begin = clock();
+    clock_t begin = clock();
     create_img(img, &processed);
 
     // Filter orange
     image_orangefilt(img, &processed, orange_cf[0], orange_cf[1], orange_cf[2],
                     orange_cf[3], orange_cf[4], orange_cf[5], &mask);
 
+    detect_poles(&processed, poles);
 
     // This is just to show the mask
     // for (uint16_t x=0; x<520; x++){
@@ -55,12 +59,12 @@ struct image_t *observer_func(struct image_t *img){
     // }
     // printf("\n");
 
-    // // Remove floor (blue and greem)
+    // Remove floor (blue and greem)
     // for (uint8_t cf_i = 0; cf_i < n_cf; cf_i++) {
     //   color = (n_cf-1) - cf_i;
     //   color = true;
 
-    //   image_bgfilt(img, img, bg_cf[cf_i][0], bg_cf[cf_i][1], bg_cf[cf_i][2], 
+    //   image_bgfilt(&processed, &processed, bg_cf[cf_i][0], bg_cf[cf_i][1], bg_cf[cf_i][2], 
     //                   bg_cf[cf_i][3], bg_cf[cf_i][4], bg_cf[cf_i][5], color);
     // }
 
@@ -68,11 +72,11 @@ struct image_t *observer_func(struct image_t *img){
     // observer((char *) img->buf, img->w, img->h);
 
 
-  // clock_t end = clock();
-  // double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
-  // printf("Time: %lf \n", time_spent);
+  clock_t end = clock();
+  double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+  printf("Time: %lf \n", time_spent);
   }
-  return img;
+  return &processed;
 }
 
 void create_img(struct image_t *input, struct image_t *output){
@@ -126,13 +130,17 @@ void image_orangefilt(struct image_t *input, struct image_t *output, uint8_t y_m
         *(mask+x+1+y*(output->w)) = 1;
       } else {
         // UYVY
-        // dest[0] = 128;  // U
+        // dest[0] = 128;  // U // Black
         // dest[1] = 0;    // Y
         // dest[2] = 128;  // V
         // dest[3] = 0;    // Y
-        dest[0] = 128;  // U
+        // dest[0] = 128;       // U // Grayscale
+        // dest[1] = source[1]; // Y
+        // dest[2] = 128;       // V
+        // dest[3] = source[3]; // Y
+        dest[0] = source[0];  // U
         dest[1] = source[1];    // Y
-        dest[2] = 128;  // V
+        dest[2] = source[2];  // V
         dest[3] = source[3];    // Y
         *(mask+x+y*(output->w)) = 0;
         *(mask+x+1+y*(output->w)) = 0;
@@ -191,7 +199,11 @@ void image_bgfilt(struct image_t *input, struct image_t *output, uint8_t y_m,
   }
 }
 
-// Trye number 1 to convolve image
+void detect_poles(struct image_t *input, uint16_t poles[100][3]){
+
+}
+
+// Try number 1 to convolve image
 void convolve(struct image_t *input, struct image_t *output){
 
 
