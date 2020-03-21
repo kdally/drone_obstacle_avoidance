@@ -55,6 +55,9 @@ int mode=1;
 float dt=0.0011; // up to 1.6 m/s
 // float dt=0.0015; //very fast
 
+float AVOID_safety_optical_flow[];
+
+
 
 
 
@@ -343,4 +346,11 @@ if(AVOID_number_of_objects!=0){
   nav_heading = ANGLE_BFP_OF_REAL(new_heading);
 
   }
+}
+
+
+
+void safety_check_opital_flow(){
+
+  
 }

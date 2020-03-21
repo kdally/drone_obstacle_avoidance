@@ -197,3 +197,5 @@ tests/results/*
 
 # VSCode
 .vscode/*
+
+opencv
