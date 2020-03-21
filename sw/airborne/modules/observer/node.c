@@ -15,6 +15,9 @@
 // orange filter            y_m  y_M  u_m  u_M  v_m  v_M
 uint8_t orange_cf[6] = {26,  164,  74, 112, 173, 192};
 
+// orange mask
+uint8_t mask[520][240];
+
 // background filter
 uint8_t n_cf = 3;
 uint8_t bg_cf[3][6] = {{26,  164,  74, 112, 173, 192}, {70, 255, 128, 255,  0, 128},  // blue
@@ -29,44 +32,32 @@ uint8_t kernel[3][3] = {{0, 1, 0},
 bool color;
 
 struct image_t *observer_func(struct image_t *img){
-  // uint8_t cf[3][6] = {{26,  164,  74, 112, 173, 192},  // orange
-  //                     {BLUE_y_m, BLUE_y_M, BLUE_u_m, BLUE_u_M, BLUE_v_m, BLUE_v_M},  // blue?
-  //                     {0,   255,   0, 110,   0, 130}}; // green
-  // printf("The");
-  // struct image_t *outimg;
-  // printf("problem is:");
-  // image_create(outimg, img->w, img->h, img->type);
-  // printf("here\n");
 
   if (img->type == IMAGE_YUV422) {
 
     // Filter orange
     image_orangefilt(img, img, orange_cf[0], orange_cf[1], orange_cf[2],
-                    orange_cf[3], orange_cf[4], orange_cf[5]);
-
-    // printf("Image has: %d rows and %d cols", img->h, img->w);
+                    orange_cf[3], orange_cf[4], orange_cf[5], &mask);
 
 
-    // convolve(img, img);
+    // This is just to show the mask
+    for (uint16_t x=0; x<520; x++){
+      for (uint16_t y=0; y<240; y++){
+        printf("%d",mask[x][y]);
+      }
+      printf("\n");
+    }
+    printf("\n");
 
-    // find_poles(img);    
-
-    // Remove floor (blue and greem)
+    // // Remove floor (blue and greem)
     // for (uint8_t cf_i = 0; cf_i < n_cf; cf_i++) {
     //   color = (n_cf-1) - cf_i;
-    //   // color = true;
 
     //   image_bgfilt(img, img, bg_cf[cf_i][0], bg_cf[cf_i][1], bg_cf[cf_i][2], 
     //                   bg_cf[cf_i][3], bg_cf[cf_i][4], bg_cf[cf_i][5], color);
     // }
 
-    // Convolve the image
-    // convolve
-
-    // Overwrite original image
-    // img = outimg;
-
-    // call the C++ interface
+    // // call the C++ interface
     // observer((char *) img->buf, img->w, img->h);
 
   }
@@ -77,7 +68,7 @@ struct image_t *observer_func(struct image_t *img){
 // Filter orange color and place black on the rest
 void image_orangefilt(struct image_t *input, struct image_t *output, uint8_t y_m, 
                      uint8_t y_M, uint8_t u_m, uint8_t u_M, uint8_t v_m, 
-                     uint8_t v_M) {
+                     uint8_t v_M, uint8_t *mask) {
 
   uint8_t *source = (uint8_t *)input->buf;
   uint8_t *dest = (uint8_t *)output->buf;
@@ -86,8 +77,8 @@ void image_orangefilt(struct image_t *input, struct image_t *output, uint8_t y_m
   output->ts = input->ts;
 
   // Go trough all the pixels
-  for (uint16_t y = 0; y < output->h; y++) {
-    for (uint16_t x = 0; x < output->w; x += 2) {
+  for (uint16_t y = 0; y < output->h; y++) { // horizontal (for every column) 520
+    for (uint16_t x = 0; x < output->w; x += 2) { // vertical (for every pixel in every column) 240
       // Check if the color is inside the specified values
       if ( (source[1] >= y_m)
         && (source[1] <= y_M)
@@ -100,12 +91,16 @@ void image_orangefilt(struct image_t *input, struct image_t *output, uint8_t y_m
         dest[1] = 255;  // Y
         dest[2] = 128;  // V
         dest[3] = 255;  // Y
+        *(mask+x+y*(output->w)) = 1;
+        *(mask+x+1+y*(output->w)) = 1;
       } else {
         // UYVY
         dest[0] = 128;  // U
         dest[1] = 0;    // Y
         dest[2] = 128;  // V
         dest[3] = 0;    // Y
+        *(mask+x+y*(output->w)) = 0;
+        *(mask+x+1+y*(output->w)) = 0;
       }
       // Go to the next 2 pixels
       dest += 4;
