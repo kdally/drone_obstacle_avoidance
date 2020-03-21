@@ -90,7 +90,7 @@
       <define name="VIEWVIDEO_QUALITY_FACTOR" value="40"/>
     </module>
     <module name="optic_avoid"/>
-    <module name="trajectory"/>
+    <!-- <module name="trajectory"/> -->
   </firmware>
 
 
@@ -110,7 +110,7 @@
 
   <section name="MIXING" prefix="MOTOR_MIXING_">
     <define name="TRIM_ROLL" value="0"/>
-    <define name="TRIM_PITCH" value="0"/>
+    <define name="TRIM_PITCH" value="0"/>  
     <define name="TRIM_YAW" value="0"/>
     <define name="TYPE" value="QUAD_X"/>
   </section>
