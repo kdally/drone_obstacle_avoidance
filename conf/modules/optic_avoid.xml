@@ -1,0 +1,57 @@
+<!DOCTYPE module SYSTEM "module.dtd">
+
+<module name="optic_avoid" dir="optic_avoid">
+  <doc>
+    <description>This is the conf file for the optic avoid node that uses optical flow to determine safest path to fly
+    </description>
+
+    <define name="OPENCVDEMO_CAMERA" value="front_camera|bottom_camera" description="Video device to use"/>
+    <define name="OPENCVDEMO_FPS" value="0" description="The (maximum) frequency to run the calculations at. If zero, it will max out at the camera frame rate"/>
+  </doc>
+  <header>
+    <file name="optic_node.h"/>
+  </header>
+  <init fun="optic_avoid_node_init()"/>
+  <makefile target="ap">
+    <file name="optic_node.c"/>
+    <file name="optic_avoid.cpp"/>
+    <!-- <file name="observer_lib.cpp"/> -->
+    <flag name="CXXFLAGS" value="I$(PAPARAZZI_SRC)/sw/ext/opencv_bebop/install_arm/include"/>
+
+	<flag name="LDFLAGS" value="L$(PAPARAZZI_HOME)/sw/ext/opencv_bebop/install_arm/lib" />
+	<flag name="LDFLAGS" value="lopencv_world" />
+	<flag name="LDFLAGS" value="L$(PAPARAZZI_HOME)/sw/ext/opencv_bebop/install_arm/share/OpenCV/3rdparty/lib" />
+	<flag name="LDFLAGS" value="llibprotobuf" />
+	<flag name="LDFLAGS" value="llibjpeg-turbo" />
+	<flag name="LDFLAGS" value="llibpng" />
+	<flag name="LDFLAGS" value="llibtiff" />
+	<flag name="LDFLAGS" value="lzlib" />
+	<flag name="LDFLAGS" value="ltegra_hal" />
+	<flag name="LDFLAGS" value="lquirc" />
+	<flag name="LDFLAGS" value="ldl" />
+	<flag name="LDFLAGS" value="lm" />
+	<flag name="LDFLAGS" value="lpthread" />
+	<flag name="LDFLAGS" value="lrt" />
+  </makefile>
+  <makefile target="nps">
+    <file name="optic_node.c"/>
+    <file name="optic_avoid.cpp"/>
+    <!-- <file name="observer_lib.cpp"/> -->
+
+    <flag name="CXXFLAGS" value="I$(PAPARAZZI_SRC)/sw/ext/opencv_bebop/install_pc/include"/>
+
+    <flag name="LDFLAGS" value="L$(PAPARAZZI_HOME)/sw/ext/opencv_bebop/install_pc/lib" />
+    <flag name="LDFLAGS" value="lopencv_world" />
+    <flag name="LDFLAGS" value="L$(PAPARAZZI_HOME)/sw/ext/opencv_bebop/install_pc/share/OpenCV/3rdparty/lib" />
+    <flag name="LDFLAGS" value="lprotobuf" />
+    <flag name="LDFLAGS" value="ljpeg"/>
+    <flag name="LDFLAGS" value="lpng"/>
+    <flag name="LDFLAGS" value="ltiff"/>
+    <flag name="LDFLAGS" value="ldc1394"/>
+    <flag name="LDFLAGS" value="lz"/>
+    <flag name="LDFLAGS" value="ldl"/>
+    <flag name="LDFLAGS" value="lm"/>
+    <flag name="LDFLAGS" value="lpthread"/>
+    <flag name="LDFLAGS" value="lrt"/>
+  </makefile>
+</module>
