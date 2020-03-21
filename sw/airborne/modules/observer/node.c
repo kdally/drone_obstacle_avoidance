@@ -35,6 +35,7 @@ bool color;
 uint16_t poles[100][3];
 
 struct image_t processed;
+struct image_t convoluted;
 
 struct image_t *observer_func(struct image_t *img){
 
@@ -43,12 +44,16 @@ struct image_t *observer_func(struct image_t *img){
   if (img->type == IMAGE_YUV422) {
     clock_t begin = clock();
     create_img(img, &processed);
+    create_img(img, &convoluted);
 
     // Filter orange
     image_orangefilt(img, &processed, orange_cf[0], orange_cf[1], orange_cf[2],
                     orange_cf[3], orange_cf[4], orange_cf[5], &mask);
 
-    detect_poles(&poles);
+    // detect_poles(&poles);
+    printf("problem \n");
+
+    convolve(&processed, &convoluted);
 
     // This is just to show the mask
     // for (uint16_t x=0; x<520; x++){
@@ -60,20 +65,22 @@ struct image_t *observer_func(struct image_t *img){
     // printf("\n");
 
     // Remove floor (blue and greem)
-    for (uint8_t cf_i = 0; cf_i < n_cf; cf_i++) {
-      color = (n_cf-1) - cf_i; // if last in the list, turn to grey
-      color = true;
+    // for (uint8_t cf_i = 0; cf_i < n_cf; cf_i++) {
+    //   color = (n_cf-1) - cf_i; // if last in the list, turn to grey
+    //   color = true;
 
-      image_bgfilt(&processed, &processed, bg_cf[cf_i][0], bg_cf[cf_i][1], bg_cf[cf_i][2], 
-                      bg_cf[cf_i][3], bg_cf[cf_i][4], bg_cf[cf_i][5], color);
-    }
+    //   image_bgfilt(&processed, &processed, bg_cf[cf_i][0], bg_cf[cf_i][1], bg_cf[cf_i][2], 
+    //                   bg_cf[cf_i][3], bg_cf[cf_i][4], bg_cf[cf_i][5], color);
+    // }
+
+
 
 
   clock_t end = clock();
   double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
   printf("Time: %lf \n", time_spent);
   }
-  return &processed;
+  return &convoluted;
 }
 
 void create_img(struct image_t *input, struct image_t *output){
@@ -127,18 +134,18 @@ void image_orangefilt(struct image_t *input, struct image_t *output, uint8_t y_m
         *(mask+x+1+y*(output->w)) = 1;
       } else {
         // UYVY
-        // dest[0] = 128;  // U // Black
-        // dest[1] = 0;    // Y
-        // dest[2] = 128;  // V
-        // dest[3] = 0;    // Y
+        dest[0] = 128;  // U // Black
+        dest[1] = 0;    // Y
+        dest[2] = 128;  // V
+        dest[3] = 0;    // Y
         // dest[0] = 128;       // U // Grayscale
         // dest[1] = source[1]; // Y
         // dest[2] = 128;       // V
         // dest[3] = source[3]; // Y
-        dest[0] = source[0];  // U
-        dest[1] = source[1];    // Y
-        dest[2] = source[2];  // V
-        dest[3] = source[3];    // Y
+        // dest[0] = source[0];  // U
+        // dest[1] = source[1];    // Y
+        // dest[2] = source[2];  // V
+        // dest[3] = source[3];    // Y
         *(mask+x+y*(output->w)) = 0;
         *(mask+x+1+y*(output->w)) = 0;
       }
@@ -203,57 +210,125 @@ void detect_poles(uint16_t *poles){
 // Try number 1 to convolve image
 void convolve(struct image_t *input, struct image_t *output){
 
+  uint8_t *source = ((uint8_t *)input->buf)+(4*input->w);//+4+4*input->w;
+  uint8_t *dest = ((uint8_t *)output->buf)+(4*input->w);//+4+4*input->w;
 
-  uint8_t *source = ((uint8_t *)input->buf)+4;
-  uint8_t *dest = ((uint8_t *)output->buf)+4;
+  int16_t val1;
+  int16_t val2;
+  int16_t max_k1 = 0;
+  int16_t min_k1 = 32000;
+  int16_t max_k2 = 0;
+  int16_t min_k2 = 32000;
 
-  // for (uint16_t y = k_size/2; y < (input->h-k_size/2); y++) {
-  //   for (uint16_t x = k_size/2; x < (input->w-k_size/2); x += 2) {
+  for (uint16_t y = 1; y < (input->h)-3; y++) { // horizontal (for every column) 520
+    dest += 4;
+    source += 4;
+    for (uint16_t x = 1; x < (input->w)-3; x += 2) { // vertical (for every pixel in every column) 240
+      // val1 = 0;
+      // val2 = 0;
+      // uint8_t val1 = 0;
+      // uint8_t val2 = 0;
+      // for (uint8_t k_y = 0; k_y < k_size; k_y++) {
+      //   for (uint8_t k_x = 0; k_x < k_size; k_x++) {
+      //     // idx = source + (k_x-k_size/2)*4 + (k_y-k_size/2)*4*(output->w)
+      //     val1 += kernel[k_x][k_y] * (source + (k_x-k_size/2)*4 + (k_y-k_size/2)*4*(output->w))[1];
+      //     val2 += kernel[k_x][k_y] * (source + (k_x-k_size/2)*4 + (k_y-k_size/2)*4*(output->w))[3];
+      //   }
+      // }
+      // dest[1] = val1;
+      // dest[3] = val2;
+
+      val1 = (source-4)[1] + (source+4)[1] + (source-(4*input->w))[1] + (source+(4*input->w))[1] - 4*(source[1]);
+      val2 = (source-4)[3] + (source+4)[3] + (source-(4*input->w))[3] + (source+(4*input->w))[3] - 4*(source[3]);
+
+      if (val1 > max_k1) {
+        max_k1 = val1;
+      } if(val1 < min_k1) {
+        min_k1 = val1;
+      } if (val2 > max_k2) {
+        max_k2 = val2;
+      } if (val2 < min_k2) {
+        min_k2 = val2;
+      }
+
+      dest[1] = (val1);
+      dest[3] = (val2);
+
+      // printf("%d \t", (source-4*input->w)[1]);
+      // printf("%d \t", val1);
+
+      //   *(mask+x+y*(output->w)) = 1;
+      //   *(mask+x+1+y*(output->w)) = 1;
+
+      // dest[1] = (source-4)[1] + (source+4)[1] + (source-4*input->w)[1] + (source+4*input->w)[1] - 4*(source[1]);
+      // dest[3] = (source-4)[3] + (source+4)[3] + (source-4*input->w)[3] + (source+4*input->w)[3] - 4*(source[3]);
+  
+      dest += 4;
+      source += 4;
+    }
+    // printf("\n");
+    dest += 4;
+    source += 4;
+  }
+
+  printf("Max k_1: %d\n", max_k1);
+  printf("Min k_1: %d\n", min_k1);
+
+  dest = ((uint8_t *)output->buf)+(4*input->w);
+
+  for (uint16_t y = 1; y < (input->h)-3; y++) { // horizontal (for every column) 520
+    dest += 4;
+    source += 4;
+    for (uint16_t x = 1; x < (input->w)-3; x += 2) { // vertical (for every pixel in every column) 240
+      // dest[1] = (dest[1]-min_k1) * 255 / (max_k1-min_k1);
+      // dest[3] = (dest[3]-min_k2) * 255 / (max_k2-min_k2);
+
+      printf("%d \t", dest[1]);
+      dest += 4;
+      source += 4;
+    }
+    printf("\n");
+    dest += 4;
+    source += 4;
+  }
+  printf("\n");
+
+
+
+
+  // for (uint16_t y = 1; y < (input->h)-1; y++) {
+  //   for (uint16_t x = 1; x < (input->w)-1; x += 2) {
   //     // uint8_t val = 0;
   //     // for (uint8_t k_i = 0; k_i < k_size; k_i++) {
   //     //   val += kernel[k_i]
   //     // }
+  //     printf("issue");
+  //     // dest[1] = 255*y/(input->h);
 
-  //     dest[1] = (source-4)[1] + (source+4)[1] + (source-4*input->w)[1] + (source+4*input->w)[1] - 4*(source[1]);
-  //     dest[3] = (source-4)[3] + (source+4)[3] + (source-4*input->w)[3] + (source+4*input->w)[3] - 4*(source[3]);
+  //     // bool condition = ((dest-4)[1] != (dest+4)[1]);
+  //     bool condition = true;
+
+  //     if (condition) {
+  //       dest[1] = 255;
+  //       dest[3] = 255;
+  //     } else {
+  //       dest[1] = 0;
+  //       dest[3] = 0;
+  //     }
+
+  //     printf("here\n");
+  //     // dest[1] = ((source-4)[1] - (source+4)[1]) * ((source-4)[1] - (source+4)[1]);
+  //     // dest[3] = ((source-4)[3] - (source+4)[3]) * ((source-4)[3] - (source+4)[3]);
+
+  //     // dest[1] = abs((source-4)[1] - (source+4)[1]);
+  //     // dest[3] = abs((source-4)[3] - (source+4)[3]);
 
   //     dest += 4;
   //     source += 4;
   //   }
+  //   dest += 8;
+  //   source += 8;
   // }
-  for (uint16_t y = 0; y < input->h; y++) {
-    for (uint16_t x = 1; x < input->w-1; x += 2) {
-      // uint8_t val = 0;
-      // for (uint8_t k_i = 0; k_i < k_size; k_i++) {
-      //   val += kernel[k_i]
-      // }
-      printf("issue");
-      // dest[1] = 255*y/(input->h);
-
-      // bool condition = ((dest-4)[1] != (dest+4)[1]);
-      bool condition = true;
-
-      if (condition) {
-        dest[1] = 255;
-        dest[3] = 255;
-      } else {
-        dest[1] = 0;
-        dest[3] = 0;
-      }
-
-      printf("here\n");
-      // dest[1] = ((source-4)[1] - (source+4)[1]) * ((source-4)[1] - (source+4)[1]);
-      // dest[3] = ((source-4)[3] - (source+4)[3]) * ((source-4)[3] - (source+4)[3]);
-
-      // dest[1] = abs((source-4)[1] - (source+4)[1]);
-      // dest[3] = abs((source-4)[3] - (source+4)[3]);
-
-      dest += 4;
-      source += 4;
-    }
-    dest += 8;
-    source += 8;
-  }
 }
 
 void image_convolve(struct image_t *input, struct image_t *output) {
