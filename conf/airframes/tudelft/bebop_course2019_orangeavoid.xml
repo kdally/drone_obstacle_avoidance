@@ -9,7 +9,7 @@
     <target name="ap" board="bebop">
       <define name="VIDEO_CAPTURE_PATH" value="/data/ftp/internal_000/images"/>
       <define name="FILE_LOGGER_PATH" value="/data/ftp/internal_000/log"/>
-      
+
       <!-- Detect orange -->
       <define name="COLOR_OBJECT_DETECTOR_LUM_MIN1" value="40"/>
       <define name="COLOR_OBJECT_DETECTOR_LUM_MAX1" value="145"/>
@@ -22,7 +22,7 @@
       <module name="fdm" type="gazebo"/>
       <define name="VIDEO_CAPTURE_PATH" value="/tmp/paparazzi/images"/>
       <define name="FILE_LOGGER_PATH" value="/tmp/paparazzi/log"/>
-      
+
       <!-- Detect orange -->
       <define name="COLOR_OBJECT_DETECTOR_LUM_MIN1" value="41"/>
       <define name="COLOR_OBJECT_DETECTOR_LUM_MAX1" value="183"/>
@@ -31,7 +31,7 @@
       <define name="COLOR_OBJECT_DETECTOR_CR_MIN1" value="134"/>
       <define name="COLOR_OBJECT_DETECTOR_CR_MAX1" value="249"/>
     </target>
-    
+
     <define name="ARRIVED_AT_WAYPOINT" value="0.5"/><!-- Detect arrival at waypoint when within 0.5m -->
 
     <!-- Front Camera parameters -->
@@ -90,6 +90,8 @@
       <define name="VIEWVIDEO_QUALITY_FACTOR" value="40"/>
     </module>
   </firmware> 
+    <module name="optic_avoid"/>
+  </firmware>
 
   <commands>
     <axis name="PITCH" failsafe_value="0"/>
