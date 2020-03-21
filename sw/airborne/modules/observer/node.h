@@ -14,6 +14,7 @@
 struct image_t *observer_func(struct image_t *img);
 
 // Image processing functions
+void create_img(struct image_t *input, struct image_t *output);
 void image_orangefilt(struct image_t *input, struct image_t *output, uint8_t y_m, 
                      uint8_t y_M, uint8_t u_m, uint8_t u_M, uint8_t v_m, 
                      uint8_t v_M, uint8_t *mask);

@@ -90,8 +90,10 @@
       <define name="VIEWVIDEO_QUALITY_FACTOR" value="40"/>
     </module>
     <module name="optic_avoid"/>
+    <module name="trajectory"/>
   </firmware>
-  
+
+
   <commands>
     <axis name="PITCH" failsafe_value="0"/>
     <axis name="ROLL" failsafe_value="0"/>
@@ -228,20 +230,21 @@
 
     <define name="ADAPT_INITIAL_HOVER_THROTTLE" value="0.68" />
     <define name="ADAPT_MIN_HOVER_THROTTLE" value="0.55" />
-    <define name="ADAPT_MAX_HOVER_THROTTLE" value="0.72" />
+    <define name="ADAPT_MAX_HOVER_THROTTLE" value="0.82" />
     <!-- <define name="ADAPT_NOISE_FACTOR" value="0.8" /> -->
   </section>
 
   <section name="GUIDANCE_H" prefix="GUIDANCE_H_">
     <!-- Good weather -->
     <define name="MAX_BANK" value="20" unit="deg"/>
-    <define name="REF_MAX_SPEED" value="0.5" unit="m/s"/>
+    <define name="REF_MAX_SPEED" value="1" unit="m/s"/>
     <!-- Bad weather -->
     <!-- define name="MAX_BANK" value="32" unit="deg"/ -->
     <define name="PGAIN" value="120"/>
     <define name="DGAIN" value="230"/>
     <define name="IGAIN" value="40"/>
   </section>
+
 
   <section name="NAVIGATION" prefix="NAV_">
     <define name="CLIMB_VSPEED" value="1.0"/>
