@@ -431,3 +431,39 @@ int partition(float array[], int indecis[], int low, int high)
   
   return (i + 1);
 }
+/*
+float safe_heading(float array_of[]){
+  //returns the safest heading according to OF values
+  //the saffest heading is the middle value of the i-th partition with span of "angular_span"
+  float angular_span=10* M_PI/180;
+  int number_of_partitions=M_PI/angular_span;
+  float partition_OF[number_of_partitions];
+
+  float h2=angular_span;
+  float h1=0;
+  int i1,i2;
+  i2=convert_heading_to_index(h2, OF_NUMBER_ELEMENTS);
+
+  for (int i = 0; i < number_of_partitions; i++){
+    i1=convert_heading_to_index(h1, OF_NUMBER_ELEMENTS);
+
+    //average of OF in the i-th span
+    for (int j=i1; j <= i2; j++){   
+      partition_OF[i]+=array_of[j];
+    }
+    partition_OF[i]=partition_OF[i]/(i2-i1+1);
+    
+    h2=h1;
+    i2=i1;
+    h1+=angular_span;
+  }
+
+  int indexis[number_of_partitions];
+  for(int i=0;i<OF_NUMBER_ELEMENTS;i++){
+    indexis[i]=i;
+  }
+  quickSort(partition_OF,indexis,0,number_of_partitions);
+  float safest_heading=(indexis[0]+0.5)*angular_span; //partition with lowest OF average
+}
+*/
+
