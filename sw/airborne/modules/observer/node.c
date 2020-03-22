@@ -1,6 +1,7 @@
 
 #include "modules/observer/node.h"
 #include <stdio.h>
+#include <time.h>
 
 
 #ifndef OPENCVDEMO_FPS
@@ -48,14 +49,6 @@ struct image_t convoluted;
 
 // MAIN FUNCTION
 struct image_t *observer_func(struct image_t *img){
-  // uint8_t cf[3][6] = {{26,  164,  74, 112, 173, 192},  // orange
-  //                     {BLUE_y_m, BLUE_y_M, BLUE_u_m, BLUE_u_M, BLUE_v_m, BLUE_v_M},  // blue?
-  //                     {0,   255,   0, 110,   0, 130}}; // green
-  // printf("The");
-  // struct image_t *outimg;
-  // printf("problem is:");
-  // image_create(outimg, img->w, img->h, img->type);
-  // printf("here\n");
 
   if (img->type == IMAGE_YUV422) {
 
@@ -101,8 +94,6 @@ struct image_t *observer_func(struct image_t *img){
     // }
     // printf("\n");
 
-    // find_poles(img);    
-
     // Remove floor (blue and greem)
     // for (uint8_t cf_i = 0; cf_i < n_cf; cf_i++) {
     //   color = (n_cf-1) - cf_i; // if last in the list, turn to grey
@@ -113,8 +104,6 @@ struct image_t *observer_func(struct image_t *img){
     // }
     // convolve(&processed, &convoluted);
 
-    // Convolve the image
-    // convolve
 
   clock_t end = clock();
   double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
@@ -124,11 +113,31 @@ struct image_t *observer_func(struct image_t *img){
   // return img;
 }
 
+void create_img(struct image_t *input, struct image_t *output){
+  // Set the variables
+  output->type = input->type;
+  output->w = input->w;
+  output->h = input->h;
+
+  // Depending on the type the size differs
+  if (output->type == IMAGE_YUV422) {
+    output->buf_size = sizeof(uint8_t) * 2 * input->w * input->h;
+  } else if (output->type == IMAGE_JPEG) {
+    output->buf_size = sizeof(uint8_t) * 2 * input->w * input->h;  // At maximum quality this is enough
+  } else if (output->type == IMAGE_GRADIENT) {
+    output->buf_size = sizeof(int16_t) * input->w * input->h;
+  } else {
+    output->buf_size = sizeof(uint8_t) * input->w * input->h;
+  }
+
+  output->buf = malloc(input->buf_size);
+}
+
 
 // Filter orange color and place black on the rest
 void image_orangefilt(struct image_t *input, struct image_t *output1, struct image_t *output2, uint8_t y_m, 
                      uint8_t y_M, uint8_t u_m, uint8_t u_M, uint8_t v_m, 
-                     uint8_t v_M) {
+                     uint8_t v_M, uint8_t *mask) {
 
   uint8_t *source = (uint8_t *)input->buf;
   uint8_t *dest1 = (uint8_t *)output1->buf;
@@ -239,12 +248,12 @@ void image_bgfilt(struct image_t *input, struct image_t *output, uint8_t y_m,
   }
 }
 
-// Trye number 1 to convolve image
+void detect_poles(uint16_t *poles){
+
+}
+
+// Try number 1 to convolve image
 void convolve(struct image_t *input, struct image_t *output){
-
-
-  uint8_t *source = ((uint8_t *)input->buf)+4;
-  uint8_t *dest = ((uint8_t *)output->buf)+4;
 
   uint8_t *source = ((uint8_t *)input->buf)+(4*input->w);
   uint8_t *dest = ((uint8_t *)output->buf)+(4*output->w);
@@ -266,8 +275,8 @@ void convolve(struct image_t *input, struct image_t *output){
       //     val2 += kernel[k_x][k_y] * (source + (k_x-k_size/2)*4 + (k_y-k_size/2)*4*(output->w))[3];
       //   }
       // }
-      printf("issue");
-      // dest[1] = 255*y/(input->h);
+      // dest[1] = val1;
+      // dest[3] = val2;
 
       // val1 = (source-(4*input->w))[1] + (source+(4*input->w))[1] - 2*(source[1]);
       // val3 = (source-(4*input->w))[3] + (source+(4*input->w))[3] - 4*(source[3]);
@@ -292,8 +301,9 @@ void convolve(struct image_t *input, struct image_t *output){
       dest += 4;
       source += 4;
     }
-    dest += 8;
-    source += 8;
+    // printf("\n");
+    dest += 4;
+    source += 4;
   }
 
   source = ((uint8_t *)input->buf)+(4*input->w);
@@ -532,23 +542,6 @@ void image_convolve(struct image_t *input, struct image_t *output) {
         // Go to the next 2 pixels
         dest += 4;
         source += 4;
-      }
-    }
-  }
-}
-
-void find_poles(struct image_t *input){
-
-  uint8_t *source = (uint8_t *)input->buf;
-
-  for (uint16_t y = 0; y < input->h; y++){
-    for (uint16_t x = 0; x < input->w; x++){
-
-      // If pixel is white
-      if ( (source[1] >= 100)){
-
-      } else {
-
       }
     }
   }

@@ -38,12 +38,7 @@
 extern "C" {
 #endif
 
-
-
 void observer(char *img, int width, int height);
-
-
-
 
 #ifdef __cplusplus
 }

@@ -88,10 +88,11 @@
       <define name="VIEWVIDEO_CAMERA2" value="bottom_camera"/>
       <define name="VIEWVIDEO_DOWNSIZE_FACTOR" value="1"/>
       <define name="VIEWVIDEO_QUALITY_FACTOR" value="40"/>
-    </module> 
+    </module>
     <module name="optic_avoid"/>
     <module name="trajectory"/>
   </firmware>
+
 
   <commands>
     <axis name="PITCH" failsafe_value="0"/>
@@ -243,6 +244,7 @@
     <define name="DGAIN" value="230"/>
     <define name="IGAIN" value="40"/>
   </section>
+
 
   <section name="NAVIGATION" prefix="NAV_">
     <define name="CLIMB_VSPEED" value="1.0"/>
