@@ -146,7 +146,7 @@ void optic_avoid(char *img, int width, int height) {
   }
 
   for (int i = 0; i < lower_height; i++) {
-    std::cout << "i" << i << " :" << optic_avoid_heading_information[i] << std::endl;
+    std::cout << "i" << i << " :" << GLOBAL_OF_VECTOR[i] << std::endl;
   }
 
 

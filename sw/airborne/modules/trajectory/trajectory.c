@@ -73,7 +73,7 @@ for(int i=0;i<OF_NUMBER_ELEMENTS;i++){
     indecis[i]=i;
 }
 //to call sorting uncoment next line
-//quickSort(OF_array,indecis,0,7);
+//quickSort(OF_array,indecis,0,OF_NUMBER_ELEMENTS-1);
 */
 
 current_time += dt;
@@ -137,6 +137,8 @@ float x_rotated=TRAJECTORY_X*0.5+TRAJECTORY_Y*0.866025;
 float y_rotated=-TRAJECTORY_X*0.866025+TRAJECTORY_Y*0.5;
 
 waypoint_set_xy_i(WP_STDBY,x_rotated,y_rotated);
+
+float *GLOBAL_OF_VECTOR = NULL;
 
 }
 
@@ -347,7 +349,7 @@ if(AVOID_number_of_objects!=0){
     }
   }
 
-  float new_heading = stateGetNedToBodyEulers_f()->psi + RadOfDeg(heading_increment); 
+  float new_heading = stateGetNedToBodyEulers_f()->psi + RadOfDeg(heading_increment); // Check thaatRadOfDeg works with Floats
   FLOAT_ANGLE_NORMALIZE(new_heading);
   nav_heading = ANGLE_BFP_OF_REAL(new_heading);
 
