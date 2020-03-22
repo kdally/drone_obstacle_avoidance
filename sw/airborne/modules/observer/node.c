@@ -40,7 +40,7 @@ bool color;
 
 // detected poles (max 100 at a time) -> (left_px, right_px, distance)
 uint16_t poles[100][3];
-//int *GLOBAL_OBJECTS_VECTOR{ poles};
+uint16_t *GLOBAL_OBJECTS_VECTOR = poles;
 
 struct image_t processed;
 struct image_t orange_mask;

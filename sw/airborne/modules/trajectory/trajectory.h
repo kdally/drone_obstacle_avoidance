@@ -27,8 +27,10 @@
 #define TRAJECTORY_H
 #define OF_NUMBER_ELEMENTS 173
 #ifndef M_PI
-#    define M_PI 3.14159265358979323846
+#define M_PI 3.14159265358979323846
 #endif
+
+#include "modules/computer_vision/cv.h"
 
 
 // settings
@@ -43,7 +45,7 @@ extern float TRAJECTORY_Y;
 extern float TRAJECTORY_SWITCHING_TIME;
 
 extern float *GLOBAL_OF_VECTOR;
-extern int *GLOBAL_OBJECTS_VECTOR;
+extern uint16_t *GLOBAL_OBJECTS_VECTOR;
 
 // functions
 extern void trajectory_init();

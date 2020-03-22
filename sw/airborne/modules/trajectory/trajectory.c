@@ -27,6 +27,7 @@
 #include "generated/flight_plan.h"
 #include "firmwares/rotorcraft/navigation.h"
 
+
 enum trajectory_mode_t {
   CIRCLE,
   SQUARE,
@@ -62,9 +63,21 @@ void trajectory_init(void){}
 void trajectory_periodic(void)
 {
 
-safety_check_optical_flow(GLOBAL_OF_VECTOR);
-
+// Set heading according to previous goal
 nav_set_heading_towards_waypoint(WP_STDBY);
+
+// Count number of objects
+AVOID_number_of_objects = 0;
+
+
+// for(int i=0; i< 10; i++){
+//   printf("%.f", GLOBAL_OBJECTS_VECTOR[i]);
+// }
+
+
+  // safety_check_optical_flow(&GLOBAL_OF_VECTOR);
+
+
 
 /*
 //array with the positions
@@ -136,8 +149,14 @@ switch (trajectory_mode){
 float x_rotated=TRAJECTORY_X*0.5+TRAJECTORY_Y*0.866025;
 float y_rotated=-TRAJECTORY_X*0.866025+TRAJECTORY_Y*0.5;
 
+
+// Check that new goal is within a safe heading
+safety_check_optical_flow(&GLOBAL_OF_VECTOR);
+
+// Define next goal
 waypoint_set_xy_i(WP_STDBY,x_rotated,y_rotated);
 
+// Deallocate
 float *GLOBAL_OF_VECTOR = NULL;
 
 }
@@ -362,7 +381,8 @@ void safety_check_optical_flow(float *AVOID_safety_optical_flow){
 
 
 // for(int i=0; i< 173; i++){
-//   printf("%.6f", *(AVOID_safety_optical_flow+i));
+//   printf("%.f", AVOID_safety_optical_flow[i]);
+//   printf("\n");
 // }
 
 
