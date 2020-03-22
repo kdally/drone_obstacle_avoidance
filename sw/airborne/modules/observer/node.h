@@ -15,15 +15,18 @@ struct image_t *observer_func(struct image_t *img);
 
 // Image processing functions
 void create_img(struct image_t *input, struct image_t *output);
-void image_orangefilt(struct image_t *input, struct image_t *output, uint8_t y_m, 
-                     uint8_t y_M, uint8_t u_m, uint8_t u_M, uint8_t v_m, 
-                     uint8_t v_M, uint8_t *mask);
+void image_orangefilt(struct image_t *input, struct image_t *output1, 
+                      struct image_t *output2, uint8_t y_m, 
+                      uint8_t y_M, uint8_t u_m, uint8_t u_M, 
+                      uint8_t v_m, uint8_t v_M, uint8_t *mask);
 void image_bgfilt(struct image_t *input, struct image_t *output, uint8_t y_m, 
-                     uint8_t y_M, uint8_t u_m, uint8_t u_M, uint8_t v_m, 
-                     uint8_t v_M, bool color);
+                  uint8_t y_M, uint8_t u_m, uint8_t u_M, uint8_t v_m, 
+                  uint8_t v_M, bool color);
 void convolve(struct image_t *input, struct image_t *output);
 void image_convolve(struct image_t *input, struct image_t *output);
 void detect_poles(uint16_t *poles);
+void look4poles(uint8_t idx);
+void look4polesg(struct image_t *input);
 
 // Init function
 extern void observer_node_init(void);
