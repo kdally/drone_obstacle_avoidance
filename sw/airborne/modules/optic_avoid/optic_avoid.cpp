@@ -142,12 +142,7 @@ void optic_avoid(char *img, int width, int height) {
 
   // Write to external array after doing final thresholding
   for (int i = 0; i < lower_height; i++) {
-    if(smoothed_normalised_heading_flow[i] > goTo_threshold){
-      optic_avoid_heading_information[i] = smoothed_normalised_heading_flow[i];
-    }
-    else {
-      optic_avoid_heading_information[i] = 0.0;
-    }
+    std::cout << "i" << i << " :" << GLOBAL_OF_VECTOR[i] << std::endl;
   }
 
   // for (int i = 0; i < lower_height; i++) {

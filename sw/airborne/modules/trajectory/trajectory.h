@@ -38,6 +38,8 @@ extern float TRAJECTORY_X;
 extern float TRAJECTORY_Y;
 extern float TRAJECTORY_SWITCHING_TIME;
 
+extern float *GLOBAL_OF_VECTOR;
+extern float *GLOBAL_OBJECTS_VECTOR;
 
 // functions
 extern void trajectory_init();
