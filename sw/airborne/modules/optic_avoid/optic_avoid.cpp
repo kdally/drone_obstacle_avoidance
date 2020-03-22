@@ -60,6 +60,7 @@ const int lower_width = (int)(240./resolution_step_down);
 const int lower_height = (int)(520./resolution_step_down);
 // Blurring
 const int GB_parameter = 33;
+const float goTo_threshold = 0.1;
 
 
 // Create global variable for heading safety
@@ -67,7 +68,7 @@ std::vector<float> normalised_heading_flow (lower_height, 0); // Create std::vec
 std::vector<float> smoothed_normalised_heading_flow (lower_height, 0); // Create std::vecotr of shape (1,lower_height) filled with zeros
 
 float optic_avoid_heading_information[lower_height] = {0};
-extern "C" float *GLOBAL_OF_VECTOR = optic_avoid_heading_information;
+extern "C" float *GLOBAL_OF_VECTOR{optic_avoid_heading_information};
 
 void optic_avoid(char *img, int width, int height) {
   // float start = cv::getTickCount();
@@ -139,9 +140,14 @@ void optic_avoid(char *img, int width, int height) {
 
 
 
-  // Write to external array
+  // Write to external array after doing final thresholding
   for (int i = 0; i < lower_height; i++) {
-    optic_avoid_heading_information[i] = smoothed_normalised_heading_flow[i];
+    if(smoothed_normalised_heading_flow[i] > goTo_threshold){
+      optic_avoid_heading_information[i] = smoothed_normalised_heading_flow[i];
+    }
+    else {
+      optic_avoid_heading_information[i] = 0.0;
+    }
   }
 
   // for (int i = 0; i < lower_height; i++) {
