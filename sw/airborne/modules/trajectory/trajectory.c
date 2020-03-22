@@ -38,11 +38,6 @@ enum trajectory_mode_t trajectory_mode = CIRCLE;
 int TRAJECTORY_L = 1750; //for a dt f 0.0011, razor thin margins
 // int TRAJECTORY_L = 1550; //for a dt f 0.0004
 int TRAJECTORY_D = 0;
-int AVOID_number_of_objects = 0;
-float AVOID_h1,AVOID_h2;
-float AVOID_d;
-float AVOID_safety_angle = 10;
-float AVOID_FOV = 80;
 float TRAJECTORY_X=0;
 float TRAJECTORY_Y=0;
 float TRAJECTORY_SWITCHING_TIME=20;
@@ -55,16 +50,19 @@ int mode=1;
 float dt=0.0011; // up to 1.6 m/s
 // float dt=0.0015; //very fast
 
+int AVOID_number_of_objects = 0;
+float AVOID_h1,AVOID_h2;
+float AVOID_d;
+float AVOID_safety_angle = 10;
+float AVOID_FOV = 80;
 
 
-
-
-void trajectory_init(void)
-{
-}
+void trajectory_init(void){}
 
 void trajectory_periodic(void)
 {
+
+safety_check_optical_flow(GLOBAL_OF_VECTOR);
 
 nav_set_heading_towards_waypoint(WP_STDBY);
 
@@ -318,6 +316,7 @@ void lace_inverted(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r)
     *TRAJECTORY_X=*TRAJECTORY_Y;
 
     if (*TRAJECTORY_Y>r){
+
       lace_mode=1;
     }
   }
@@ -355,4 +354,80 @@ if(AVOID_number_of_objects!=0){
   nav_heading = ANGLE_BFP_OF_REAL(new_heading);
 
   }
+}
+
+
+
+void safety_check_optical_flow(float *AVOID_safety_optical_flow){
+
+
+// for(int i=0; i< 173; i++){
+//   printf("%.6f", *(AVOID_safety_optical_flow+i));
+// }
+
+
+
+// float indices[] = AVOID_safety_optical_flow[];
+
+// float OF_values[] = AVOID_safety_optical_flow[];
+
+// for (i = 0; i < 10; i++) {
+//     sum += array[i];
+// }
+  
+}
+
+
+
+float convert_index_to_heading(int index, int N){
+  float heading=2*index/(N-1)-1;  //normalize the index 
+  heading=asin(heading); 
+  return heading; //heading in radians
+}
+
+int convert_heading_to_index(float heading, int N){
+  int index=(1+sin(heading))/(N-1)*2;
+  return index; 
+}
+
+void quickSort(float array[],int indecis[], int low,int high)
+{
+    if (low < high)
+    {
+        /* pi is partitioning index, arr[pi] is now
+           at right place */
+        int pi = partition(array, indecis, low, high);
+
+        quickSort(array, indecis, low, pi - 1);  // Before pi
+        quickSort(array, indecis, pi + 1, high); // After pi
+    }
+    return;
+}
+
+int partition(float array[], int indecis[], int low, int high)
+{
+  int pivot = array[high];
+  int i = (low - 1);
+
+  for (int j = low; j < high; j++)
+  {
+    if (array[j] <= pivot)
+    {
+      i++;
+      float aux=array[i];
+      array[i]=array[j];
+      array[j]=aux;
+      int aux2=indecis[i];
+      indecis[i]=indecis[j];
+      indecis[j]=aux2;
+    }
+  }
+  float aux = array[i+1];
+  array[i+1]=array[high];
+  array[high]=aux;
+  int aux2 = indecis[i+1];
+  indecis[i+1]=indecis[high];
+  indecis[high]=aux2;
+  
+  return (i + 1);
 }

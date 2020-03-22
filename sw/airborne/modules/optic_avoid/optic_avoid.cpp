@@ -25,7 +25,7 @@
 
 
 #include "optic_avoid.h"
-// #include "modules/trajectory/trajectory.h"
+#include "modules/trajectory/trajectory.h"
 #include "modules/computer_vision/lib/vision/image.h"
 
 #include <opencv2/core/core.hpp>
@@ -60,7 +60,6 @@ const int lower_width = (int)(240./resolution_step_down);
 const int lower_height = (int)(520./resolution_step_down);
 // Blurring
 const int GB_parameter = 33;
-const float goTo_threshold = 0.1;
 
 
 // Create global variable for heading safety
@@ -68,7 +67,9 @@ std::vector<float> normalised_heading_flow (lower_height, 0); // Create std::vec
 std::vector<float> smoothed_normalised_heading_flow (lower_height, 0); // Create std::vecotr of shape (1,lower_height) filled with zeros
 
 float optic_avoid_heading_information[lower_height] = {0};
-extern "C" float *GLOBAL_OF_VECTOR{optic_avoid_heading_information};
+float *GLOBAL_OF_VECTOR{ optic_avoid_heading_information };
+
+
 
 void optic_avoid(char *img, int width, int height) {
   // float start = cv::getTickCount();
@@ -139,15 +140,14 @@ void optic_avoid(char *img, int width, int height) {
   cv::GaussianBlur(normalised_heading_flow, smoothed_normalised_heading_flow, cv::Size(GB_parameter, GB_parameter), 0);
 
 
+  // Write to external array
+  for (int i = 0; i < lower_height; i++) {
+    optic_avoid_heading_information[i] = smoothed_normalised_heading_flow[i];
+  }
 
-  // Write to external array after doing final thresholding
   for (int i = 0; i < lower_height; i++) {
     std::cout << "i" << i << " :" << GLOBAL_OF_VECTOR[i] << std::endl;
   }
-
-  // for (int i = 0; i < lower_height; i++) {
-  //   std::cout << "i" << i << " :" << GLOBAL_OF_VECTOR[i] << std::endl;
-  // }
 
 
 

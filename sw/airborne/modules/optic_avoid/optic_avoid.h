@@ -30,13 +30,11 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-// Temporary variables for now
+// Define stuff C++ style?
 
 void optic_avoid(char *img, int width, int height);
 
 void initialize_optic_avoid();
-
 
 // struct image_t dest_img;
 

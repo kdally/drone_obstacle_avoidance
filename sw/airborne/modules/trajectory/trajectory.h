@@ -25,6 +25,7 @@
 
 #ifndef TRAJECTORY_H
 #define TRAJECTORY_H
+#define OF_NUMBER_ELEMENTS 173
 
 
 // settings
@@ -49,5 +50,10 @@ extern void square(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r);
 extern void lace(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r);
 extern void lace_inverted(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r);
 extern void avoidance_straight_path(float AVOID_h1, float AVOID_h2);
+extern float convert_index_to_heading(int index, int N);
+extern int convert_heading_to_index(float heading, int N);
+extern void quickSort(float array[],int indecis[], int low,int high);
+extern int partition(float array[], int indecis[], int low, int high);
+extern void safety_check_optical_flow(float *AVOID_safety_optical_flow);
 #endif
 
