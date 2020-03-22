@@ -29,6 +29,7 @@
 #ifndef M_PI
 #    define M_PI 3.14159265358979323846
 #endif
+#include <stdbool.h> 
 
 
 // settings
@@ -57,7 +58,7 @@ extern float convert_index_to_heading(int index, int N);
 extern int convert_heading_to_index(float heading, int N);
 extern void quickSort(float array[],int indecis[], int low,int high);
 extern int partition(float array[], int indecis[], int low, int high);
-extern void safety_check_optical_flow(float *AVOID_safety_optical_flow);
+extern bool safety_check_optical_flow(float *AVOID_safety_optical_flow);
 extern float safe_heading(float array_of[]);
 #endif
 
