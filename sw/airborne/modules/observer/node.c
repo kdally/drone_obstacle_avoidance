@@ -40,7 +40,7 @@ bool color;
 
 // detected poles (max 100 at a time) -> (left_px, right_px, distance)
 uint16_t poles[100][3];
-uint16_t *GLOBAL_OBJECTS_VECTOR = poles;
+uint16_t *GLOBAL_OBJECTS_VECTOR = &poles[0][0];
 
 struct image_t processed;
 struct image_t orange_mask;
@@ -108,7 +108,7 @@ struct image_t *observer_func(struct image_t *img){
 
   clock_t end = clock();
   double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
-  printf("Time: %lf \n", time_spent);
+  //printf("Time: %lf \n", time_spent);
   }
   return &orange_mask;
   // return img;
@@ -422,10 +422,10 @@ void look4poles(uint8_t idx){
         // }
 
 
-  for (uint16_t x = 0; x < 10; x++){
-    printf("[%d, %d] \n", poles[x][0], poles[x][1]);
-  }
-  printf("\n");
+  // for (uint16_t x = 0; x < 10; x++){
+  //   printf("[%d, %d] \n", poles[x][0], poles[x][1]);
+  // }
+  // printf("\n");
 }
 
 

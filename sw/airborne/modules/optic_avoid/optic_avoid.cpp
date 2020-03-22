@@ -66,8 +66,8 @@ const int GB_parameter = 33;
 std::vector<float> normalised_heading_flow (lower_height, 0); // Create std::vecotr of shape (1,lower_height) filled with zeros
 std::vector<float> smoothed_normalised_heading_flow (lower_height, 0); // Create std::vecotr of shape (1,lower_height) filled with zeros
 
-float optic_avoid_heading_information[lower_height] = {0};
-float *GLOBAL_OF_VECTOR{ optic_avoid_heading_information };
+float optic_avoid_heading_information[lower_height];
+float *GLOBAL_OF_VECTOR = &optic_avoid_heading_information[0];
 
 
 

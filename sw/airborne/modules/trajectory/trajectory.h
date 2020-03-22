@@ -61,5 +61,7 @@ extern void quickSort(float array[],int indecis[], int low,int high);
 extern int partition(float array[], int indecis[], int low, int high);
 extern void safety_check_optical_flow(float *AVOID_safety_optical_flow);
 extern float safe_heading(float array_of[]);
+extern void unpack_objects_vector(uint16_t *GLOBAL_OBJECTS_VECTOR);
+extern void count_objects(uint16_t *AVOID_objects_heading_left, uint16_t *AVOID_objects_heading_right);
 #endif
 

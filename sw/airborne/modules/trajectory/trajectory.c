@@ -56,6 +56,9 @@ float AVOID_h1,AVOID_h2;
 float AVOID_d;
 float AVOID_safety_angle = 10;
 float AVOID_FOV = 80;
+uint16_t AVOID_objects_heading_left[100];
+uint16_t AVOID_objects_heading_right[100];
+uint16_t AVOID_objects_heading_dist[100];
 
 
 void trajectory_init(void){}
@@ -67,15 +70,19 @@ void trajectory_periodic(void)
 nav_set_heading_towards_waypoint(WP_STDBY);
 
 // Count number of objects
-AVOID_number_of_objects = 0;
+unpack_objects_vector(&GLOBAL_OBJECTS_VECTOR);
+int AVOID_number_of_objects = 0;
+count_objects(&AVOID_objects_heading_left, &AVOID_objects_heading_right);
 
 
-// for(int i=0; i< 10; i++){
-//   printf("%.f", GLOBAL_OBJECTS_VECTOR[i]);
+// for (int i = 0; i < 100; i++) {
+//  if (GLOBAL_OBJECTS_VECTOR[i] != 0){
+//   printf("%d ", GLOBAL_OBJECTS_VECTOR[i]);
+//   printf("\n");
+
+//  }
 // }
 
-
-  // safety_check_optical_flow(&GLOBAL_OF_VECTOR);
 
 
 
@@ -151,13 +158,14 @@ float y_rotated=-TRAJECTORY_X*0.866025+TRAJECTORY_Y*0.5;
 
 
 // Check that new goal is within a safe heading
-safety_check_optical_flow(&GLOBAL_OF_VECTOR);
+//safety_check_optical_flow(&GLOBAL_OF_VECTOR);
 
 // Define next goal
 waypoint_set_xy_i(WP_STDBY,x_rotated,y_rotated);
 
 // Deallocate
 float *GLOBAL_OF_VECTOR = NULL;
+float *GLOBAL_OBJECTS_VECTOR = NULL;
 
 }
 
@@ -487,3 +495,31 @@ float safe_heading(float array_of[]){
 }
 */
 
+
+void unpack_objects_vector(uint16_t *GLOBAL_OBJECTS_VECTOR){
+
+for (int i = 0; i < 100; i++) {
+  AVOID_objects_heading_left[i] = GLOBAL_OBJECTS_VECTOR[i*3];
+  AVOID_objects_heading_right[i] = GLOBAL_OBJECTS_VECTOR[i*3+1];
+  AVOID_objects_heading_dist[i] = GLOBAL_OBJECTS_VECTOR[i*3+2];
+}
+
+}
+
+void count_objects(uint16_t *AVOID_objects_heading_left, uint16_t *AVOID_objects_heading_right){
+
+int AVOID_number_of_objects = 0;
+for (int i = 0; i < 100; i++) {
+ //if (AVOID_objects_heading_left[i] != 0 || AVOID_objects_heading_right[i] != 0){
+ if (AVOID_objects_heading_right[i] != 0){
+   AVOID_number_of_objects = AVOID_number_of_objects+1;
+   
+   printf("[%d] \n", AVOID_number_of_objects);
+   
+   printf("\n");
+
+ }
+}
+
+
+}
