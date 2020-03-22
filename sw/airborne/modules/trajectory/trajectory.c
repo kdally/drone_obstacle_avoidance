@@ -62,20 +62,7 @@ void trajectory_init(void){}
 
 void trajectory_periodic(void)
 {
-
-//safety_check_optical_flow(GLOBAL_OF_VECTOR);
-
 nav_set_heading_towards_waypoint(WP_STDBY);
-
-/*
-//array with the positions
-int indecis[OF_NUMBER_ELEMENTS];
-for(int i=0;i<OF_NUMBER_ELEMENTS;i++){
-    indecis[i]=i;
-}
-//to call sorting uncoment next line
-//quickSort(OF_array,indecis,0,OF_NUMBER_ELEMENTS-1);
-*/
 
 current_time += dt;
 int r = TRAJECTORY_L/2 - TRAJECTORY_D;   
@@ -137,10 +124,18 @@ switch (trajectory_mode){
 float x_rotated=TRAJECTORY_X*0.5+TRAJECTORY_Y*0.866025;
 float y_rotated=-TRAJECTORY_X*0.866025+TRAJECTORY_Y*0.5;
 
-waypoint_set_xy_i(WP_STDBY,x_rotated,y_rotated);
+//after having the next way point --> double check with OF
+bool change_heading=safety_check_optical_flow(GLOBAL_OF_VECTOR, x_rotated, y_rotated);
+
+if(change_heading){
+  float safest_heading=safe_heading(GLOBAL_OF_VECTOR);
+  //Set way point using safety heading from OF - still to do!!!
+}
+else{
+  waypoint_set_xy_i(WP_STDBY,x_rotated,y_rotated);
+}
 
 float *GLOBAL_OF_VECTOR = NULL;
-
 }
 
 //***************************************** AVOIDANCE STRATEGIES *****************************************
@@ -178,11 +173,8 @@ if(AVOID_number_of_objects!=0){
   }
 }
 
-bool safety_check_optical_flow(float *AVOID_safety_optical_flow){
+bool safety_check_optical_flow(float *AVOID_safety_optical_flow, float x2, float y2){
 //returns true if it's not safe and there's the need to change heading
-//rotate the next way point to cyberzoo coordinates
-float x2=TRAJECTORY_X*0.5+TRAJECTORY_Y*0.866025;
-float y2=-TRAJECTORY_X*0.866025+TRAJECTORY_Y*0.5;
 
 float x1,y1;
 //find next abssolute heading
