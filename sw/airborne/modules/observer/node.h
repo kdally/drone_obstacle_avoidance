@@ -32,6 +32,8 @@ void look4polesg(struct image_t *input);
 extern void observer_node_init(void);
 
 
+extern uint16_t poles[100][3];
+
 ////////////////////////////////////////////////////////////////////////////////
 // DEFINE PARAMETERS
 

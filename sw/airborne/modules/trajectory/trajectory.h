@@ -46,7 +46,7 @@ extern float TRAJECTORY_Y;
 extern float TRAJECTORY_SWITCHING_TIME;
 
 extern float *GLOBAL_OF_VECTOR;
-extern uint16_t *GLOBAL_OBJECTS_VECTOR;
+//extern uint16_t *GLOBAL_OBJECTS_VECTOR;
 
 // functions
 extern void trajectory_init();
@@ -62,7 +62,7 @@ extern void quickSort(float array[],int indecis[], int low,int high);
 extern int partition(float array[], int indecis[], int low, int high);
 extern bool safety_check_optical_flow(float *AVOID_safety_optical_flow, float x2, float y2);
 extern float safe_heading(float array_of[]);
-extern void unpack_objects_vector(uint16_t *GLOBAL_OBJECTS_VECTOR);
-extern void count_objects(uint16_t *AVOID_objects_heading_left, uint16_t *AVOID_objects_heading_right);
+extern void unpack_object_list(uint16_t (*poles)[100][3], float objects[100][3]);
+extern void count_objects(uint16_t (*poles)[100][3]);
 #endif
 

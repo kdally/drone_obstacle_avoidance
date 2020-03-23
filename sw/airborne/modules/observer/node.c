@@ -40,7 +40,7 @@ bool color;
 
 // detected poles (max 100 at a time) -> (left_px, right_px, distance)
 uint16_t poles[100][3];
-uint16_t *GLOBAL_OBJECTS_VECTOR = &poles[0][0];
+//uint16_t *GLOBAL_OBJECTS_VECTOR = poles;
 
 struct image_t processed;
 struct image_t orange_mask;
@@ -450,10 +450,10 @@ void look4polesg(struct image_t *input){
   }
 
 
-  for (uint16_t x = 0; x < 520; x++){
-    printf("%d, ", floors[x]);
-  }
-  printf("\n");
+  // for (uint16_t x = 0; x < 520; x++){
+  //   printf("%d, ", floors[x]);
+  // }
+  // printf("\n");
 
 
   // Get derivative in number of appearances
