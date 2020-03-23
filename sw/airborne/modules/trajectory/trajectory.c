@@ -199,6 +199,7 @@ for(int i; i < AVOID_number_of_objects; i++){
 
 bool safety_check_optical_flow(float *AVOID_safety_optical_flow, float x2, float y2){
   //returns true if it's not safe and there's the need to change heading
+  //tunning parameters: AVOID_PERCENTAGE_THRESHOLD and AVOID_OF_angle
 
   float x1=stateGetPositionEnu_i()->x;
   float y1=stateGetPositionEnu_i()->y;
@@ -295,8 +296,8 @@ float safe_heading(float array_of[]){
   int number_of_partitions=M_PI/angular_span;
   float partition_OF[number_of_partitions];
 
-  float h2=angular_span;  
-  float h1=0;     //h2 and h1 are the limits of the partition being processed
+  float h1=-1*M_PI/2;     //h2 and h1 are the limits of the partition being processed
+  float h2=h1+angular_span;  
   int i1,i2;      //i1 and i2 are the indices corresponding to h1 and h2 
   i2=convert_heading_to_index(h2, OF_NUMBER_ELEMENTS);
 
