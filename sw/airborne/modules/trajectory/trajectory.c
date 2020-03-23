@@ -1,5 +1,5 @@
 /*
- * CopTRAJECTORY_Yright (C) Team Wonder
+ * Copyright (C) Team Wonder
  *
  * This file is part of paparazzi
  *
@@ -30,6 +30,8 @@
 #include "modules/observer/node.h"
 
 
+
+
 enum trajectory_mode_t {
   CIRCLE,
   SQUARE,
@@ -38,7 +40,7 @@ enum trajectory_mode_t {
 };
 
 enum trajectory_mode_t trajectory_mode = CIRCLE;
-int TRAJECTORY_L = 1750; //for a dt f 0.0011, razor thin margins
+int TRAJECTORY_L = 1800; //for a dt f 0.0011, razor thin margins
 // int TRAJECTORY_L = 1550; //for a dt f 0.0004
 int TRAJECTORY_D = 0;
 float TRAJECTORY_X=0;
@@ -49,9 +51,7 @@ float current_time = 0;
 int square_mode = 1;
 int lace_mode = 1;
 int mode=1;
-// float dt=0.0004; // 0.6 m/s
-float dt=0.0011; // up to 1.6 m/s
-// float dt=0.0015; //very fast
+
 
 int AVOID_number_of_objects = 0;
 float AVOID_h1,AVOID_h2;
@@ -61,6 +61,10 @@ float AVOID_FOV = 80;
 int AVOID_PERCENTAGE_THRESHOLD=20;
 float AVOID_OF_angle = 5 * M_PI/180;
 float AVOID_objects[100][3];
+float AVOID_slow_dt = 0.0002;
+float AVOID_normal_dt = 0.0011;
+
+float dt=0.0011; // 0.6 m/s speed
 
 void trajectory_init(void){}
 
@@ -68,13 +72,14 @@ void trajectory_periodic(void)
 {
 
 // Set heading according to previous goal
-nav_set_heading_towards_waypoint(WP_STDBY);
+
 
 AVOID_number_of_objects = 0;
 unpack_object_list();
 count_objects();
 
 current_time += dt;
+//dt = AVOID_normal_dt;
 int r = TRAJECTORY_L/2 - TRAJECTORY_D;   
 
 switch (trajectory_mode){
@@ -135,18 +140,22 @@ float x_rotated=TRAJECTORY_X*0.5+TRAJECTORY_Y*0.866025;
 float y_rotated=-TRAJECTORY_X*0.866025+TRAJECTORY_Y*0.5;
 
 //after having the next way point --> double check with OF
-bool change_heading=safety_check_optical_flow(GLOBAL_OF_VECTOR, x_rotated, y_rotated);
+// bool change_heading=safety_check_optical_flow(GLOBAL_OF_VECTOR, x_rotated, y_rotated);
 
-if(change_heading){
-  float next_heading=safe_heading(GLOBAL_OF_VECTOR)+stateGetNedToBodyEulers_f()->psi;
-  FLOAT_ANGLE_NORMALIZE(next_heading);
-  float x_next = stateGetPositionEnu_i()->x + 1 * cos(next_heading); //confirm this angles tomorrow with values in excel!!
-  float y_next = stateGetPositionEnu_i()->y + 1 * sin(next_heading);
-  waypoint_set_xy_i(WP_STDBY,x_next,y_next);
-}
-else{
-  waypoint_set_xy_i(WP_STDBY,x_rotated,y_rotated);
-}
+// if(change_heading){
+//   float next_heading=safe_heading(GLOBAL_OF_VECTOR)+stateGetNedToBodyEulers_f()->psi;
+//   FLOAT_ANGLE_NORMALIZE(next_heading);
+//   float x_next = stateGetPositionEnu_i()->x + 1 * cos(next_heading); //confirm this angles tomorrow with values in excel!!
+//   float y_next = stateGetPositionEnu_i()->y + 1 * sin(next_heading);
+//   waypoint_set_xy_i(WP_STDBY,x_next,y_next);
+// }
+// else{
+//   waypoint_set_xy_i(WP_STDBY,x_rotated,y_rotated);
+// }
+
+waypoint_set_xy_i(WP_GOAL,x_rotated,y_rotated);
+waypoint_set_xy_i(WP_TRAJECTORY,x_rotated,y_rotated);
+nav_set_heading_towards_waypoint(WP_GOAL);
 
   // Deallocate
 // float *GLOBAL_OF_VECTOR = NULL; 
@@ -163,25 +172,26 @@ void avoidance_straight_path(){
 
 float heading_increment = 0;
 
+
 for(int i; i < AVOID_number_of_objects; i++){
 
 
-  if(AVOID_objects[i][0] > 0 && AVOID_objects[i][0] < AVOID_safety_angle){
-    if(i==0 || abs(AVOID_objects[i][0]) > abs(AVOID_objects[i-1][0]) || abs(AVOID_objects[i][1]) > abs(AVOID_objects[i-1][1])){
+  if(AVOID_objects[i][0] > 0 && AVOID_objects[i][0] < AVOID_safety_angle || AVOID_objects[i][0]*AVOID_objects[i][1] < 0){    
+    if(i==0 || fabs(AVOID_objects[i][0]) > fabs(AVOID_objects[i-1][0]) || fabs(AVOID_objects[i][1]) > fabs(AVOID_objects[i-1][1])){
       heading_increment = AVOID_objects[i][0] - AVOID_safety_angle; // linear function to adapt heading change
   }
   }
 
-  if(AVOID_objects[i][1] < 0 && AVOID_objects[i][1] > -1*AVOID_safety_angle){
-    if(i==0 || abs(AVOID_objects[i][0]) > abs(AVOID_objects[i-1][0]) || abs(AVOID_objects[i][1]) > abs(AVOID_objects[i-1][1])){
+  if(AVOID_objects[i][1] < 0 && AVOID_objects[i][1] > -1*AVOID_safety_angle || AVOID_objects[i][0]*AVOID_objects[i][1] < 0){    
+    if(i==0 || fabs(AVOID_objects[i][0]) > fabs(AVOID_objects[i-1][0]) || fabs(AVOID_objects[i][1]) > fabs(AVOID_objects[i-1][1])){
       heading_increment = AVOID_objects[i][0] + AVOID_safety_angle; // linear function to adapt heading change
 }
   }
 
-  if(AVOID_objects[i][1] > -1*AVOID_safety_angle && AVOID_objects[i][1] < 0){
-    if(i==0 || abs(AVOID_objects[i][0]) > abs(AVOID_objects[i-1][0]) || abs(AVOID_objects[i][1]) > abs(AVOID_objects[i-1][1])){
+  if(AVOID_objects[i][1] > -1*AVOID_safety_angle && AVOID_objects[i][1] < 0 || AVOID_objects[i][0]*AVOID_objects[i][1] < 0){    
+    if(i==0 || fabs(AVOID_objects[i][0]) > fabs(AVOID_objects[i-1][0]) || fabs(AVOID_objects[i][1]) > fabs(AVOID_objects[i-1][1])){
 
-      if(abs(AVOID_objects[i][0]) > abs(AVOID_objects[i][1])){
+      if(fabs(AVOID_objects[i][0]) > fabs(AVOID_objects[i][1])){
         heading_increment = AVOID_safety_angle;
       }
       else{
@@ -363,17 +373,25 @@ void circle(float current_time, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r)
 
   for(int i; i < AVOID_number_of_objects; i++){
 
-    if(abs(AVOID_objects[i][0]) < AVOID_safety_angle || abs(AVOID_objects[i][1]) < AVOID_safety_angle){
-      if(i==0 || abs(AVOID_objects[i][0]) > abs(AVOID_objects[i-1][0]) || abs(AVOID_objects[i][1]) > abs(AVOID_objects[i-1][1])){
-          r-=abs(AVOID_objects[i][1])*50; //adjust gain - we have tune this experimentaly!!
-          //printf("[%d] \n", r);
-          //dt = 0.002;
+    if(fabs(AVOID_objects[i][0]) < AVOID_safety_angle || fabs(AVOID_objects[i][1]) < AVOID_safety_angle || AVOID_objects[i][0]*AVOID_objects[i][1] < 0){    
+
+      if(i==0 || fabs(AVOID_objects[i][0]) > fabs(AVOID_objects[i-1][0]) || fabs(AVOID_objects[i][1]) > fabs(AVOID_objects[i-1][1])){
+          
+          // float new_heading = stateGetNedToBodyEulers_f()->psi - 15*M_PI/180.0;
+          // FLOAT_ANGLE_NORMALIZE(new_heading);
+          // nav_heading = ANGLE_BFP_OF_REAL(new_heading);
+          // moveWaypointForward(WP_TRAJECTORY, 5.0);
+          
+          printf("[%d]", r);
+          r-=fabs(AVOID_objects[i][1])*400;
+          printf("[%d] \n", r);
+          dt = AVOID_slow_dt;
         }
     }
-    // else{
-    //   dt = 0.011;
-    // }
+    else{
+      dt = AVOID_normal_dt;
     }
+  }
 
   *TRAJECTORY_X = r * cos(current_time);
   *TRAJECTORY_Y = e * r * sin(current_time);
@@ -387,17 +405,20 @@ void square(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r)
 
   for(int i; i < AVOID_number_of_objects; i++){
 
-    if(abs(AVOID_objects[i][0]) < AVOID_safety_angle || abs(AVOID_objects[i][1]) < AVOID_safety_angle){
-      if(i==0 || abs(AVOID_objects[i][0]) > abs(AVOID_objects[i-1][0]) || abs(AVOID_objects[i][1]) > abs(AVOID_objects[i-1][1])){
-          r-=abs(AVOID_objects[i][1])*50; //adjust gain - we have tune this experimentaly!!
-          //printf("[%d] \n", r);
-          //dt = 0.002;
+    if(fabs(AVOID_objects[i][0]) < AVOID_safety_angle || fabs(AVOID_objects[i][1]) < AVOID_safety_angle || AVOID_objects[i][0]*AVOID_objects[i][1] < 0){    
+
+      if(i==0 || fabs(AVOID_objects[i][0]) > fabs(AVOID_objects[i-1][0]) || fabs(AVOID_objects[i][1]) > fabs(AVOID_objects[i-1][1])){
+          printf("[%d]", r);
+          //r-=fabs(AVOID_objects[i][1])*1000;
+          r -= 450;
+          printf("[%d %d %0.3f] \n", r, AVOID_number_of_objects, AVOID_objects[i][1]);
+          dt = AVOID_slow_dt;
         }
     }
-    // else{
-    //   dt = 0.011;
-    // }
+    else{
+      dt = AVOID_normal_dt;
     }
+  }
 
   if(square_mode==1){
     *TRAJECTORY_X = r;
@@ -440,25 +461,30 @@ void square(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r)
 void lace(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r)
 {
   int V = 700;
-  
+
   for(int i; i < AVOID_number_of_objects; i++){
 
-    if(abs(AVOID_objects[i][0]) < AVOID_safety_angle || abs(AVOID_objects[i][1]) < AVOID_safety_angle){
-      if(i==0 || abs(AVOID_objects[i][0]) > abs(AVOID_objects[i-1][0]) || abs(AVOID_objects[i][1]) > abs(AVOID_objects[i-1][1])){
+    if(fabs(AVOID_objects[i][0]) < AVOID_safety_angle || fabs(AVOID_objects[i][1]) < AVOID_safety_angle || AVOID_objects[i][0]*AVOID_objects[i][1] < 0){    
+
+      if(i==0 || fabs(AVOID_objects[i][0]) > fabs(AVOID_objects[i-1][0]) || fabs(AVOID_objects[i][1]) > fabs(AVOID_objects[i-1][1])){
+          
           if(lace_mode == 1 || lace_mode == 3){
-            r-=abs(AVOID_objects[i][1])*50; //adjust gain - we have tune this experimentaly!!
-            //printf("[%d] \n", r);
-            //dt = 0.002;
+
+            printf("[%d]", r);
+            r-=fabs(AVOID_objects[i][1])*1000;
+            printf("[%d %d %0.3f] \n", r, AVOID_number_of_objects, AVOID_objects[i][1]);
           }
           else{
             avoidance_straight_path();
           }
+          dt = AVOID_slow_dt;
         }
     }
     // else{
-    //   dt = 0.011;
+    //   dt = AVOID_normal_dt;
     // }
-    }
+  }
+
 
   if(lace_mode==1){
     *TRAJECTORY_X = r;
@@ -504,21 +530,25 @@ void lace_inverted(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r)
 
   for(int i; i < AVOID_number_of_objects; i++){
 
-  if(abs(AVOID_objects[i][0]) < AVOID_safety_angle || abs(AVOID_objects[i][1]) < AVOID_safety_angle){
-    if(i==0 || abs(AVOID_objects[i][0]) > abs(AVOID_objects[i-1][0]) || abs(AVOID_objects[i][1]) > abs(AVOID_objects[i-1][1])){
-        if(lace_mode == 1 || lace_mode == 3){
-          r-=abs(AVOID_objects[i][1])*50; //adjust gain - we have tune this experimentaly!!
-          //printf("[%d] \n", r);
-          //dt = 0.002;
+    if(fabs(AVOID_objects[i][0]) < AVOID_safety_angle || fabs(AVOID_objects[i][1]) < AVOID_safety_angle || AVOID_objects[i][0]*AVOID_objects[i][1] < 0){    
+
+      if(i==0 || fabs(AVOID_objects[i][0]) > fabs(AVOID_objects[i-1][0]) || fabs(AVOID_objects[i][1]) > fabs(AVOID_objects[i-1][1])){
+          
+          if(lace_mode == 1 || lace_mode == 3){
+
+            printf("[%d]", r);
+            r-=fabs(AVOID_objects[i][1])*1000;
+            printf("[%d %d %0.3f] \n", r, AVOID_number_of_objects, AVOID_objects[i][1]);
+          }
+          else{
+            avoidance_straight_path();
+          }
+          dt = AVOID_slow_dt;
         }
-        else{
-          avoidance_straight_path();
-        }
-      }
-  }
-  // else{
-  //   dt = 0.011;
-  // }
+    }
+    // else{
+    //   dt = AVOID_normal_dt;
+    // }
   }
 
   if(lace_mode==1){
@@ -559,3 +589,44 @@ void lace_inverted(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r)
   }
     return;}
 
+
+
+
+
+/*
+ * Calculates coordinates of a distance of 'distanceMeters' forward w.r.t. current position and heading
+ */
+static uint8_t calculateForwards(struct EnuCoor_i *new_coor, float distanceMeters)
+{
+  float heading  = stateGetNedToBodyEulers_f()->psi;
+
+  // Now determine where to place the waypoint you want to go to
+  new_coor->x = stateGetPositionEnu_i()->x + POS_BFP_OF_REAL(sinf(heading) * (distanceMeters));
+  new_coor->y = stateGetPositionEnu_i()->y + POS_BFP_OF_REAL(cosf(heading) * (distanceMeters));
+  // VERBOSE_PRINT("Calculated %f m forward position. x: %f  y: %f based on pos(%f, %f) and heading(%f)\n", distanceMeters,	
+                // POS_FLOAT_OF_BFP(new_coor->x), POS_FLOAT_OF_BFP(new_coor->y),
+                // stateGetPositionEnu_f()->x, stateGetPositionEnu_f()->y, DegOfRad(heading));
+  return false;
+}
+
+/*
+ * Sets waypoint 'waypoint' to the coordinates of 'new_coor'
+ */
+uint8_t moveWaypoint(uint8_t waypoint, struct EnuCoor_i *new_coor)
+{
+  // VERBOSE_PRINT("Moving waypoint %d to x:%f y:%f\n", waypoint, POS_FLOAT_OF_BFP(new_coor->x),
+                // POS_FLOAT_OF_BFP(new_coor->y));
+  waypoint_set_xy_i(waypoint, new_coor->x, new_coor->y);
+  return false;
+}
+
+/*
+ * Calculates coordinates of distance forward and sets waypoint 'waypoint' to those coordinates
+ */
+uint8_t moveWaypointForward(uint8_t waypoint, float distanceMeters)
+{
+  struct EnuCoor_i new_coor;
+  calculateForwards(&new_coor, distanceMeters);
+  moveWaypoint(waypoint, &new_coor);
+  return false;
+}
