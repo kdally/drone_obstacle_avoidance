@@ -27,6 +27,7 @@
 #include "generated/flight_plan.h"
 #include "firmwares/rotorcraft/navigation.h"
 #include "state.h"
+#include "modules/observer/node.h"
 
 
 enum trajectory_mode_t {
@@ -57,9 +58,6 @@ float AVOID_h1,AVOID_h2;
 float AVOID_d;
 float AVOID_safety_angle = 10 * M_PI/180;
 float AVOID_FOV = 80;
-uint16_t AVOID_objects_heading_left[100];
-uint16_t AVOID_objects_heading_right[100];
-uint16_t AVOID_objects_heading_dist[100];
 int AVOID_PERCENTAGE_THRESHOLD=20;
 float AVOID_OF_angle = 5 * M_PI/180;
 
@@ -71,12 +69,10 @@ void trajectory_periodic(void)
 // Set heading according to previous goal
 nav_set_heading_towards_waypoint(WP_STDBY);
 
-// Count number of objects
-unpack_objects_vector(&GLOBAL_OBJECTS_VECTOR);
-int AVOID_number_of_objects = 0;
-count_objects(&AVOID_objects_heading_left, &AVOID_objects_heading_right);
-
-
+// float objects[100][3];
+// unpack_object_list(&poles, objects);
+// unpack_object_list(&poles);
+count_objects(&poles);
 
 current_time += dt;
 int r = TRAJECTORY_L/2 - TRAJECTORY_D;   
@@ -150,8 +146,8 @@ else{
 }
 
   // Deallocate
-float *GLOBAL_OF_VECTOR = NULL;
-float *GLOBAL_OBJECTS_VECTOR = NULL;
+// float *GLOBAL_OF_VECTOR = NULL;
+// float *GLOBAL_OBJECTS_VECTOR = NULL;
 }
 
 
@@ -226,18 +222,6 @@ if(change_heading){
   float new_heading=safe_heading(AVOID_safety_optical_flow)
 }*/
 
-// ******************** Killian's stuff *********************
-// for(int i=0; i< 173; i++){
-//   printf("%.6f", *(AVOID_safety_optical_flow+i));
-// }
-
-// float indices[] = AVOID_safety_optical_flow[];
-
-// float OF_values[] = AVOID_safety_optical_flow[];
-
-// for (i = 0; i < 10; i++) {
-//     sum += array[i];
-// }
   return change_heading;
 }
 
@@ -325,6 +309,34 @@ float safe_heading(float array_of[]){
   quickSort(partition_OF,indexis,0,number_of_partitions);
   float safest_heading=(indexis[0]+0.5)*angular_span; //partition with lowest OF average
   return safest_heading;
+}
+
+
+void unpack_object_list(uint16_t (*poles)[100][3], float objects[100][3]){
+
+for (uint16_t i = 0; i < 100; i++) {
+    objects[i][0] = convert_index_to_heading((*poles)[i][0], 519);
+    objects[i][1] = convert_index_to_heading((*poles)[i][2], 519);
+    objects[i][2] = 0;
+  
+}
+}
+
+
+void count_objects(uint16_t (*poles)[100][3]){
+
+int AVOID_number_of_objects = 0;
+
+for (uint16_t i = 0; i < 10; i++) {
+ if ((*poles)[i][0] != 0 || (*poles)[i][1] != 0){
+
+   AVOID_number_of_objects = AVOID_number_of_objects+1;
+   
+  //  printf("[%d %d] \n", (*poles)[i][0], AVOID_number_of_objects);
+  //  printf("\n");
+
+ }
+}
 }
 
 //*****************************************  PATHING FUNCTIONS ********************************************
@@ -507,30 +519,3 @@ void lace_inverted(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r)
     return;
 }
 
-
-
-
-void unpack_objects_vector(uint16_t *GLOBAL_OBJECTS_VECTOR){
-
-for (int i = 0; i < 100; i++) {
-  AVOID_objects_heading_left[i] = GLOBAL_OBJECTS_VECTOR[i*3];
-  AVOID_objects_heading_right[i] = GLOBAL_OBJECTS_VECTOR[i*3+1];
-  AVOID_objects_heading_dist[i] = GLOBAL_OBJECTS_VECTOR[i*3+2];
-}
-}
-
-void count_objects(uint16_t *AVOID_objects_heading_left, uint16_t *AVOID_objects_heading_right){
-
-int AVOID_number_of_objects = 0;
-for (int i = 0; i < 100; i++) {
- //if (AVOID_objects_heading_left[i] != 0 || AVOID_objects_heading_right[i] != 0){
- if (AVOID_objects_heading_right[i] != 0){
-   AVOID_number_of_objects = AVOID_number_of_objects+1;
-   
-   printf("[%d] \n", AVOID_number_of_objects);
-   
-   printf("\n");
-
- }
-}
-}
