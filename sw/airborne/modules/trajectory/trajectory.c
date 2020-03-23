@@ -142,8 +142,11 @@ float y_rotated=-TRAJECTORY_X*0.866025+TRAJECTORY_Y*0.5;
 bool change_heading=safety_check_optical_flow(GLOBAL_OF_VECTOR, x_rotated, y_rotated);
 
 if(change_heading){
-  float safest_heading=safe_heading(GLOBAL_OF_VECTOR);
-  //Set way point using safety heading from OF - still to do!!!
+  float next_heading=safe_heading(GLOBAL_OF_VECTOR)+stateGetNedToBodyEulers_f()->psi;
+  FLOAT_ANGLE_NORMALIZE(next_heading);
+  float x_next = stateGetPositionEnu_i()->x + 1 * cos(next_heading); //confirm this angles tomorrow with values in excel!!
+  float y_next = stateGetPositionEnu_i()->y + 1 * sin(next_heading);
+  waypoint_set_xy_i(WP_STDBY,x_next,y_next);
 }
 else{
   waypoint_set_xy_i(WP_STDBY,x_rotated,y_rotated);
@@ -191,54 +194,55 @@ if(AVOID_number_of_objects!=0){
 }
 
 bool safety_check_optical_flow(float *AVOID_safety_optical_flow, float x2, float y2){
-//returns true if it's not safe and there's the need to change heading
+  //returns true if it's not safe and there's the need to change heading
 
-float x1,y1;
-//find next abssolute heading
-float next_absolute_heading=atan((y2-y1)/(x2-x1));
-if(x2<x1){
-  next_absolute_heading+=M_PI;
-}
-FLOAT_ANGLE_NORMALIZE(next_absolute_heading);
+  float x1=stateGetPositionEnu_i()->x;
+  float y1=stateGetPositionEnu_i()->y;
+  //find next abssolute heading
+  float next_absolute_heading=atan((y2-y1)/(x2-x1));
+  if(x2<x1){
+    next_absolute_heading+=M_PI;
+  }
+  FLOAT_ANGLE_NORMALIZE(next_absolute_heading);
 
-float relative_heading=next_absolute_heading-stateGetNedToBodyEulers_f()->psi;
+  float relative_heading=next_absolute_heading-stateGetNedToBodyEulers_f()->psi;
+stateGetNedToBodyEulers_f()->psi
+  int i1=convert_heading_to_index(relative_heading-AVOID_OF_angle, OF_NUMBER_ELEMENTS);
+  int i2=convert_heading_to_index(relative_heading+AVOID_OF_angle, OF_NUMBER_ELEMENTS);
 
-int i1=convert_heading_to_index(relative_heading-AVOID_OF_angle, OF_NUMBER_ELEMENTS);
-int i2=convert_heading_to_index(relative_heading+AVOID_OF_angle, OF_NUMBER_ELEMENTS);
+  //array with the positions
+  int indecis[OF_NUMBER_ELEMENTS];
+  for(int i=0;i<OF_NUMBER_ELEMENTS;i++){
+      indecis[i]=i;
+  }
+  quickSort(AVOID_safety_optical_flow,indecis,0,OF_NUMBER_ELEMENTS-1);
 
-//array with the positions
-int indecis[OF_NUMBER_ELEMENTS];
-for(int i=0;i<OF_NUMBER_ELEMENTS;i++){
-    indecis[i]=i;
-}
-quickSort(AVOID_safety_optical_flow,indecis,0,OF_NUMBER_ELEMENTS-1);
-
-bool change_heading=false;
-for(int i=0;i<OF_NUMBER_ELEMENTS;i++){  //runs through the entire sorted array
-    if(indecis[i]<i && indecis[i]<i2){  //checks the values inside the original interval
-      if(i>OF_NUMBER_ELEMENTS*(AVOID_PERCENTAGE_THRESHOLD/100)){
-        change_heading=true;
+  bool change_heading=false;
+  for(int i=0;i<OF_NUMBER_ELEMENTS;i++){  //runs through the entire sorted array
+      if(indecis[i]<i && indecis[i]<i2){  //checks the values inside the original interval
+        if(i>OF_NUMBER_ELEMENTS*(AVOID_PERCENTAGE_THRESHOLD/100)){
+          change_heading=true;
+      }
     }
   }
-}
-/*
-if(change_heading){
-  float new_heading=safe_heading(AVOID_safety_optical_flow)
-}*/
+  /*
+  if(change_heading){
+    float new_heading=safe_heading(AVOID_safety_optical_flow)
+  }*/
 
-// ******************** Killian's stuff *********************
-// for(int i=0; i< 173; i++){
-//   printf("%.6f", *(AVOID_safety_optical_flow+i));
-// }
+  // ******************** Killian's stuff *********************
+  // for(int i=0; i< 173; i++){
+  //   printf("%.6f", *(AVOID_safety_optical_flow+i));
+  // }
 
-// float indices[] = AVOID_safety_optical_flow[];
+  // float indices[] = AVOID_safety_optical_flow[];
 
-// float OF_values[] = AVOID_safety_optical_flow[];
+  // float OF_values[] = AVOID_safety_optical_flow[];
 
-// for (i = 0; i < 10; i++) {
-//     sum += array[i];
-// }
-  return change_heading;
+  // for (i = 0; i < 10; i++) {
+  //     sum += array[i];
+  // }
+    return change_heading;
 }
 
 float convert_index_to_heading(int index, int N){
@@ -253,16 +257,16 @@ int convert_heading_to_index(float heading, int N){
 }
 
 void quickSort(float array[],int indecis[], int low,int high){
-    if (low < high)
-    {
-        /* pi is partitioning index, arr[pi] is now
-           at right place */
-        int pi = partition(array, indecis, low, high);
+  if (low < high)
+  {
+    /* pi is partitioning index, arr[pi] is now
+       at right place */
+      int pi = partition(array, indecis, low, high);
 
-        quickSort(array, indecis, low, pi - 1);  // Before pi
-        quickSort(array, indecis, pi + 1, high); // After pi
-    }
-    return;
+      quickSort(array, indecis, low, pi - 1);  // Before pi
+      quickSort(array, indecis, pi + 1, high); // After pi
+  }
+  return;
 }
 
 int partition(float array[], int indecis[], int low, int high){
@@ -504,8 +508,7 @@ void lace_inverted(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r)
       lace_mode=1;
     }
   }
-    return;
-}
+    return;}
 
 
 
