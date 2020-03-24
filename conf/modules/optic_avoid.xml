@@ -47,7 +47,7 @@
     <flag name="LDFLAGS" value="ljpeg"/>
     <flag name="LDFLAGS" value="lpng"/>
     <flag name="LDFLAGS" value="ltiff"/>
-    <flag name="LDFLAGS" value="ldc1394"/>
+    <!--flag name="LDFLAGS" value="ldc1394"/-->
     <flag name="LDFLAGS" value="lz"/>
     <flag name="LDFLAGS" value="ldl"/>
     <flag name="LDFLAGS" value="lm"/>

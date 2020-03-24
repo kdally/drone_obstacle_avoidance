@@ -28,7 +28,7 @@
 #include "firmwares/rotorcraft/navigation.h"
 #include "state.h"
 #include "modules/observer/node.h"
-
+#define NUMBER_OF_PARTITIONS 10
 
 enum trajectory_mode_t {
   CIRCLE,
@@ -61,7 +61,7 @@ float AVOID_h1,AVOID_h2;
 float AVOID_d;
 float AVOID_safety_angle = 20 * M_PI/180;
 float AVOID_FOV = 80;
-int AVOID_PERCENTAGE_THRESHOLD=20;
+int AVOID_PERCENTAGE_THRESHOLD=30;
 float AVOID_OF_angle = 5 * M_PI/180;
 float AVOID_objects[100][3];
 float AVOID_slow_dt = 0.0002;
@@ -116,19 +116,23 @@ float x_rotated=TRAJECTORY_X*0.5+TRAJECTORY_Y*0.866025;
 float y_rotated=-TRAJECTORY_X*0.866025+TRAJECTORY_Y*0.5;
 
 //after having the next way point --> double check with OF
-// bool change_heading=safety_check_optical_flow(GLOBAL_OF_VECTOR, x_rotated, y_rotated);
+bool change_heading=safety_check_optical_flow(GLOBAL_OF_VECTOR, x_rotated, y_rotated);
+printf("change_heading: %d \n", change_heading);
 
-// if(change_heading){
-//   float next_heading=safe_heading(GLOBAL_OF_VECTOR)+stateGetNedToBodyEulers_f()->psi;
-//   FLOAT_ANGLE_NORMALIZE(next_heading);
-//   float x_next = stateGetPositionEnu_i()->x + 1 * cos(next_heading); //confirm this angles tomorrow with values in excel!!
-//   float y_next = stateGetPositionEnu_i()->y + 1 * sin(next_heading);
-//   waypoint_set_xy_i(WP_STDBY,x_next,y_next);
-// }
-// else{
-//   waypoint_set_xy_i(WP_STDBY,x_rotated,y_rotated);
-// }
+if(change_heading){
+  float next_heading=safe_heading(GLOBAL_OF_VECTOR);
+  printf("\n OPTICAL FLOW - SAFE HEADING ACTIVATED!!!");
+  next_heading+=stateGetNedToBodyEulers_f()->psi;
+  FLOAT_ANGLE_NORMALIZE(next_heading);
+  float y_next = stateGetPositionEnu_i()->y + 1 * sin(next_heading);
+  float x_next = stateGetPositionEnu_i()->x + 1 * cos(next_heading); //confirm this angles tomorrow with values in excel!!
+  waypoint_set_xy_i(WP_STDBY,x_next,y_next);
+}
+ else{
+   waypoint_set_xy_i(WP_STDBY,x_rotated,y_rotated);
+ }
 
+ 
 if(AVOID_keep_slow_count==0){
   waypoint_set_xy_i(WP_STDBY,x_rotated,y_rotated);
   nav_set_heading_towards_waypoint(WP_STDBY);
@@ -160,13 +164,13 @@ for(int i; i < AVOID_number_of_objects; i++){
   if(AVOID_objects[i][0] > 0 && AVOID_objects[i][0] < AVOID_safety_angle || AVOID_objects[i][0]*AVOID_objects[i][1] < 0){    
     if(i==0 || fabs(AVOID_objects[i][0]) > fabs(AVOID_objects[i-1][0]) || fabs(AVOID_objects[i][1]) > fabs(AVOID_objects[i-1][1])){
       heading_increment = AVOID_objects[i][0] - AVOID_safety_angle; // linear function to adapt heading change
-  }
+    }
   }
 
   if(AVOID_objects[i][1] < 0 && AVOID_objects[i][1] > -1*AVOID_safety_angle || AVOID_objects[i][0]*AVOID_objects[i][1] < 0){    
     if(i==0 || fabs(AVOID_objects[i][0]) > fabs(AVOID_objects[i-1][0]) || fabs(AVOID_objects[i][1]) > fabs(AVOID_objects[i-1][1])){
       heading_increment = AVOID_objects[i][0] + AVOID_safety_angle; // linear function to adapt heading change
-}
+    }
   }
 
   if(AVOID_objects[i][1] > -1*AVOID_safety_angle && AVOID_objects[i][1] < 0 || AVOID_objects[i][0]*AVOID_objects[i][1] < 0){    
@@ -202,6 +206,11 @@ bool safety_check_optical_flow(float *AVOID_safety_optical_flow, float x2, float
   FLOAT_ANGLE_NORMALIZE(next_absolute_heading);
 
   float relative_heading=next_absolute_heading-stateGetNedToBodyEulers_f()->psi;
+  FLOAT_ANGLE_NORMALIZE(relative_heading);
+  /*
+  printf("next_absolute_heading: %f \n", next_absolute_heading*180/M_PI);
+  printf("current_absolute_heading: %f \n", (stateGetNedToBodyEulers_f()->psi)*180/M_PI);
+  printf("relative_heading: %f \n", relative_heading*180/M_PI);*/
 
   int i1=convert_heading_to_index(relative_heading-AVOID_OF_angle, OF_NUMBER_ELEMENTS);
   int i2=convert_heading_to_index(relative_heading+AVOID_OF_angle, OF_NUMBER_ELEMENTS);
@@ -211,23 +220,89 @@ bool safety_check_optical_flow(float *AVOID_safety_optical_flow, float x2, float
   for(int i=0;i<OF_NUMBER_ELEMENTS;i++){
       indecis[i]=i;
   }
+
+/*
   quickSort(AVOID_safety_optical_flow,indecis,0,OF_NUMBER_ELEMENTS-1);
 
   bool change_heading=false;
   for(int i=0;i<OF_NUMBER_ELEMENTS;i++){  //runs through the entire sorted array
-      if(indecis[i]<i && indecis[i]<i2){  //checks the values inside the original interval
-        if(i>OF_NUMBER_ELEMENTS*(AVOID_PERCENTAGE_THRESHOLD/100)){
+      if(i1<indecis[i] && indecis[i]<i2){  //checks the values inside the original interval
+        if(i>(OF_NUMBER_ELEMENTS*AVOID_PERCENTAGE_THRESHOLD/100)){
           change_heading=true;
       }
     }
   }
-  /*
-  if(change_heading){
-    float new_heading=safe_heading(AVOID_safety_optical_flow)
-  }*/
+  */
+
+  printf("OF array:\n");
+  for(int i=0;i<OF_NUMBER_ELEMENTS;i++){
+    printf("%d: %f \n",indecis[i],AVOID_safety_optical_flow[i]);
+  }
+
+  bool change_heading=false;
+  for (int i = i1; i <= i2; i++){
+    if(AVOID_safety_optical_flow[i]>0.1){
+          change_heading=true;
+
+      }
+  }
 
   return change_heading;
 }
+
+
+float safe_heading(float array_of[]){
+  //returns the safest heading according to OF values
+  //saffest heading is the middle value of the i-th partition with span="angular_span"
+  float angular_span=M_PI/NUMBER_OF_PARTITIONS;
+  
+  float partition_OF[NUMBER_OF_PARTITIONS];
+  int indexis[NUMBER_OF_PARTITIONS];
+  //float* partition_OF=malloc(NUMBER_OF_PARTITIONS * sizeof(float));
+  //int* indexis=malloc(NUMBER_OF_PARTITIONS * sizeof(int));
+  
+  for (int i=0; i<NUMBER_OF_PARTITIONS; i++){   
+      partition_OF[i]=0;
+      indexis[i]=i;
+  }
+
+  float h1=-1*M_PI/2;     //h2 and h1 are the limits of the partition being processed
+  float h2=h1+angular_span;  
+  int i1,i2;      //i1 and i2 are the indices corresponding to h1 and h2 
+
+  for (int i = 0; i < NUMBER_OF_PARTITIONS; i++){
+    i1=convert_heading_to_index(h1, OF_NUMBER_ELEMENTS);
+    i2=convert_heading_to_index(h2, OF_NUMBER_ELEMENTS);
+
+    //average of OF in the i-th span
+    for (int j=i1; j <= i2; j++){   
+      partition_OF[i]+=array_of[j];
+    }
+    partition_OF[i]=partition_OF[i]/(i2-i1+1);
+    //printf("h1: %f  i1: %d \n h2: %f i2: %d \n \n", h1*180/M_PI, i1, h2*180/M_PI, i2);
+
+    h1+=angular_span;
+    h2=h1+angular_span;
+  }
+  /*
+  printf("\n \n Array before quick sorting: \n");
+  for(int i=0;i<NUMBER_OF_PARTITIONS;i++){
+    printf("i: %d , value: %f \n", indexis[i], partition_OF[i]);
+  }
+  */
+  quickSort(partition_OF,indexis,0,NUMBER_OF_PARTITIONS-1);
+  /*
+  printf("\n \n Array after quick sorting: \n");
+  for(int i=0;i<NUMBER_OF_PARTITIONS;i++){
+    printf("i: %d , value: %f \n", indexis[i], partition_OF[i]);
+  }*/
+
+  float safest_heading = indexis[0] * angular_span + angular_span/2; //partition with lowest OF average
+  //free(partition_OF);
+  //free(indexis);
+  return safest_heading;
+}
+
 
 float convert_index_to_heading(int index, int N){
   float heading=2.0*index/(N-1)-1.0;  //normalize the index 
@@ -236,83 +311,43 @@ float convert_index_to_heading(int index, int N){
 }
 
 int convert_heading_to_index(float heading, int N){
-  int index=(1+sin(heading))/(N-1)*2;
+  int index=(1+sin(heading))*(N-1)/2;
   return index; 
 }
 
-void quickSort(float array[],int indecis[], int low,int high){
-  if (low < high)
-  {
-    /* pi is partitioning index, arr[pi] is now
-       at right place */
-      int pi = partition(array, indecis, low, high);
+void quickSort(float array[], int indecis[], int first,int last){
+   int i, j, pivot, temp2;
+   float temp;
 
-      quickSort(array, indecis, low, pi - 1);  // Before pi
-      quickSort(array, indecis, pi + 1, high); // After pi
-  }
-  return;
-}
+   if(first<last){
+      pivot=first;
+      i=first;
+      j=last;
 
-int partition(float array[], int indecis[], int low, int high){
-  int pivot = array[high];
-  int i = (low - 1);
+      while(i<j){
+         while(array[i]<=array[pivot]&&i<last)
+            i++;
+         while(array[j]>array[pivot])
+            j--;
+         if(i<j){
+            temp=array[i];
+            array[i]=array[j];
+            array[j]=temp;
+            temp2=indecis[i];
+            indecis[i]=indecis[j];
+            indecis[j]=temp2;            
+         }
+      }
 
-  for (int j = low; j < high; j++)
-  {
-    if (array[j] <= pivot)
-    {
-      i++;
-      float aux=array[i];
-      array[i]=array[j];
-      array[j]=aux;
-      int aux2=indecis[i];
+      temp=array[pivot];
+      array[pivot]=array[j];
+      array[j]=temp;
+      temp2=indecis[i];
       indecis[i]=indecis[j];
-      indecis[j]=aux2;
-    }
-  }
-  float aux = array[i+1];
-  array[i+1]=array[high];
-  array[high]=aux;
-  int aux2 = indecis[i+1];
-  indecis[i+1]=indecis[high];
-  indecis[high]=aux2;
-  
-  return (i + 1);
-}
-
-float safe_heading(float array_of[]){
-  //returns the safest heading according to OF values
-  //saffest heading is the middle value of the i-th partition with span="angular_span"
-  float angular_span=10* M_PI/180;
-  int number_of_partitions=M_PI/angular_span;
-  float partition_OF[number_of_partitions];
-
-  float h1=-1*M_PI/2;     //h2 and h1 are the limits of the partition being processed
-  float h2=h1+angular_span;  
-  int i1,i2;      //i1 and i2 are the indices corresponding to h1 and h2 
-  i2=convert_heading_to_index(h2, OF_NUMBER_ELEMENTS);
-
-  for (int i = 0; i < number_of_partitions; i++){
-    i1=convert_heading_to_index(h1, OF_NUMBER_ELEMENTS);
-
-    //average of OF in the i-th span
-    for (int j=i1; j <= i2; j++){   
-      partition_OF[i]+=array_of[j];
-    }
-    partition_OF[i]=partition_OF[i]/(i2-i1+1);
-    
-    h2=h1;
-    i2=i1;
-    h1+=angular_span;
-  }
-
-  int indexis[number_of_partitions];
-  for(int i=0;i<OF_NUMBER_ELEMENTS;i++){
-    indexis[i]=i;
-  }
-  quickSort(partition_OF,indexis,0,number_of_partitions);
-  float safest_heading=(indexis[0]+0.5)*angular_span; //partition with lowest OF average
-  return safest_heading;
+      indecis[j]=temp2;
+      quickSort(array, indecis, first,j-1);
+      quickSort(array, indecis ,j+1,last);
+   }
 }
 
 
@@ -345,6 +380,7 @@ void circle(float current_time, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r)
   //   float offset=asin(AVOID_d/(2*r))*180/M_PI; //offset in degrees
   //     r_reduced=r*(AVOID_h2-offset)*M_PI/180;
  
+
 
   for(int i; i < AVOID_number_of_objects; i++){
 
