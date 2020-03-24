@@ -46,9 +46,8 @@ std::vector<float> normalised_heading_flow (lower_height, 0); // Create std::vec
 std::vector<float> smoothed_normalised_heading_flow (lower_height, 0); // Create std::vecotr of shape (1,lower_height) filled with zeros
 
 // Create global variable for heading safety
-float optic_avoid_heading_information[lower_height] = {0}; // Initialise array with 0's
-extern "C" float *GLOBAL_OF_VECTOR{optic_avoid_heading_information}; // External pointer to array with optic avoid collision danger information
-
+float optic_avoid_heading_information[lower_height];
+float *GLOBAL_OF_VECTOR = &optic_avoid_heading_information[0];
 
 
 void optic_avoid(char *img, int width, int height) {

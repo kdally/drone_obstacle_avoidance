@@ -131,6 +131,8 @@ if(change_heading){
  else{
    waypoint_set_xy_i(WP_STDBY,x_rotated,y_rotated);
  }
+
+ 
 if(AVOID_keep_slow_count==0){
   waypoint_set_xy_i(WP_STDBY,x_rotated,y_rotated);
   nav_set_heading_towards_waypoint(WP_STDBY);
@@ -231,6 +233,11 @@ bool safety_check_optical_flow(float *AVOID_safety_optical_flow, float x2, float
     }
   }
   */
+
+  printf("OF array:\n");
+  for(int i=0;i<OF_NUMBER_ELEMENTS;i++){
+    printf("%d: %f \n",indecis[i],AVOID_safety_optical_flow[i]);
+  }
 
   bool change_heading=false;
   for (int i = i1; i <= i2; i++){
@@ -374,7 +381,7 @@ void circle(float current_time, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r)
   //     r_reduced=r*(AVOID_h2-offset)*M_PI/180;
  
 
-/*
+
   for(int i; i < AVOID_number_of_objects; i++){
 
     if(fabs(AVOID_objects[i][0]) < AVOID_safety_angle || fabs(AVOID_objects[i][1]) < AVOID_safety_angle || AVOID_objects[i][0]*AVOID_objects[i][1] < 0){    
@@ -410,7 +417,7 @@ return;
 void square(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r)
 {
   int V = 700;
-/*
+
   for(int i; i < AVOID_number_of_objects; i++){
 
     if(fabs(AVOID_objects[i][0]) < AVOID_safety_angle || fabs(AVOID_objects[i][1]) < AVOID_safety_angle || AVOID_objects[i][0]*AVOID_objects[i][1] < 0){    

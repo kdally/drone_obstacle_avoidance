@@ -92,7 +92,7 @@
     <module name="optic_avoid">
       <define name="OPTIC_RESOLUTION_STEP_DOWN" value="3"/> <!-- Factor of decrease in resolution of original image -->
       <define name="GB_WINDOW_PARAMETER" value="33"/> <!-- Window for Guassian Blur of avoidance information -->
-      <define name="OPTIC_AVOID_GOTO_THRESHOLD" value="0.1"/> <!-- Threshold for minimising the confidence of a row of pixels -->
+      <define name="OPTIC_AVOID_GOTO_THRESHOLD" value="0.0"/> <!-- Threshold for minimising the confidence of a row of pixels -->
     </module>
     <module name="trajectory"/>
   </firmware>
