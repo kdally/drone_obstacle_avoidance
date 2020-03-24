@@ -39,11 +39,12 @@ enum trajectory_mode_t {
 
 enum safety_level_t {
   SAFE,
-  THREAT
+  THREAT,
+  ESCAPE_IN_PROGRESS
 };
 
 enum trajectory_mode_t trajectory_mode = CIRCLE;
-enum safety_level_t safety_level = THREAT;
+enum safety_level_t safety_level = SAFE;
 int TRAJECTORY_L = 1800; //for a dt f 0.0011, razor thin margins
 // int TRAJECTORY_L = 1550; //for a dt f 0.0004
 int TRAJECTORY_D = 0;
@@ -59,7 +60,7 @@ int mode=1;
 int AVOID_number_of_objects = 0;
 float AVOID_h1,AVOID_h2;
 float AVOID_d;
-float AVOID_safety_angle = 20 * M_PI/180;
+float AVOID_safety_angle = 25 * M_PI/180;
 float AVOID_FOV = 80;
 int AVOID_PERCENTAGE_THRESHOLD=30;
 float AVOID_OF_angle = 5 * M_PI/180;
@@ -115,31 +116,37 @@ switch (trajectory_mode){
 float x_rotated=TRAJECTORY_X*0.5+TRAJECTORY_Y*0.866025;
 float y_rotated=-TRAJECTORY_X*0.866025+TRAJECTORY_Y*0.5;
 
-//after having the next way point --> double check with OF
-bool change_heading=safety_check_optical_flow(GLOBAL_OF_VECTOR, x_rotated, y_rotated);
-printf("change_heading: %d \n", change_heading);
+// //after having the next way point --> double check with OF
+// bool change_heading=safety_check_optical_flow(GLOBAL_OF_VECTOR, x_rotated, y_rotated);
+// printf("change_heading: %d \n", change_heading);
 
-if(change_heading){
-  float next_heading=safe_heading(GLOBAL_OF_VECTOR);
-  printf("\n OPTICAL FLOW - SAFE HEADING ACTIVATED!!!");
-  next_heading+=stateGetNedToBodyEulers_f()->psi;
-  FLOAT_ANGLE_NORMALIZE(next_heading);
-  float y_next = stateGetPositionEnu_i()->y + 1 * sin(next_heading);
-  float x_next = stateGetPositionEnu_i()->x + 1 * cos(next_heading); //confirm this angles tomorrow with values in excel!!
-  waypoint_set_xy_i(WP_STDBY,x_next,y_next);
-}
- else{
-   waypoint_set_xy_i(WP_STDBY,x_rotated,y_rotated);
- }
+// if(change_heading){
+//   float next_heading=safe_heading(GLOBAL_OF_VECTOR);
+//   printf("\n OPTICAL FLOW - SAFE HEADING ACTIVATED!!!");
+//   next_heading+=stateGetNedToBodyEulers_f()->psi;
+//   FLOAT_ANGLE_NORMALIZE(next_heading);
+//   float y_next = stateGetPositionEnu_i()->y + 1 * sin(next_heading);
+//   float x_next = stateGetPositionEnu_i()->x + 1 * cos(next_heading); //confirm this angles tomorrow with values in excel!!
+//   waypoint_set_xy_i(WP_STDBY,x_next,y_next);
+// }
+//  else{
+//    waypoint_set_xy_i(WP_STDBY,x_rotated,y_rotated);
+//  }
 
- 
-if(AVOID_keep_slow_count==0){
+
+if(safety_level!=ESCAPE_IN_PROGRESS){
   waypoint_set_xy_i(WP_STDBY,x_rotated,y_rotated);
   nav_set_heading_towards_waypoint(WP_STDBY);
   // waypoint_set_xy_i(WP_GOAL,x_rotated,y_rotated);
   // waypoint_set_xy_i(WP_TRAJECTORY,x_rotated,y_rotated);
 }
+else{
+  printf("[%c] \n", "hold");
+}
 
+      //moveWaypointForwardWithDirection(WP_STDBY, 100.0, -45*M_PI/180.0);
+      // printf("[%d] \n", AVOID_number_of_objects);
+      // printf("[%d] \n", r);
   // Deallocate
 // float *GLOBAL_OF_VECTOR = NULL; 
 }
@@ -148,6 +155,15 @@ if(AVOID_keep_slow_count==0){
 //***************************************** AVOIDANCE STRATEGIES *****************************************
 
 void determine_if_safe(){
+
+  if(AVOID_keep_slow_count!=0){
+    safety_level = ESCAPE_IN_PROGRESS;
+    AVOID_keep_slow_count += 1;
+    if(AVOID_keep_slow_count>50){
+        AVOID_keep_slow_count = 0;
+        }
+    return;
+  }
 
   safety_level = SAFE;
   for(int i; i < AVOID_number_of_objects; i++){
@@ -159,6 +175,7 @@ void determine_if_safe(){
     safety_level = THREAT;
   }
 }
+return;
 }
 
 
@@ -390,23 +407,24 @@ void circle(float current_time, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r)
 {
   double e = 1;
 
+  
   //   float offset=asin(AVOID_d/(2*r))*180/M_PI; //offset in degrees
   //     r_reduced=r*(AVOID_h2-offset)*M_PI/180;
+
   determine_if_safe();
 
   if(safety_level==THREAT){
-
     dt = AVOID_slow_dt;
     r-=fabs(AVOID_objects[AVOID_biggest_threat][1])*400;
-    //moveWaypointForwardWithDirection(WP_STDBY, 100.0, -45*M_PI/180.0);
+    //moveWaypointForwaifrdWithDirection(WP_STDBY, 100.0, -45*M_PI/180.0);
     printf("[%d %d] \n", AVOID_biggest_threat, r);
-    AVOID_keep_slow_count += 0;
-    if(AVOID_keep_slow_count==2){
-      AVOID_keep_slow_count=0;
-      }
+    AVOID_keep_slow_count += 1;
   }
-  if(safety_level==SAFE){
-  dt = AVOID_normal_dt;
+  else if(safety_level==SAFE){
+    dt = AVOID_normal_dt;
+  }
+  else if(safety_level==ESCAPE_IN_PROGRESS){
+    dt = AVOID_slow_dt;
   }
 
   *TRAJECTORY_X = r * cos(current_time);
