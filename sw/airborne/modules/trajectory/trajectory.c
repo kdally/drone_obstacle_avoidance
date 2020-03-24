@@ -64,9 +64,10 @@ float AVOID_FOV = 80;
 int AVOID_PERCENTAGE_THRESHOLD=30;
 float AVOID_OF_angle = 5 * M_PI/180;
 float AVOID_objects[100][3];
-float AVOID_slow_dt = 0.0002;
-float AVOID_normal_dt = 0.0007;
+float AVOID_slow_dt = 0.0001;
+float AVOID_normal_dt = 0.0004;
 int AVOID_keep_slow_count = 0;
+int AVOID_biggest_threat;
 
 float dt=0.0007; // 0.6 m/s speed
 
@@ -74,7 +75,6 @@ void trajectory_init(void){}
 
 void trajectory_periodic(void)
 {
-
 
 AVOID_number_of_objects = 0;
 unpack_object_list();
@@ -140,15 +140,28 @@ if(AVOID_keep_slow_count==0){
   // waypoint_set_xy_i(WP_TRAJECTORY,x_rotated,y_rotated);
 }
 
-
-
   // Deallocate
 // float *GLOBAL_OF_VECTOR = NULL; 
-// float *GLOBAL_OBJECTS_VECTOR = NULL;
 }
 
 
 //***************************************** AVOIDANCE STRATEGIES *****************************************
+
+void determine_if_safe(){
+
+  safety_level = SAFE;
+  for(int i; i < AVOID_number_of_objects; i++){
+    if(fabs(AVOID_objects[i][0]) < AVOID_safety_angle || fabs(AVOID_objects[i][1]) < AVOID_safety_angle || AVOID_objects[i][0]*AVOID_objects[i][1] < 0){
+          
+      if(i==0 || fabs(AVOID_objects[i][0]) > fabs(AVOID_objects[i-1][0]) || fabs(AVOID_objects[i][1]) > fabs(AVOID_objects[i-1][1])){
+          AVOID_biggest_threat = i;
+      }
+    safety_level = THREAT;
+  }
+}
+}
+
+
 
 void avoidance_straight_path(){
 
@@ -379,33 +392,21 @@ void circle(float current_time, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r)
 
   //   float offset=asin(AVOID_d/(2*r))*180/M_PI; //offset in degrees
   //     r_reduced=r*(AVOID_h2-offset)*M_PI/180;
- 
+  determine_if_safe();
 
+  if(safety_level==THREAT){
 
-  for(int i; i < AVOID_number_of_objects; i++){
-
-    if(fabs(AVOID_objects[i][0]) < AVOID_safety_angle || fabs(AVOID_objects[i][1]) < AVOID_safety_angle || AVOID_objects[i][0]*AVOID_objects[i][1] < 0){    
-
-      if(i==0 || fabs(AVOID_objects[i][0]) > fabs(AVOID_objects[i-1][0]) || fabs(AVOID_objects[i][1]) > fabs(AVOID_objects[i-1][1])){
-          
-          //moveWaypointForwardWithDirection(WP_STDBY, 100.0, -45*M_PI/180.0);
-
-          // printf("[%d] \n", AVOID_number_of_objects);
-          r-=fabs(AVOID_objects[i][1])*400;
-          // printf("[%d] \n", r);
-          dt = AVOID_slow_dt;
-
-          AVOID_keep_slow_count += 0;
-          
-          if(AVOID_keep_slow_count==2){
-            AVOID_keep_slow_count=0;
-            }
-
-        }
-    }
-    else{
-      dt = AVOID_normal_dt;
-    }
+    dt = AVOID_slow_dt;
+    r-=fabs(AVOID_objects[AVOID_biggest_threat][1])*400;
+    //moveWaypointForwardWithDirection(WP_STDBY, 100.0, -45*M_PI/180.0);
+    printf("[%d %d] \n", AVOID_biggest_threat, r);
+    AVOID_keep_slow_count += 0;
+    if(AVOID_keep_slow_count==2){
+      AVOID_keep_slow_count=0;
+      }
+  }
+  if(safety_level==SAFE){
+  dt = AVOID_normal_dt;
   }
 
   *TRAJECTORY_X = r * cos(current_time);
@@ -418,22 +419,21 @@ void square(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r)
 {
   int V = 700;
 
-  for(int i; i < AVOID_number_of_objects; i++){
-
-    if(fabs(AVOID_objects[i][0]) < AVOID_safety_angle || fabs(AVOID_objects[i][1]) < AVOID_safety_angle || AVOID_objects[i][0]*AVOID_objects[i][1] < 0){    
-
-      if(i==0 || fabs(AVOID_objects[i][0]) > fabs(AVOID_objects[i-1][0]) || fabs(AVOID_objects[i][1]) > fabs(AVOID_objects[i-1][1])){
-          printf("[%d]", r);
-          r-=fabs(AVOID_objects[i][1])*400;
-          //r -= 200;
-          printf("[%d] \n", r);
-          dt = AVOID_slow_dt;
+  if(safety_level==THREAT){
+      dt = AVOID_slow_dt;
+      r-=fabs(AVOID_objects[AVOID_biggest_threat][1])*400;
+      //moveWaypointForwardWithDirection(WP_STDBY, 100.0, -45*M_PI/180.0);
+      // printf("[%d] \n", AVOID_number_of_objects);
+      // printf("[%d] \n", r);
+      AVOID_keep_slow_count += 0;
+      if(AVOID_keep_slow_count==2){
+        AVOID_keep_slow_count=0;
         }
     }
-    else{
-      dt = AVOID_normal_dt;
+    if(safety_level==SAFE){
+    dt = AVOID_normal_dt;
     }
-  }
+
 
   if(square_mode==1){
     *TRAJECTORY_X = r;
