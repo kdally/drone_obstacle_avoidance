@@ -158,7 +158,7 @@ uint8_t elem_to_rm;
 
 // Distance hreshold for same object [pixels]
 const uint8_t threshold = 50;
-const uint8_t associate_threshold = 100;
+const uint8_t associate_threshold = 80;
 
 struct image_t processed;
 struct image_t color_mask;
@@ -226,10 +226,10 @@ struct image_t *observer_func(struct image_t *img){
     // find_rand_objs();
 
 
-    // // This is just to show the mask
+    // This is just to show the mask
     // printf("After blur\n");
-    // for (uint16_t x=0; x<520; x++){
-    //   for (uint16_t y=0; y<240; y++){
+    // for (uint16_t x=0; x<520; x+=3){
+    //   for (uint16_t y=0; y<240; y+=2){
     //     printf("%d ",mask_g[x][y]);
     //   }
     //   printf("\n");
@@ -570,7 +570,6 @@ void convolve(struct image_t *input, struct image_t *output){
     // printf("\n");
   }
 }
-
 
 // Try number 1 to blur an image vertically
 void blur_big(struct image_t *input, struct image_t *output){
@@ -1027,11 +1026,11 @@ void find_orange_objs(){
       //   der2new = 0;
       // }
 
-  // printf("Poles detected from orange mask\n");
-  // for (uint16_t x = 0; x < 10; x++){
-  //   printf("[%d, %d] \n", poles[x][0], poles[x][1]);
-  // }
-  // printf("\n");
+  printf("Poles detected from orange mask\n");
+  for (uint16_t x = 0; x < 10; x++){
+    printf("[%d, %d] \n", poles[x][0], poles[x][1]);
+  }
+  printf("\n");
 }
 
 // Find poles from green mask
@@ -1047,8 +1046,8 @@ void find_green_objs(){
       // the first white pixel
       if ((mask_g[x][y] == 1)){
         // define upper boundary seach
-        if (y>8){ // if there are more than 8 pixels in the row left
-          top_l = 8;
+        if (y>6){ // if there are more than 8 pixels in the row left
+          top_l = 6;
         } else { // else
           top_l = y;
         }
@@ -1068,8 +1067,6 @@ void find_green_objs(){
   }
 
 
-
-
   // Get floor slope
   int8_t der1 = 0;
   count_g = 0;
@@ -1078,19 +1075,21 @@ void find_green_objs(){
 
   // TODO delete behaviour where stuff is detected 
 
-  for (uint16_t x = 1; x < 519; x++){
+  for (uint16_t x = 2; x < 518; x++){
 
     // LOGIC WITH THRESHOLD ON 1st DERIVATIVE
-    der1 = floors[x+1] - floors[x-1];
+    der1 = floors[x+2] + floors[x+1] - floors[x-1] - floors[x-2];
 
-    if (abs(der1) > 10) {
+    if (abs(der1) > 18) {
       if (der1 < 0){
         poles[idx_g+count_g][0] = x;
         started = true;
       } else {
-        poles[idx_g+count_g][1] = x;
-        count_g++;
-        started = false;
+        if ((poles[idx_g+count_g][0] != 0) || (count_g < 0.5)){
+          poles[idx_g+count_g][1] = x;
+          count_g++;
+          started = false;
+        }
       }
       x += 8;
     }
@@ -1104,11 +1103,11 @@ void find_green_objs(){
 
 
 
-  // printf("Poles detected from green mask\n");
-  // for (uint16_t x = idx_g; x < idx_g+9; x++){
-  //   printf("[%d, %d] \n", poles[x][0], poles[x][1]);
-  // }
-  // printf("\n");
+  printf("Poles detected from green mask\n");
+  for (uint16_t x = idx_g; x < idx_g+9; x++){
+    printf("[%d, %d] \n", poles[x][0], poles[x][1]);
+  }
+  printf("\n");
 }
 
 
@@ -1328,12 +1327,13 @@ void delete_outliers(){
     }
   }
 
-  printf("count intertia: %d \n", count_inertia);
-  printf("Intertial measurements 2\n");
-  for (uint16_t x = 0; x < 10; x++){
-    printf("[%d, %d, %d] \n", poles_w_inertia[x][0], poles_w_inertia[x][1], poles_w_inertia[x][3]);
-  }
-  printf("\n");
+  // printf("count intertia: %d \n", count_inertia);
+  // printf("New count: %d\n", new_count);
+  // printf("Intertial measurements 2\n");
+  // for (uint16_t x = 0; x < 10; x++){
+  //   printf("[%d, %d, %d] \n", poles_w_inertia[x][0], poles_w_inertia[x][1], poles_w_inertia[x][3]);
+  // }
+  // printf("\n");
 
 
   count_inertia += new_count;
@@ -1348,6 +1348,10 @@ void delete_outliers(){
     if (poles_w_inertia[c_inrt][3] < 1){
       idx_to_rm[elem_to_rm] = c_inrt;
       elem_to_rm ++;
+
+      // printf("REMOVEEE!!!\n");
+      // printf("Obj idx: %d\t Obj to rm: %d\n", c_inrt, elem_to_rm-1);
+
     } else {
 
       if (poles_w_inertia[c_inrt][3] > 7){
@@ -1366,14 +1370,18 @@ void delete_outliers(){
   }
 
   uint8_t last_idx = count_inertia-1;
+  uint8_t rm_idx_i;
 
   for (uint8_t c_rm = 0; c_rm < elem_to_rm; c_rm++){
-    for (uint8_t c_mv = c_rm; c_mv < count_inertia-1; c_mv++){
+    rm_idx_i = idx_to_rm[c_rm];
+    for (uint8_t c_mv = rm_idx_i; c_mv < count_inertia-1; c_mv++){
+      // printf("Moving %d to %d\n", c_mv+1, c_mv);
       poles_w_inertia[c_mv][0] = poles_w_inertia[c_mv+1][0];
       poles_w_inertia[c_mv][1] = poles_w_inertia[c_mv+1][1];
       poles_w_inertia[c_mv][2] = poles_w_inertia[c_mv+1][2];
       poles_w_inertia[c_mv][3] = poles_w_inertia[c_mv+1][3];
     }
+    // printf("Deleting obj %d\n", last_idx);
     poles_w_inertia[last_idx][0] = 0;
     poles_w_inertia[last_idx][1] = 0;
     poles_w_inertia[last_idx][2] = 0;
