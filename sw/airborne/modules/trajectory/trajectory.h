@@ -63,5 +63,9 @@ extern bool safety_check_optical_flow(float *AVOID_safety_optical_flow, float x2
 extern float safe_heading(float array_of[]);
 extern void unpack_object_list();
 extern void count_objects();
+extern uint8_t moveWaypointForward(uint8_t waypoint, float distanceMeters);
+extern uint8_t moveWaypoint(uint8_t waypoint, struct EnuCoor_i *new_coor);
+extern uint8_t increase_nav_heading(float incrementDegrees);
+extern uint8_t moveWaypointForwardWithDirection(uint8_t waypoint, float distanceMeters, float direction);
 #endif
 
