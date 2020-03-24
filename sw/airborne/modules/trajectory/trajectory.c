@@ -128,9 +128,9 @@ if(change_heading){
   float x_next = stateGetPositionEnu_i()->x + 1 * cos(next_heading); //confirm this angles tomorrow with values in excel!!
   waypoint_set_xy_i(WP_STDBY,x_next,y_next);
 }
-// else{
-//   waypoint_set_xy_i(WP_STDBY,x_rotated,y_rotated);
-// }
+ else{
+   waypoint_set_xy_i(WP_STDBY,x_rotated,y_rotated);
+ }
 if(AVOID_keep_slow_count==0){
   waypoint_set_xy_i(WP_STDBY,x_rotated,y_rotated);
   nav_set_heading_towards_waypoint(WP_STDBY);
