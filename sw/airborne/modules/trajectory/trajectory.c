@@ -71,6 +71,9 @@ int AVOID_keep_slow_count = 0;
 int AVOID_biggest_threat;
 
 float dt=0.0007; // 0.6 m/s speed
+struct EnuCoor_i target_coord; 
+
+
 
 void trajectory_init(void){}
 
@@ -116,6 +119,8 @@ switch (trajectory_mode){
 float x_rotated=TRAJECTORY_X*0.5+TRAJECTORY_Y*0.866025;
 float y_rotated=-TRAJECTORY_X*0.866025+TRAJECTORY_Y*0.5;
 
+setCoord(&target_coord, x_rotated, y_rotated); 
+
 // //after having the next way point --> double check with OF
 // bool change_heading=safety_check_optical_flow(GLOBAL_OF_VECTOR, x_rotated, y_rotated);
 // printf("change_heading: %d \n", change_heading);
@@ -141,7 +146,7 @@ if(safety_level!=ESCAPE_IN_PROGRESS){
   // waypoint_set_xy_i(WP_TRAJECTORY,x_rotated,y_rotated);
 }
 else{
-  printf("[%c] \n", "hold");
+  printf("HOLD for iteration %c \n", AVOID_keep_slow_count);
 }
 
       //moveWaypointForwardWithDirection(WP_STDBY, 100.0, -45*M_PI/180.0);
@@ -159,7 +164,9 @@ void determine_if_safe(){
   if(AVOID_keep_slow_count!=0){
     safety_level = ESCAPE_IN_PROGRESS;
     AVOID_keep_slow_count += 1;
-    if(AVOID_keep_slow_count>50){
+  
+    if(isCoordInRadius(&target_coord, 5.0) == true){
+    //if(AVOID_keep_slow_count>50){
         AVOID_keep_slow_count = 0;
         }
     return;
@@ -385,8 +392,8 @@ void unpack_object_list(){
 
      for (int i = 0; i < 100; i++) {
 
-         AVOID_objects[i][0] = convert_index_to_heading(poles[i][0], 519);
-         AVOID_objects[i][1] = convert_index_to_heading(poles[i][1], 519);
+         AVOID_objects[i][0] = convert_index_to_heading(final_objs[i][0], 519);
+         AVOID_objects[i][1] = convert_index_to_heading(final_objs[i][1], 519);
          AVOID_objects[i][2] = 0.0;
      }
 }
@@ -396,7 +403,7 @@ void count_objects(){
   
     
     for (int i = 0; i < 10; i++) {
-       if (poles[i][0] != 0 || poles[i][1] != 0){
+       if (final_objs[i][0] != 0 || final_objs[i][1] != 0){
             AVOID_number_of_objects = AVOID_number_of_objects+1;
         }
     }
@@ -429,6 +436,7 @@ void circle(float current_time, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r)
 
   *TRAJECTORY_X = r * cos(current_time);
   *TRAJECTORY_Y = e * r * sin(current_time);
+
 
 return;
 }
@@ -694,7 +702,6 @@ uint8_t moveWaypointForward(uint8_t waypoint, float distanceMeters)
   return false;
 }
 
-
 /*
  * Calculates coordinates of distance forward and sets waypoint 'waypoint' to those coordinates
  */
@@ -704,4 +711,20 @@ uint8_t moveWaypointForwardWithDirection(uint8_t waypoint, float distanceMeters,
   calculateForwardsWithDirection(&new_coor, distanceMeters, direction);
   moveWaypoint(waypoint, &new_coor);
   return false;
+}
+
+void setCoord(struct EnuCoor_i *coord, float x, float y){
+  coord->x = stateGetPositionEnu_i()->x;
+  coord->y = stateGetPositionEnu_i()->y;
+}
+
+bool isCoordInRadius(struct EnuCoor_i *coord, float radius){
+
+  float dist = sqrt(pow(coord->x - stateGetPositionEnu_i()->x,2) + pow(coord->y - stateGetPositionEnu_i()->y,2));
+  if(dist > radius){
+    return true;
+  }
+  else{
+  return false;
+  }
 }
