@@ -249,7 +249,7 @@ struct image_t *observer_func(struct image_t *img){
     clock_t end = clock();
     double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
     printf("Time: %lf \n", time_spent);
-    printf("///////////////////////////////////////////////////////////////\n");
+    // printf("///////////////////////////////////////////////////////////////\n");
   }
   return img;
   // return img;
@@ -1247,11 +1247,11 @@ void combine_measurements(){
     }
   }
 
-  printf("Combined measurements\n");
-  for (uint16_t x = 0; x < 10; x++){
-    printf("[%d, %d] \n", poles_comb[x][0], poles_comb[x][1]);
-  }
-  printf("\n");
+  // printf("Combined measurements\n");
+  // for (uint16_t x = 0; x < 10; x++){
+  //   printf("[%d, %d] \n", poles_comb[x][0], poles_comb[x][1]);
+  // }
+  // printf("\n");
 
 }
 
@@ -1262,12 +1262,12 @@ void delete_outliers(){
   uint16_t min_dist;
   uint8_t min_idx;
 
-  printf("count intertia: %d \n", count_inertia);
-  printf("Intertial measurements 1\n");
-  for (uint16_t x = 0; x < 10; x++){
-    printf("[%d, %d, %d] \n", poles_w_inertia[x][0], poles_w_inertia[x][1], poles_w_inertia[x][3]);
-  }
-  printf("\n");
+  // printf("count intertia: %d \n", count_inertia);
+  // printf("Intertial measurements 1\n");
+  // for (uint16_t x = 0; x < 10; x++){
+  //   printf("[%d, %d, %d] \n", poles_w_inertia[x][0], poles_w_inertia[x][1], poles_w_inertia[x][3]);
+  // }
+  // printf("\n");
 
   // if list obj_w_inertia is empty, add all seen cones
   if (count_inertia == 0){
@@ -1328,12 +1328,12 @@ void delete_outliers(){
     }
   }
 
-  printf("count intertia: %d \n", count_inertia);
-  printf("Intertial measurements 2\n");
-  for (uint16_t x = 0; x < 10; x++){
-    printf("[%d, %d, %d] \n", poles_w_inertia[x][0], poles_w_inertia[x][1], poles_w_inertia[x][3]);
-  }
-  printf("\n");
+  // printf("count intertia: %d \n", count_inertia);
+  // printf("Intertial measurements 2\n");
+  // for (uint16_t x = 0; x < 10; x++){
+  //   printf("[%d, %d, %d] \n", poles_w_inertia[x][0], poles_w_inertia[x][1], poles_w_inertia[x][3]);
+  // }
+  // printf("\n");
 
 
   count_inertia += new_count;
@@ -1385,31 +1385,31 @@ void delete_outliers(){
 
 
 
-  printf("Intertial measurements 3\n");
-  for (uint16_t x = 0; x < 10; x++){
-    printf("[%d, %d, %d] \n", poles_w_inertia[x][0], poles_w_inertia[x][1], poles_w_inertia[x][3]);
-  }
+  // printf("Intertial measurements 3\n");
+  // for (uint16_t x = 0; x < 10; x++){
+  //   printf("[%d, %d, %d] \n", poles_w_inertia[x][0], poles_w_inertia[x][1], poles_w_inertia[x][3]);
+  // }
 
-  printf("\n");
+  // printf("\n");
 
 
 }
 
 void find_distances(){
 
-  printf("Final count: %d\n", final_count);
+  // printf("Final count: %d\n", final_count);
 
   for (uint8_t idx = 0; idx < final_count; idx++){
     final_objs[idx][2] = final_objs[idx][1]-final_objs[idx][0];
   }
 
 
-  printf("Final measurements\n");
-  for (uint16_t x = 0; x < 10; x++){
-    printf("[%d, %d, %d] \n", final_objs[x][0], final_objs[x][1], final_objs[x][2]);
-  }
+  // printf("Final measurements\n");
+  // for (uint16_t x = 0; x < 10; x++){
+  //   printf("[%d, %d, %d] \n", final_objs[x][0], final_objs[x][1], final_objs[x][2]);
+  // }
 
-  printf("\n");
+  // printf("\n");
 
 
 }
