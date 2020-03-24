@@ -1,7 +1,30 @@
+/*
+ * Copyright (C) Team Wonder
+ *
+ * This file is part of paparazzi
+ *
+ * paparazzi is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2, or (at your option)
+ * any later version.
+ *
+ * paparazzi is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with paparazzi; see the file COPYING.  If not, see
+ * <http://www.gnu.org/licenses/>.
+ */
+/**
+ * @file "modules/TRAJECTORY/TRAJECTORY.h"
+ * @author Team Wonder
+ * Just pathing in TRAJECTORY
+ */
+
 
 #include "modules/observer/node.h"
-#include <stdio.h>
-#include <time.h>
 
 
 #ifndef OPENCVDEMO_FPS
@@ -216,10 +239,10 @@ struct image_t *observer_func(struct image_t *img){
 
 
     // // blur_image(&processed, &blurred);
-    // blur_big(&processed, &blurred);
+    blur_big(&processed, &blurred);
 
     // // // // convolve(&blurred, &processed);
-    // convolve_big(&blurred, &processed);
+    convolve_big(&blurred, &processed);
 
 
 
@@ -768,24 +791,6 @@ void convolve_big(struct image_t *input, struct image_t *output){
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   // uint8_t *source = ((uint8_t *)input->buf);
   // uint8_t *dest = ((uint8_t *)output->buf);
 
@@ -1026,11 +1031,11 @@ void find_orange_objs(){
       //   der2new = 0;
       // }
 
-  printf("Poles detected from orange mask\n");
-  for (uint16_t x = 0; x < 10; x++){
-    printf("[%d, %d] \n", poles[x][0], poles[x][1]);
-  }
-  printf("\n");
+  // printf("Poles detected from orange mask\n");
+  // for (uint16_t x = 0; x < 10; x++){
+  //   printf("[%d, %d] \n", poles[x][0], poles[x][1]);
+  // }
+  // printf("\n");
 }
 
 // Find poles from green mask
@@ -1103,11 +1108,11 @@ void find_green_objs(){
 
 
 
-  printf("Poles detected from green mask\n");
-  for (uint16_t x = idx_g; x < idx_g+9; x++){
-    printf("[%d, %d] \n", poles[x][0], poles[x][1]);
-  }
-  printf("\n");
+  // printf("Poles detected from green mask\n");
+  // for (uint16_t x = idx_g; x < idx_g+9; x++){
+  //   printf("[%d, %d] \n", poles[x][0], poles[x][1]);
+  // }
+  // printf("\n");
 }
 
 
@@ -1246,11 +1251,11 @@ void combine_measurements(){
     }
   }
 
-  printf("Combined measurements\n");
-  for (uint16_t x = 0; x < 10; x++){
-    printf("[%d, %d] \n", poles_comb[x][0], poles_comb[x][1]);
-  }
-  printf("\n");
+  // printf("Combined measurements\n");
+  // for (uint16_t x = 0; x < 10; x++){
+  //   printf("[%d, %d] \n", poles_comb[x][0], poles_comb[x][1]);
+  // }
+  // printf("\n");
 
 }
 
@@ -1412,12 +1417,12 @@ void find_distances(){
   }
 
 
-  printf("Final measurements\n");
-  for (uint16_t x = 0; x < 10; x++){
-    printf("[%d, %d, %d] \n", final_objs[x][0], final_objs[x][1], final_objs[x][2]);
-  }
+  // printf("Final measurements\n");
+  // for (uint16_t x = 0; x < 10; x++){
+  //   printf("[%d, %d, %d] \n", final_objs[x][0], final_objs[x][1], final_objs[x][2]);
+  // }
 
-  printf("\n");
+  // printf("\n");
 
 
 }
