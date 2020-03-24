@@ -28,7 +28,7 @@
 #include "modules/observer/observer.h"
 #include "state.h"
 #include <stdio.h>
-#include <time.h>q
+#include <time.h>
 
 #ifndef OBSERVER_NODE_H
 #define OBSERVER_NODE_H

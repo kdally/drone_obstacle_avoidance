@@ -264,15 +264,15 @@ struct image_t *observer_func(struct image_t *img){
     find_distances();
 
     // copy processed to img for output
-    copy2img(&processed, img);
+    // copy2img(&processed, img);
     // copy2img(&blurred, img);
 
 
 
     clock_t end = clock();
     double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
-    printf("Time: %lf \n", time_spent);
-    printf("///////////////////////////////////////////////////////////////\n");
+    // printf("Time: %lf \n", time_spent);
+    // printf("///////////////////////////////////////////////////////////////\n");
   }
   return img;
   // return img;
@@ -1412,9 +1412,11 @@ void find_distances(){
 
   // printf("Final count: %d\n", final_count);
 
+  // Estimate distance purely from pixel width
   for (uint8_t idx = 0; idx < final_count; idx++){
     final_objs[idx][2] = final_objs[idx][1]-final_objs[idx][0];
   }
+
 
 
   // printf("Final measurements\n");
