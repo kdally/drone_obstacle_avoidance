@@ -71,8 +71,8 @@ int AVOID_keep_slow_count = 0;
 int AVOID_biggest_threat;
 //**** FOR OF TUNNING
 float AVOID_OF_angle = 3.5 * M_PI/180;
-float OF_NEXT_HEADING_INFLUENCE = 0.25;
-float OPTICAL_FLOW_THRESHOLD=0.6;
+float OF_NEXT_HEADING_INFLUENCE = 0.2;
+float OPTICAL_FLOW_THRESHOLD=0.7;
 
 float dt=0.0005; // 0.6 m/s speed
 struct EnuCoor_i AVOID_start_avoid_coord;
@@ -269,7 +269,9 @@ bool safety_check_optical_flow(float *AVOID_safety_optical_flow, float x2, float
   }
   */
   bool change_heading=false;
+  printf("Optical Flow\n");
   for (int i = i1; i <= i2; i++){
+    printf("i: %f\n",AVOID_safety_optical_flow[i]);
     if(AVOID_safety_optical_flow[i]>OPTICAL_FLOW_THRESHOLD){
           change_heading=true;
       }
@@ -325,6 +327,14 @@ float safe_heading(float array_of[]){
     }
   }
    */
+
+  if(safe_mode_previous){
+    if(partition_OF[last_iteration_safe_heading]<0.1){
+      float safest_heading = -1*field_of_view/2 + last_iteration_safe_heading * angular_span + angular_span/2;
+      printf("SAME HEADING");
+      return safest_heading;
+    }
+  }
   quickSort(partition_OF,indexis,0,NUMBER_OF_PARTITIONS-1);
   
   printf("\n \n Array after quick sorting: \n");
@@ -333,16 +343,6 @@ float safe_heading(float array_of[]){
   }
 
   float safest_heading = -1*field_of_view/2 + indexis[0] * angular_span + angular_span/2; //partition with lowest OF average
-
-  printf("last iteration i: %d \n this iteration i: %d \n", safest_heading, indexis[0]);
-
-  if(safe_mode_previous){
-    if(partition_OF[last_iteration_safe_heading]<0.1+partition_OF[0]){
-      safest_heading = -1*field_of_view/2 + last_iteration_safe_heading * angular_span + angular_span/2;
-      printf("HEYYYY");
-      return safest_heading;
-    }
-  }
 
   last_iteration_safe_heading=indexis[0];
   printf("safest heading: %f \n", safest_heading*180/M_PI);
@@ -446,7 +446,7 @@ void square(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r)
 {
   int V = 700;
 
-  determine_if_safe();
+  //determine_if_safe();
 
   if(safety_level==THREAT){
     dt = AVOID_slow_dt;
