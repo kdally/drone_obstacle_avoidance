@@ -72,12 +72,12 @@ struct EnuCoor_i AVOID_start_avoid_coord;
 
 //********************* TUNNING PARAMETERS *********************
 //**** FOR Color filter TUNNING
-float AVOID_dist_threat = 3.0; // typically between 35 and 90. The higher, the smaller is the distance from which we consider poles a threat
+float AVOID_dist_threat = 3.2; // typically between 35 and 90. The higher, the smaller is the distance from which we consider poles a threat
 int AVOID_keep_escape_count = 35;   // typically between 0 and 90. This is to avoid oscillations in the escape route. The higher, the fewer oscillations
 //**** FOR Optical Flow TUNNING
 float AVOID_OF_angle = 3.5 * M_PI/180;  // angle for which we look at the Optical flow
 float OF_NEXT_HEADING_INFLUENCE = 0.6;  // Gain of escpae route from the optical flow-based avoidance
-float OPTICAL_FLOW_THRESHOLD=1.0;  // Optical flow above which it's dangerous to move forward
+float OPTICAL_FLOW_THRESHOLD=0.9;  // Optical flow above which it's dangerous to move forward
 
 
 void trajectory_init(void){}
@@ -126,8 +126,8 @@ float y_rotated=-TRAJECTORY_X*0.866025+TRAJECTORY_Y*0.5;
 
 
 if(safety_level!=ESCAPE_IN_PROGRESS){
-  waypoint_set_xy_i(WP_STDBY,x_rotated,y_rotated);
-  nav_set_heading_towards_waypoint(WP_STDBY);
+  waypoint_set_xy_i(WP_GOAL,x_rotated,y_rotated);
+  nav_set_heading_towards_waypoint(WP_GOAL);
   // waypoint_set_xy_i(WP_GOAL,x_rotated,y_rotated);
   // waypoint_set_xy_i(WP_TRAJECTORY,x_rotated,y_rotated);
 }
@@ -137,10 +137,10 @@ else{
 
  //after having the next way point --> double check with OF
  bool change_heading=safety_check_optical_flow(GLOBAL_OF_VECTOR, x_rotated, y_rotated);
- //printf("\nchange_heading: %d \n", change_heading);
 
 if(change_heading){
-  moveWaypointForwardWithDirection(WP_STDBY,OF_NEXT_HEADING_INFLUENCE,safe_heading(GLOBAL_OF_VECTOR));
+  printf("\nchange_heading: %d \n", change_heading);
+  moveWaypointForwardWithDirection(WP_GOAL,OF_NEXT_HEADING_INFLUENCE,safe_heading(GLOBAL_OF_VECTOR));
 }
 
 // Deallocate
@@ -424,7 +424,7 @@ void square(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r)
 
   if(safety_level==THREAT){
     dt = AVOID_slow_dt;
-    r-=fabs(AVOID_objects[AVOID_biggest_threat][1])*400;
+    r-=fabs(AVOID_objects[AVOID_biggest_threat][1])*600;
     //moveWaypointForwaifrdWithDirection(WP_STDBY, 100.0, -45*M_PI/180.0);
     printf("[%d %d] \n", final_objs[AVOID_biggest_threat][2], r);
     AVOID_keep_slow_count += 1;
