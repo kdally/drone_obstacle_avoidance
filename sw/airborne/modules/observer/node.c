@@ -247,6 +247,9 @@ struct image_t *observer_func(struct image_t *img){
     x_loc = - stateGetPositionEnu_f()->x*0.523599 + stateGetPositionEnu_f()->y*0.851965;
     y_loc =  stateGetPositionEnu_f()->x*0.851965 + stateGetPositionEnu_f()->y*0.523599;
     head = stateGetNedToBodyEulers_f()->psi + 0.523599;
+    if (head > 3.141592){
+      head -= 3.141592*2;
+    }
 
     // printf("[%lf, %lf, %lf]\n", stateGetPositionEnu_f()->x, stateGetPositionEnu_f()->y, stateGetNedToBodyEulers_f()->psi);
 
@@ -261,21 +264,21 @@ struct image_t *observer_func(struct image_t *img){
     find_orange_objs();
 
     // Filter ground (green)
-    // image_specfilt(&processed, &processed, &color_mask, green_cf[0], green_cf[1], 
-    //             green_cf[2], green_cf[3], green_cf[4], green_cf[5], &mask_g);
+    image_specfilt(&processed, &processed, &color_mask, green_cf[0], green_cf[1], 
+                green_cf[2], green_cf[3], green_cf[4], green_cf[5], &mask_g);
 
-    // find_green_objs();
+    find_green_objs();
 
-    // // // Filter blue color and remove stuff in ground
-    // image_bgfilt(&processed, &processed, blue_cf[0], blue_cf[1], 
-    //                blue_cf[2], blue_cf[3], blue_cf[4], blue_cf[5], false);
+    // // Filter blue color and remove stuff in ground
+    image_bgfilt(&processed, &processed, blue_cf[0], blue_cf[1], 
+                   blue_cf[2], blue_cf[3], blue_cf[4], blue_cf[5], false);
 
 
-    // // // blur_image(&processed, &blurred);
-    // blur_big(&processed, &blurred);
+    // // blur_image(&processed, &blurred);
+    blur_big(&processed, &blurred);
 
-    // // // // // convolve(&blurred, &processed);
-    // convolve_big(&blurred, &processed);
+    // // // // convolve(&blurred, &processed);
+    convolve_big(&blurred, &processed);
 
 
 
@@ -304,8 +307,8 @@ struct image_t *observer_func(struct image_t *img){
 
     clock_t end = clock();
     double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
-    // printf("Time: %lf \n", time_spent);
-    // printf("///////////////////////////////////////////////////////////////\n");
+    printf("Time: %lf \n", time_spent);
+    printf("///////////////////////////////////////////////////////////////\n");
   }
   return img;
   // return img;
@@ -1497,22 +1500,107 @@ void delete_outliers(){
 
 void find_distances(){
 
-  // printf("Final count: %d\n", final_count);
+  int16_t avg_px;
+  float head_obj;
+  float d_to_edge = 0;
 
-  // Estimate distance purely from pixel width
+  float dist1;
+  float dist2;
+
+  // angle from pose to
+  float head_1 = atan2(( 3.85-y_loc), ( 3.85-x_loc)); // top r (+, +) 
+  float head_2 = atan2(( 3.85-y_loc), (-3.85-x_loc)); // bot r (+, -)
+  float head_3 = atan2((-3.85-y_loc), (-3.85-x_loc)); // bot l (-, -)
+  float head_4 = atan2((-3.85-y_loc), ( 3.85-x_loc)); // top l (-, +))
+
+  // // angle from pose to 
+  // float head_1 = atan2(( 3.85-x_loc), ( 3.85-y_loc)); // top r (+, +) 
+  // float head_2 = atan2(( 3.85-x_loc), (-3.85-y_loc)); // bot r (+, -)
+  // float head_3 = atan2((-3.85-x_loc), (-3.85-y_loc)); // bot l (-, -)
+  // float head_4 = atan2((-3.85-x_loc), ( 3.85-y_loc)); // top l (-, +))
+
+
+  // printf("HEADS: \n");
+  // printf("H1: %.2lf\n", head_1);
+  // printf("H2: %.2lf\n", head_2);
+  // printf("H3: %.2lf\n", head_3);
+  // printf("H4: %.2lf\n", head_4);
+
+  printf("Own loc: [%.2lf, %.2lf]\n", x_loc, y_loc);
+  printf("Our head: %.2lf\n", head);
+
   for (uint8_t idx = 0; idx < final_count; idx++){
-    final_objs[idx][2] = px_dist_scale/(final_objs[idx][1]-final_objs[idx][0]);
+
+    dist1 = 0;
+    dist2 = 0;
+
+    ////////////////// Find distance from hole in ground mask //////////////////
+    avg_px = (final_objs[idx][1]+final_objs[idx][0])/2;
+
+    if (floors[avg_px] != 0){
+      // Get angle to obj from linear mapping on the pixel location
+      head_obj = head + (-40+4*avg_px/26) * 0.017453;
+      printf("Avg pxl: %d\n", avg_px);
+      printf("Head obj: %.2lf\n", head_obj);
+
+      // if pointing to top edge
+      if ((head_obj < head_1) && (head_obj > head_4)){
+        // x_lim = 3.85-x_loc;
+        // y_lim = 
+        printf("1\n");
+
+        d_to_edge = (3.85-x_loc) / cos(head_obj);
+      }
+      // if pointing to the right edge
+      if ((head_obj > head_1) && (head_obj < head_2)){
+        d_to_edge = (3.85-y_loc) / sin(head_obj);
+        printf("2\n");
+      }
+      // if pointing to the bottom edge
+      if ((head_obj > head_2) || (head_obj < head_3)){
+        d_to_edge = (-3.85-x_loc) / cos(head_obj);
+        printf("3\n");
+      }
+      // if pointing to the left edge
+      if ((head_obj > head_3) && (head_obj < head_4)){
+        d_to_edge = (-3.85-y_loc) / sin(head_obj);
+        printf("4\n");
+      }
+
+      // aritmetic expression that yields somewhat good results for pole distance
+      dist1 = 2*9*d_to_edge/(floors[(uint16_t)final_objs[idx][0]-15] + floors[(uint16_t)final_objs[idx][1]-15]);
+      dist1 = sin(dist1);
+      dist1 = floors[avg_px]*dist1/9 + 0.9;
+    }
+
+
+    // printf("[%.1lf, %.1lf]\n", final_objs[idx][0], final_objs[idx][1]);
+
+    // printf("d_to_edge: %.2lf m\n", d_to_edge);
+
+    // printf("Floor @ obj: %d\n", floors[avg_px]);
+    // printf("Floor next to obj: %d, %d\n", floors[(uint16_t)final_objs[idx][0]-15], floors[(uint16_t)final_objs[idx][1]+15]);
+
+
+    ////////////////// Find distance from object thickness //////////////////
+    // (assuming thickness of 0.3 m -> pole thickness)
+
+    dist2 = px_dist_scale/(final_objs[idx][1]-final_objs[idx][0]);
+
+    if (dist1 != 0){
+      final_objs[idx][2] = (2*dist2 + dist1) / 3;
+    } else {
+      final_objs[idx][2] = dist2;
+    }
   }
 
 
+  printf("Final measurements\n");
+  for (uint16_t x = 0; x < 10; x++){
+    printf("[%f, %f, %f] \n", final_objs[x][0], final_objs[x][1], final_objs[x][2]);
+  }
 
-
-  // printf("Final measurements\n");
-  // for (uint16_t x = 0; x < 10; x++){
-  //   printf("[%f, %f, %f] \n", final_objs[x][0], final_objs[x][1], final_objs[x][2]);
-  // }
-
-  // printf("\n");
+  printf("\n");
 
 
 }
