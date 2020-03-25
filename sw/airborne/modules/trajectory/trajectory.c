@@ -74,7 +74,7 @@ float AVOID_OF_angle = 5 * M_PI/180;
 float OF_NEXT_HEADING_INFLUENCE = 100;
 
 float dt=0.0007; // 0.6 m/s speed
-
+struct EnuCoor_i target_coord; 
 
 
 void trajectory_init(void){}
@@ -123,9 +123,10 @@ float y_rotated=-TRAJECTORY_X*0.866025+TRAJECTORY_Y*0.5;
 
 setCoord(&target_coord, x_rotated, y_rotated); 
 
-// //after having the next way point --> double check with OF
-// bool change_heading=safety_check_optical_flow(GLOBAL_OF_VECTOR, x_rotated, y_rotated);
-// printf("change_heading: %d \n", change_heading);
+ //after having the next way point --> double check with OF
+ bool change_heading=safety_check_optical_flow(GLOBAL_OF_VECTOR, x_rotated, y_rotated);
+ printf("change_heading: %d \n", change_heading);
+
 if(change_heading){
   float next_heading=safe_heading(GLOBAL_OF_VECTOR);
   printf("\nCurrent heading: %f", (stateGetNedToBodyEulers_f()->psi)*180/M_PI);
@@ -135,8 +136,8 @@ if(change_heading){
   ANGLE_BFP_OF_REAL(next_heading);
   printf("\nheading next: %f", next_heading*180/M_PI);
 
-  float dx=OF_NEXT_HEADING_INFLUENCE * cos(next_heading-M_PI/2);
-  float dy=OF_NEXT_HEADING_INFLUENCE * sin(next_heading-M_PI/2);
+  float dx=OF_NEXT_HEADING_INFLUENCE * cosf(next_heading-M_PI/2);
+  float dy=OF_NEXT_HEADING_INFLUENCE * sinf(next_heading-M_PI/2);
   int x_next = stateGetPositionEnu_i()->x + dx;  
   int y_next = stateGetPositionEnu_i()->y + dy;
   printf("\nThis position: x:%d ",stateGetPositionEnu_i()->x);
