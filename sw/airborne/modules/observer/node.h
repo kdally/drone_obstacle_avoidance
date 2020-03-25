@@ -63,7 +63,7 @@ void combine_measurements();
 void delete_outliers();
 void find_distances();
 
-extern uint16_t final_objs[100][3];
+extern float final_objs[100][3];
 
 // Init function
 extern void observer_node_init(void);
