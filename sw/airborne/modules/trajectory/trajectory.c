@@ -69,6 +69,8 @@ int AVOID_keep_slow_count = 0;
 int AVOID_biggest_threat;
 float dt=0.0006; // 0.6 m/s speed
 struct EnuCoor_i AVOID_start_avoid_coord; 
+bool safe_mode_previous=false;
+int last_iteration_safe_heading=0;
 
 //********************* TUNNING PARAMETERS *********************
 //**** FOR Color filter TUNNING
@@ -77,10 +79,7 @@ int AVOID_keep_escape_count = 35;   // typically between 0 and 90. This is to av
 //**** FOR Optical Flow TUNNING
 float AVOID_OF_angle = 3.5 * M_PI/180;  // angle for which we look at the Optical flow
 float OF_NEXT_HEADING_INFLUENCE = 0.25;  // Gain of escpae route from the optical flow-based avoidance
-float OPTICAL_FLOW_THRESHOLD=0.7;  // Optical flow above which it's dangerous to move forward
-bool safe_mode_previous=false;
-int last_iteration_safe_heading=0;
-
+float OPTICAL_FLOW_THRESHOLD=0.8;  // Optical flow above which it's dangerous to move forward
 
 void trajectory_init(void){}
 
@@ -130,24 +129,18 @@ float y_rotated=-TRAJECTORY_X*0.866025+TRAJECTORY_Y*0.5;
 if(safety_level!=ESCAPE_IN_PROGRESS){
   waypoint_set_xy_i(WP_GOAL,x_rotated,y_rotated);
   nav_set_heading_towards_waypoint(WP_GOAL);
-  // waypoint_set_xy_i(WP_GOAL,x_rotated,y_rotated);
-  // waypoint_set_xy_i(WP_TRAJECTORY,x_rotated,y_rotated);
 }
 else{
- // printf("HOLD for iteration %c \n", AVOID_keep_slow_count);
+  bool change_heading = safety_check_optical_flow(GLOBAL_OF_VECTOR, x_rotated, y_rotated);
+  if(change_heading){
+    moveWaypointForwardWithDirection(WP_STDBY,OF_NEXT_HEADING_INFLUENCE,safe_heading(GLOBAL_OF_VECTOR));
+    safe_mode_previous=true;
+    printf("[%f] \n", safe_heading(GLOBAL_OF_VECTOR)*180/M_PI);
+  }
+  else{
+    safe_mode_previous=false;
+  }
 }
-
- //after having the next way point --> double check with OF
- bool change_heading=safety_check_optical_flow(GLOBAL_OF_VECTOR, x_rotated, y_rotated);
-
-if(change_heading){
-  moveWaypointForwardWithDirection(WP_STDBY,OF_NEXT_HEADING_INFLUENCE,safe_heading(GLOBAL_OF_VECTOR));
-  safe_mode_previous=true;
-}
-else{
-  safe_mode_previous=false;
-}
-
 // Deallocate
 // float *GLOBAL_OF_VECTOR = NULL; 
 }
@@ -184,31 +177,6 @@ return;
 }
 
 
-
-void avoidance_straight_path(float *TRAJECTORY_X, float *TRAJECTORY_Y){
-
-// h1 and h2 are the left and right headings in degrees of the obstable in a realtive 
-// reference frame w/ origin in the center of the FOV 
-// float heading_increment = 0.0;
-// for(int i; i < AVOID_number_of_objects; i++){
-//   if(AVOID_objects[i][0]*AVOID_objects[i][1] < 0){    
-//     if(i==0 || fabs(AVOID_objects[i][0]) > fabs(AVOID_objects[i-1][0]) || fabs(AVOID_objects[i][1]) > fabs(AVOID_objects[i-1][1])){
-//       heading_increment = 45 * M_PI / 180.0;
-//     }
-//   }
-//   if(AVOID_objects[i][0] > 0 && AVOID_objects[i][0] < AVOID_safety_angle){    
-//     if(i==0 || fabs(AVOID_objects[i][0]) > fabs(AVOID_objects[i-1][0]) || fabs(AVOID_objects[i][1]) > fabs(AVOID_objects[i-1][1])){
-//       heading_increment = 3*(AVOID_objects[i][0] - AVOID_safety_angle); // linear function to adapt heading change
-//     }
-//   }
-//   if(AVOID_objects[i][1] < 0 && AVOID_objects[i][1] > -1*AVOID_safety_angle){    
-//     if(i==0 || fabs(AVOID_objects[i][0]) > fabs(AVOID_objects[i-1][0]) || fabs(AVOID_objects[i][1]) > fabs(AVOID_objects[i-1][1])){
-//       heading_increment = 3*(AVOID_objects[i][0] + AVOID_safety_angle); 
-//     }
-//   }
-  float new_heading = stateGetNedToBodyEulers_f()->psi + 45 * M_PI / 180.0;
-  calculatePointForwardsWithDirection(&TRAJECTORY_X, &TRAJECTORY_Y, 30.0, new_heading);
-}
 
 bool safety_check_optical_flow(float *AVOID_safety_optical_flow, float x2, float y2){
   //returns true if it's not safe and there's the need to change heading
@@ -401,7 +369,7 @@ void circle(float current_time, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r)
 {
   double e = 1;
 
-  //determine_if_safe();
+  determine_if_safe();
 
   if(safety_level==THREAT){
     dt = AVOID_slow_dt;
@@ -487,120 +455,165 @@ void lace(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r)
   determine_if_safe();
 
   if(lace_mode==1){
+    if(safety_level==THREAT){
+      dt = AVOID_slow_dt;
+      r-=fabs(AVOID_objects[AVOID_biggest_threat][1])*600;
+      AVOID_keep_slow_count += 1;
+    }
+    else if(safety_level==SAFE){
+      dt = AVOID_normal_dt;
+    }
+    else if(safety_level==ESCAPE_IN_PROGRESS){
+      dt = AVOID_slow_dt;
+    }
   *TRAJECTORY_X = r;
   *TRAJECTORY_Y -= dt*V;
-
   if (*TRAJECTORY_Y < -r){
     lace_mode=2;
     }
   }
 
+  if(lace_mode==3){
+    if(safety_level==THREAT){
+      dt = AVOID_slow_dt;
+      r-=fabs(AVOID_objects[AVOID_biggest_threat][1])*600;
+      AVOID_keep_slow_count += 1;
+    }
+    else if(safety_level==SAFE){
+      dt = AVOID_normal_dt;
+    }
+    else if(safety_level==ESCAPE_IN_PROGRESS){
+      dt = AVOID_slow_dt;
+    }
+  *TRAJECTORY_X = -r;
+  *TRAJECTORY_Y -= dt*V;
+  if (*TRAJECTORY_Y < -r){
+    lace_mode=4;
+    }
+  }
+
   if(lace_mode==2){
-    *TRAJECTORY_X -= dt*V*0.70710678;
-    *TRAJECTORY_Y=-1 * *TRAJECTORY_X;
-
-    if (*TRAJECTORY_X<-r){
-      lace_mode=3;
-    }
-  }
-  if(lace_mode==4){
-    *TRAJECTORY_X+=dt*V*0.70710678;
-    *TRAJECTORY_Y=*TRAJECTORY_X;
-
-    if (*TRAJECTORY_X>r){
-      lace_mode=1;
-    }
-  }
-  
-
-  
-  if(safety_level==THREAT){
+    if(safety_level==THREAT){
     dt = AVOID_slow_dt;
-
-    if(lace_mode==1 || lace_mode==3){
-    r-=fabs(AVOID_objects[AVOID_biggest_threat][1])*600;
-    }
-    else{
-      avoidance_straight_path(&TRAJECTORY_X,&TRAJECTORY_Y);
-    }
+    calculatePointForwardsWithDirection(&TRAJECTORY_X, &TRAJECTORY_Y, 30.0, 45*M_PI/180.0);
     AVOID_keep_slow_count += 1;
   }
   else if(safety_level==SAFE){
     dt = AVOID_normal_dt;
+    *TRAJECTORY_X+=dt*V*0.70710678;
+    *TRAJECTORY_Y=*TRAJECTORY_X;
+      if (*TRAJECTORY_X<-r){
+      lace_mode=3;
+    }
   }
   else if(safety_level==ESCAPE_IN_PROGRESS){
     dt = AVOID_slow_dt;
   }
-
-  if(lace_mode==3){
-    *TRAJECTORY_X=-r;
-    *TRAJECTORY_Y-=dt*V;
-
-    if (*TRAJECTORY_Y<-r){
-      lace_mode=4;
-    }
   }
 
+  if(lace_mode==4){
+    if(safety_level==THREAT){
+    dt = AVOID_slow_dt;
+    calculatePointForwardsWithDirection(&TRAJECTORY_X, &TRAJECTORY_Y, 30.0, 45*M_PI/180.0);
+    AVOID_keep_slow_count += 1;
+  }
+  else if(safety_level==SAFE){
+    dt = AVOID_normal_dt;
+     *TRAJECTORY_X+=dt*V*0.70710678;
+    *TRAJECTORY_Y=*TRAJECTORY_X;
+      if (*TRAJECTORY_X>r){
+      lace_mode=1;
+    }
+  }
+  else if(safety_level==ESCAPE_IN_PROGRESS){
+    dt = AVOID_slow_dt;
+  }
+  }
   return;
 }
 
 void lace_inverted(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r)
 {
-  int V = 700;
-  if(lace_mode==2){
-    *TRAJECTORY_Y -= dt*V*0.70710678;
-    *TRAJECTORY_X=-1 * *TRAJECTORY_Y;
-
-    if (*TRAJECTORY_Y<-r){
-      lace_mode=3;
-    }
-  }
-  if(lace_mode==4){
-    *TRAJECTORY_Y+=dt*V*0.70710678;
-    *TRAJECTORY_X=*TRAJECTORY_Y;
-
-    if (*TRAJECTORY_Y>r){
-
-      lace_mode=1;
-    }
-  }
+ int V = 700;
   determine_if_safe();
-  if(safety_level==THREAT){
-    dt = AVOID_slow_dt;
 
-    if(lace_mode==1 || lace_mode==3){
-    r-=fabs(AVOID_objects[AVOID_biggest_threat][1])*600;
+  if(lace_mode==1){
+    if(safety_level==THREAT){
+      dt = AVOID_slow_dt;
+      r-=fabs(AVOID_objects[AVOID_biggest_threat][1])*600;
+      AVOID_keep_slow_count += 1;
     }
-    else{
-      avoidance_straight_path(&TRAJECTORY_X,&TRAJECTORY_Y);
+    else if(safety_level==SAFE){
+      dt = AVOID_normal_dt;
     }
+    else if(safety_level==ESCAPE_IN_PROGRESS){
+      dt = AVOID_slow_dt;
+    }
+  *TRAJECTORY_Y = r;
+  *TRAJECTORY_X -= dt*V;
+  if (*TRAJECTORY_X < -r){
+    lace_mode=2;
+    }
+  }
+
+  if(lace_mode==3){
+    if(safety_level==THREAT){
+      dt = AVOID_slow_dt;
+      r-=fabs(AVOID_objects[AVOID_biggest_threat][1])*600;
+      AVOID_keep_slow_count += 1;
+    }
+    else if(safety_level==SAFE){
+      dt = AVOID_normal_dt;
+    }
+    else if(safety_level==ESCAPE_IN_PROGRESS){
+      dt = AVOID_slow_dt;
+    }
+  *TRAJECTORY_Y=-r;
+  *TRAJECTORY_X-=dt*V;
+  if (*TRAJECTORY_X<-r){
+    lace_mode=4;
+    }
+  }
+
+  if(lace_mode==2){
+    if(safety_level==THREAT){
+    dt = AVOID_slow_dt;
+    calculatePointForwardsWithDirection(&TRAJECTORY_X, &TRAJECTORY_Y, 30.0, 45*M_PI/180.0);
     AVOID_keep_slow_count += 1;
   }
   else if(safety_level==SAFE){
     dt = AVOID_normal_dt;
+    *TRAJECTORY_Y -= dt*V*0.70710678;
+    *TRAJECTORY_X=-1 * *TRAJECTORY_Y;
+      if (*TRAJECTORY_Y<-r){
+      lace_mode=3;
+    }
   }
   else if(safety_level==ESCAPE_IN_PROGRESS){
     dt = AVOID_slow_dt;
   }
-  if(lace_mode==3){
-    *TRAJECTORY_Y=-r;
-    *TRAJECTORY_X-=dt*V;
+  }
 
-    if (*TRAJECTORY_X<-r){
-      lace_mode=4;
+  if(lace_mode==4){
+    if(safety_level==THREAT){
+    dt = AVOID_slow_dt;
+    calculatePointForwardsWithDirection(&TRAJECTORY_X, &TRAJECTORY_Y, 30.0, 45*M_PI/180.0);
+    AVOID_keep_slow_count += 1;
+  }
+  else if(safety_level==SAFE){
+    dt = AVOID_normal_dt;
+      *TRAJECTORY_Y+=dt*V*0.70710678;
+    *TRAJECTORY_X=*TRAJECTORY_Y;
+      if (*TRAJECTORY_Y>r){
+      lace_mode=1;
     }
   }
-  if(lace_mode==1){
-    *TRAJECTORY_Y = r;
-    *TRAJECTORY_X -= dt*V;
-
-    if (*TRAJECTORY_X < -r){
-      lace_mode=2;
-    }
+  else if(safety_level==ESCAPE_IN_PROGRESS){
+    dt = AVOID_slow_dt;
+  }
   }
   return;
 }
-
 
 void switch_path(enum trajectory_mode_t mode){
 
