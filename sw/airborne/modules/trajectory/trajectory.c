@@ -72,7 +72,7 @@ struct EnuCoor_i AVOID_start_avoid_coord;
 
 //********************* TUNNING PARAMETERS *********************
 //**** FOR Color filter TUNNING
-float AVOID_dist_threat = 50.0; // typically between 35 and 90. The higher, the smaller is the distance from which we consider poles a threat
+float AVOID_dist_threat = 3.0; // typically between 35 and 90. The higher, the smaller is the distance from which we consider poles a threat
 int AVOID_keep_escape_count = 35;   // typically between 0 and 90. This is to avoid oscillations in the escape route. The higher, the fewer oscillations
 //**** FOR Optical Flow TUNNING
 float AVOID_OF_angle = 3.5 * M_PI/180;  // angle for which we look at the Optical flow
@@ -165,7 +165,7 @@ void determine_if_safe(){
 
   safety_level = SAFE;
   for(int i; i < AVOID_number_of_objects; i++){
-    if((fabs(AVOID_objects[i][0]) < AVOID_safety_angle || fabs(AVOID_objects[i][1]) < AVOID_safety_angle || AVOID_objects[i][0]*AVOID_objects[i][1] < 0) &&  final_objs[i][2]>AVOID_dist_threat){
+    if((fabs(AVOID_objects[i][0]) < AVOID_safety_angle || fabs(AVOID_objects[i][1]) < AVOID_safety_angle || AVOID_objects[i][0]*AVOID_objects[i][1] < 0) &&  final_objs[i][2]<AVOID_dist_threat){
       
       if(i==0 || fabs(AVOID_objects[i][0]) > fabs(AVOID_objects[i-1][0]) || fabs(AVOID_objects[i][1]) > fabs(AVOID_objects[i-1][1])){
           AVOID_biggest_threat = i;
