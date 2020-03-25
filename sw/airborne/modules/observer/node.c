@@ -1031,11 +1031,11 @@ void find_orange_objs(){
       //   der2new = 0;
       // }
 
-  printf("Poles detected from orange mask\n");
-  for (uint16_t x = 0; x < 10; x++){
-    printf("[%d, %d] \n", poles[x][0], poles[x][1]);
-  }
-  printf("\n");
+  // printf("Poles detected from orange mask\n");
+  // for (uint16_t x = 0; x < 10; x++){
+  //   printf("[%d, %d] \n", poles[x][0], poles[x][1]);
+  // }
+  // printf("\n");
 }
 
 // Find poles from green mask
@@ -1108,11 +1108,11 @@ void find_green_objs(){
 
 
 
-  printf("Poles detected from green mask\n");
-  for (uint16_t x = idx_g; x < idx_g+9; x++){
-    printf("[%d, %d] \n", poles[x][0], poles[x][1]);
-  }
-  printf("\n");
+  // printf("Poles detected from green mask\n");
+  // for (uint16_t x = idx_g; x < idx_g+9; x++){
+  //   printf("[%d, %d] \n", poles[x][0], poles[x][1]);
+  // }
+  // printf("\n");
 }
 
 
