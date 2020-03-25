@@ -66,7 +66,7 @@ float TRAJECTORY_SWITCHING_TIME=20;
 float AVOID_safety_angle = 25 * M_PI/180;
 int AVOID_PERCENTAGE_THRESHOLD=30;
 float AVOID_slow_dt = 0.0001;
-float AVOID_normal_dt = 0.0004;
+float AVOID_normal_dt = 0.0007;
 int AVOID_keep_slow_count = 0;
 int AVOID_biggest_threat;
 //**** FOR OF TUNNING
@@ -121,36 +121,36 @@ switch (trajectory_mode){
 float x_rotated=TRAJECTORY_X*0.5+TRAJECTORY_Y*0.866025;
 float y_rotated=-TRAJECTORY_X*0.866025+TRAJECTORY_Y*0.5;
 
-//  //after having the next way point --> double check with OF
-//  bool change_heading=safety_check_optical_flow(GLOBAL_OF_VECTOR, x_rotated, y_rotated);
-//  printf("change_heading: %d \n", change_heading);
+ //after having the next way point --> double check with OF
+ bool change_heading=safety_check_optical_flow(GLOBAL_OF_VECTOR, x_rotated, y_rotated);
+ printf("change_heading: %d \n", change_heading);
 
-// if(change_heading){
-//   float next_heading=safe_heading(GLOBAL_OF_VECTOR);
-//   printf("\nCurrent heading: %f", (stateGetNedToBodyEulers_f()->psi)*180/M_PI);
-//   printf("\nheading correction: %f", (next_heading*180/M_PI));
-//   next_heading+=stateGetNedToBodyEulers_f()->psi;
-//   FLOAT_ANGLE_NORMALIZE(next_heading);
-//   ANGLE_BFP_OF_REAL(next_heading);
-//   printf("\nheading next: %f", next_heading*180/M_PI);
+if(change_heading){
+  float next_heading=safe_heading(GLOBAL_OF_VECTOR);
+  printf("\nCurrent heading: %f", (stateGetNedToBodyEulers_f()->psi)*180/M_PI);
+  printf("\nheading correction: %f", (next_heading*180/M_PI));
+  next_heading+=stateGetNedToBodyEulers_f()->psi;
+  FLOAT_ANGLE_NORMALIZE(next_heading);
+  ANGLE_BFP_OF_REAL(next_heading);
+  printf("\nheading next: %f", next_heading*180/M_PI);
 
-//   float dx=OF_NEXT_HEADING_INFLUENCE * cosf(next_heading-M_PI/2);
-//   float dy=OF_NEXT_HEADING_INFLUENCE * sinf(next_heading-M_PI/2);
-//   int x_next = stateGetPositionEnu_i()->x + dx;  
-//   int y_next = stateGetPositionEnu_i()->y + dy;
-//   printf("\nThis position: x:%d ",stateGetPositionEnu_i()->x);
-//   printf(" y: %d",stateGetPositionEnu_i()->y);  
-//   printf("\n dx: %f",dx);
-//   printf("dy: %f",dy);
-//   printf("\nNext x: %d ",x_next);
-//   printf(" Next y: %d\n \n",y_next);
+  float dx=OF_NEXT_HEADING_INFLUENCE * cosf(next_heading-M_PI/2);
+  float dy=OF_NEXT_HEADING_INFLUENCE * sinf(next_heading-M_PI/2);
+  int x_next = stateGetPositionEnu_i()->x + dx;  
+  int y_next = stateGetPositionEnu_i()->y + dy;
+  printf("\nThis position: x:%d ",stateGetPositionEnu_i()->x);
+  printf(" y: %d",stateGetPositionEnu_i()->y);  
+  printf("\n dx: %f",dx);
+  printf("dy: %f",dy);
+  printf("\nNext x: %d ",x_next);
+  printf(" Next y: %d\n \n",y_next);
 
-//   //waypoint_set_xy_i(WP_STDBY,x_next,y_next);
-// }
-//  else{
-//     waypoint_set_xy_i(WP_STDBY,x_rotated,y_rotated);
-//     nav_set_heading_towards_waypoint(WP_STDBY);
-//  }
+  //waypoint_set_xy_i(WP_STDBY,x_next,y_next);
+}
+ else{
+    waypoint_set_xy_i(WP_STDBY,x_rotated,y_rotated);
+    nav_set_heading_towards_waypoint(WP_STDBY);
+ }
  
   //nav_set_heading_towards_waypoint(WP_STDBY);
 
@@ -180,7 +180,7 @@ void determine_if_safe(){
     safety_level = ESCAPE_IN_PROGRESS;
     AVOID_keep_slow_count += 1;
   
-    //if(isCoordInRadius(&AVOID_start_avoid_coord, 5.0) == true){
+ //   if(isCoordInRadius(&AVOID_start_avoid_coord, 5.0) == true){
     if(AVOID_keep_slow_count>10){
         AVOID_keep_slow_count = 0;
         }
@@ -409,9 +409,7 @@ void quickSort(float array[], int indecis[], int first,int last){
 
 
 void unpack_object_list(){
-
      for (int i = 0; i < 100; i++) {
-
          AVOID_objects[i][0] = convert_index_to_heading(final_objs[i][0], 519);
          AVOID_objects[i][1] = convert_index_to_heading(final_objs[i][1], 519);
          AVOID_objects[i][2] = 0.0;
@@ -420,8 +418,6 @@ void unpack_object_list(){
 
 
 void count_objects(){
-  
-    
     for (int i = 0; i < 10; i++) {
        if (final_objs[i][0] != 0 || final_objs[i][1] != 0){
             AVOID_number_of_objects = AVOID_number_of_objects+1;
@@ -434,7 +430,6 @@ void circle(float current_time, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r)
 {
   double e = 1;
 
-  
   //   float offset=asin(AVOID_d/(2*r))*180/M_PI; //offset in degrees
   //     r_reduced=r*(AVOID_h2-offset)*M_PI/180;
 
@@ -444,7 +439,7 @@ void circle(float current_time, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r)
     dt = AVOID_slow_dt;
     r-=fabs(AVOID_objects[AVOID_biggest_threat][1])*400;
     //moveWaypointForwaifrdWithDirection(WP_STDBY, 100.0, -45*M_PI/180.0);
-    printf("[%d %d] \n", AVOID_biggest_threat, r);
+    //printf("[%d %d] \n", AVOID_biggest_threat, r);
     AVOID_keep_slow_count += 1;
   }
   else if(safety_level==SAFE){
