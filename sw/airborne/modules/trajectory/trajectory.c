@@ -64,18 +64,21 @@ float AVOID_objects[100][3];
 //********************* TUNNING PARAMETERS *********************
 float TRAJECTORY_SWITCHING_TIME=20;
 float AVOID_safety_angle = 20 * M_PI/180;
-int AVOID_PERCENTAGE_THRESHOLD=30;
+//int AVOID_PERCENTAGE_THRESHOLD=30;
 float AVOID_slow_dt = 0.00008;
 float AVOID_normal_dt = 0.0005;
 int AVOID_keep_slow_count = 0;
 int AVOID_biggest_threat;
 //**** FOR OF TUNNING
 float AVOID_OF_angle = 3.5 * M_PI/180;
-float OF_NEXT_HEADING_INFLUENCE = 0.5;
+float OF_NEXT_HEADING_INFLUENCE = 0.25;
 float OPTICAL_FLOW_THRESHOLD=0.6;
 
 float dt=0.0005; // 0.6 m/s speed
-struct EnuCoor_i AVOID_start_avoid_coord; 
+struct EnuCoor_i AVOID_start_avoid_coord;
+
+bool safe_mode_previous=false;
+int last_iteration_safe_heading=0;
 
 
 void trajectory_init(void){}
@@ -139,13 +142,13 @@ else{
 
 if(change_heading){
   moveWaypointForwardWithDirection(WP_STDBY,OF_NEXT_HEADING_INFLUENCE,safe_heading(GLOBAL_OF_VECTOR));
+  safe_mode_previous=true;
+}
+else{
+  safe_mode_previous=false;
 }
 
 
-
-      //moveWaypointForwardWithDirection(WP_STDBY, 100.0, -45*M_PI/180.0);
-      // printf("[%d] \n", AVOID_number_of_objects);
-      // printf("[%d] \n", r);
   // Deallocate
 // float *GLOBAL_OF_VECTOR = NULL; 
 }
@@ -312,8 +315,16 @@ float safe_heading(float array_of[]){
   printf("\n \n Array before quick sorting: \n");
   for(int i=0;i<NUMBER_OF_PARTITIONS;i++){
     printf("i: %d , value: %f \n", indexis[i], partition_OF[i]);
-  }
+  }  
   
+/*   if(safe_mode_previous){
+    if(partition_OF[last_iteration_safe_heading]<0.1){
+      float safest_heading = -1*field_of_view/2 + last_iteration_safe_heading * angular_span + angular_span/2;
+      printf("SAME HEADING: %f\n", safest_heading);
+      return safest_heading;
+    }
+  }
+   */
   quickSort(partition_OF,indexis,0,NUMBER_OF_PARTITIONS-1);
   
   printf("\n \n Array after quick sorting: \n");
@@ -322,6 +333,18 @@ float safe_heading(float array_of[]){
   }
 
   float safest_heading = -1*field_of_view/2 + indexis[0] * angular_span + angular_span/2; //partition with lowest OF average
+
+  printf("last iteration i: %d \n this iteration i: %d \n", safest_heading, indexis[0]);
+
+  if(safe_mode_previous){
+    if(partition_OF[last_iteration_safe_heading]<0.1+partition_OF[0]){
+      safest_heading = -1*field_of_view/2 + last_iteration_safe_heading * angular_span + angular_span/2;
+      printf("HEYYYY");
+      return safest_heading;
+    }
+  }
+
+  last_iteration_safe_heading=indexis[0];
   printf("safest heading: %f \n", safest_heading*180/M_PI);
   return safest_heading;
 }
@@ -396,7 +419,7 @@ void circle(float current_time, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r)
 {
   double e = 1;
 
-  determine_if_safe();
+  //determine_if_safe();
 
   if(safety_level==THREAT){
     dt = AVOID_slow_dt;
