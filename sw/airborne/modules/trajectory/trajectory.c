@@ -60,22 +60,26 @@ int AVOID_number_of_objects = 0;
 float AVOID_h1,AVOID_h2;
 float AVOID_d;
 float AVOID_objects[100][3];
-
-//********************* TUNNING PARAMETERS *********************
 float TRAJECTORY_SWITCHING_TIME=20;
 float AVOID_safety_angle = 20 * M_PI/180;
-int AVOID_PERCENTAGE_THRESHOLD=30;
+//int AVOID_PERCENTAGE_THRESHOLD=30;
 float AVOID_slow_dt = 0.00008;
 float AVOID_normal_dt = 0.0005;
 int AVOID_keep_slow_count = 0;
 int AVOID_biggest_threat;
-//**** FOR OF TUNNING
-float AVOID_OF_angle = 3.5 * M_PI/180;
-float OF_NEXT_HEADING_INFLUENCE = 0.5;
-float OPTICAL_FLOW_THRESHOLD=0.6;
-
 float dt=0.0005; // 0.6 m/s speed
 struct EnuCoor_i AVOID_start_avoid_coord; 
+
+//********************* TUNNING PARAMETERS *********************
+//**** FOR Color filter TUNNING
+float AVOID_dist_threat = 50.0; // typically between 35 and 90. The higher, the smaller is the distance from which we consider poles a threat
+int AVOID_keep_escape_count = 25;   // typically between 0 and 90. This is to avoid oscillations in the escape route. The higher, the fewer oscillations
+//**** FOR Optical Flow TUNNING
+float AVOID_OF_angle = 3.5 * M_PI/180;  // angle for which we look at the Optical flow
+float OF_NEXT_HEADING_INFLUENCE = 0.6;  // Gain of escpae route from the optical flow-based avoidance
+float OPTICAL_FLOW_THRESHOLD=0.65;  // Optical flow above which it's dangerous to move forward
+
+
 
 
 void trajectory_init(void){}
@@ -141,12 +145,7 @@ if(change_heading){
   moveWaypointForwardWithDirection(WP_STDBY,OF_NEXT_HEADING_INFLUENCE,safe_heading(GLOBAL_OF_VECTOR));
 }
 
-
-
-      //moveWaypointForwardWithDirection(WP_STDBY, 100.0, -45*M_PI/180.0);
-      // printf("[%d] \n", AVOID_number_of_objects);
-      // printf("[%d] \n", r);
-  // Deallocate
+// Deallocate
 // float *GLOBAL_OF_VECTOR = NULL; 
 }
 
@@ -160,7 +159,7 @@ void determine_if_safe(){
     AVOID_keep_slow_count += 1;
   
  //   if(isCoordInRadius(&AVOID_start_avoid_coord, 5.0) == true){
-    if(AVOID_keep_slow_count>25){
+    if(AVOID_keep_slow_count > AVOID_keep_escape_count){
         AVOID_keep_slow_count = 0;
         }
     return;
@@ -168,7 +167,7 @@ void determine_if_safe(){
 
   safety_level = SAFE;
   for(int i; i < AVOID_number_of_objects; i++){
-    if((fabs(AVOID_objects[i][0]) < AVOID_safety_angle || fabs(AVOID_objects[i][1]) < AVOID_safety_angle || AVOID_objects[i][0]*AVOID_objects[i][1] < 0) &&  final_objs[i][2]>50){
+    if((fabs(AVOID_objects[i][0]) < AVOID_safety_angle || fabs(AVOID_objects[i][1]) < AVOID_safety_angle || AVOID_objects[i][0]*AVOID_objects[i][1] < 0) &&  final_objs[i][2]>AVOID_dist_threat){
       
       if(i==0 || fabs(AVOID_objects[i][0]) > fabs(AVOID_objects[i-1][0]) || fabs(AVOID_objects[i][1]) > fabs(AVOID_objects[i-1][1])){
           AVOID_biggest_threat = i;
