@@ -1,6 +1,6 @@
 /**
  * @file "modules/optic_avoid/optic_avoid.cpp"
- * @author B. Keltjens & M. Gonzalez
+ * @author Group 11 2020
  * Module to use optical flow for collision avoidance
  */
 

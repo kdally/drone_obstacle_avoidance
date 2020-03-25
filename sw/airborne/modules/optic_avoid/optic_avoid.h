@@ -1,7 +1,7 @@
 /**
- * @file "modules/computer_vision/cv_opencvdemo.h"
- * @author C. De Wagter
- * A simple module showing what you can do with opencv on the bebop.
+ * @file "modules/optic_avoid/optic_avoid.h"
+ * @author Group 11 2020
+ * Header File for optic avoid cpp file
  */
 
 
@@ -12,15 +12,20 @@
 extern "C" {
 #endif
 
-// Temporary variables for now
-
+/**
+   * @brief function
+   * @param img: pointer to image
+   * @param width: the width of the image
+   * @param height: the height of the image
+   * @return: void.
+*/
 void optic_avoid(char *img, int width, int height);
 
+/**
+   * @brief Initialises the optic avoid function
+   * @return: void.
+*/
 void initialize_optic_avoid();
-
-
-// struct image_t dest_img;
-
 
 
 
