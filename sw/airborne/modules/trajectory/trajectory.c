@@ -63,17 +63,17 @@ float AVOID_objects[100][3];
 
 //********************* TUNNING PARAMETERS *********************
 float TRAJECTORY_SWITCHING_TIME=20;
-float AVOID_safety_angle = 25 * M_PI/180;
+float AVOID_safety_angle = 20 * M_PI/180;
 int AVOID_PERCENTAGE_THRESHOLD=30;
-float AVOID_slow_dt = 0.0001;
-float AVOID_normal_dt = 0.0007;
+float AVOID_slow_dt = 0.00008;
+float AVOID_normal_dt = 0.0005;
 int AVOID_keep_slow_count = 0;
 int AVOID_biggest_threat;
 //**** FOR OF TUNNING
 float AVOID_OF_angle = 5 * M_PI/180;
 float OF_NEXT_HEADING_INFLUENCE = 100;
 
-float dt=0.0007; // 0.6 m/s speed
+float dt=0.0005; // 0.6 m/s speed
 struct EnuCoor_i AVOID_start_avoid_coord; 
 
 
@@ -99,7 +99,7 @@ switch (trajectory_mode){
   case SQUARE:
 
     square(dt, &TRAJECTORY_X, &TRAJECTORY_Y, r);
-    switch_path(LACE);
+    switch_path(CIRCLE);
 
     break;
   case LACE:
@@ -179,7 +179,7 @@ void determine_if_safe(){
     AVOID_keep_slow_count += 1;
   
  //   if(isCoordInRadius(&AVOID_start_avoid_coord, 5.0) == true){
-    if(AVOID_keep_slow_count>0){
+    if(AVOID_keep_slow_count>25){
         AVOID_keep_slow_count = 0;
         }
     return;
@@ -187,10 +187,11 @@ void determine_if_safe(){
 
   safety_level = SAFE;
   for(int i; i < AVOID_number_of_objects; i++){
-    if(fabs(AVOID_objects[i][0]) < AVOID_safety_angle || fabs(AVOID_objects[i][1]) < AVOID_safety_angle || AVOID_objects[i][0]*AVOID_objects[i][1] < 0){
-          
+    if((fabs(AVOID_objects[i][0]) < AVOID_safety_angle || fabs(AVOID_objects[i][1]) < AVOID_safety_angle || AVOID_objects[i][0]*AVOID_objects[i][1] < 0) &&  final_objs[i][2]>50){
+      
       if(i==0 || fabs(AVOID_objects[i][0]) > fabs(AVOID_objects[i-1][0]) || fabs(AVOID_objects[i][1]) > fabs(AVOID_objects[i-1][1])){
           AVOID_biggest_threat = i;
+          //printf("[%d] \n", AVOID_objects[AVOID_biggest_threat][2]);
       }
     safety_level = THREAT;
     setCoord(&AVOID_start_avoid_coord, stateGetPositionEnu_i()->x, stateGetPositionEnu_i()->y); 
@@ -410,7 +411,7 @@ void unpack_object_list(){
      for (int i = 0; i < 100; i++) {
          AVOID_objects[i][0] = convert_index_to_heading(final_objs[i][0], 519);
          AVOID_objects[i][1] = convert_index_to_heading(final_objs[i][1], 519);
-         AVOID_objects[i][2] = 0.0;
+         AVOID_objects[i][2] = final_objs[i][2];
      }
 }
 
@@ -428,16 +429,13 @@ void circle(float current_time, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r)
 {
   double e = 1;
 
-  //   float offset=asin(AVOID_d/(2*r))*180/M_PI; //offset in degrees
-  //     r_reduced=r*(AVOID_h2-offset)*M_PI/180;
-
   determine_if_safe();
 
   if(safety_level==THREAT){
     dt = AVOID_slow_dt;
     r-=fabs(AVOID_objects[AVOID_biggest_threat][1])*400;
     //moveWaypointForwaifrdWithDirection(WP_STDBY, 100.0, -45*M_PI/180.0);
-    //printf("[%d %d] \n", AVOID_biggest_threat, r);
+    printf("[%d %d] \n", final_objs[AVOID_biggest_threat][2], r);
     AVOID_keep_slow_count += 1;
   }
   else if(safety_level==SAFE){
@@ -458,21 +456,21 @@ void square(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r)
 {
   int V = 700;
 
-  if(safety_level==THREAT){
-      dt = AVOID_slow_dt;
-      r-=fabs(AVOID_objects[AVOID_biggest_threat][1])*400;
-      //moveWaypointForwardWithDirection(WP_STDBY, 100.0, -45*M_PI/180.0);
-      // printf("[%d] \n", AVOID_number_of_objects);
-      // printf("[%d] \n", r);
-      AVOID_keep_slow_count += 0;
-      if(AVOID_keep_slow_count==2){
-        AVOID_keep_slow_count=0;
-        }
-    }
-    if(safety_level==SAFE){
-    dt = AVOID_normal_dt;
-    }
+  determine_if_safe();
 
+  if(safety_level==THREAT){
+    dt = AVOID_slow_dt;
+    r-=fabs(AVOID_objects[AVOID_biggest_threat][1])*400;
+    //moveWaypointForwaifrdWithDirection(WP_STDBY, 100.0, -45*M_PI/180.0);
+    printf("[%d %d] \n", final_objs[AVOID_biggest_threat][2], r);
+    AVOID_keep_slow_count += 1;
+  }
+  else if(safety_level==SAFE){
+    dt = AVOID_normal_dt;
+  }
+  else if(safety_level==ESCAPE_IN_PROGRESS){
+    dt = AVOID_slow_dt;
+  }
 
   if(square_mode==1){
     *TRAJECTORY_X = r;
