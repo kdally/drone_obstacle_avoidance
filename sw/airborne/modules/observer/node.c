@@ -36,7 +36,12 @@
 #endif
 
 
-// orange filter        y_m  y_M  u_m  u_M  v_m  v_M
+// Drone positions
+float x_loc;
+float y_loc;
+float head;
+
+// orange filter       y_m  y_M  u_m  u_M  v_m  v_M
 uint8_t orange_cf[6] = {26, 164,  45, 130, 160, 192};
 uint8_t green_cf[6]  = {70, 230,   0, 120,   0, 125};
 uint8_t blue_cf[6]   = {67, 255, 120, 255,   0, 125};
@@ -48,10 +53,25 @@ uint8_t mask_g[520][240];
 // random mask
 uint8_t mask_r[520][240];
 
+// limits on green mask object detection:
+// do not check if outside these boundaries
+const float top_x_green = 3.5;
+const float top_y_green = 3.5;
+
+const float head_x_t_green = 2.2;
+const float head_x_b_green = 1;
+const float head_y_t_green = 0.6;
+const float head_y_b_green = 2.5; // capo is on 2.618
+// const float head_y_pi_green = 3.58;
+
+
+// bool to check 
+bool check_green;
+
+
+
 // floor of green mask
 uint16_t floors[520];
-
-// uint8_t masks[2][520][240]; // 0: orange, 1: green
 
 // background filter
 uint8_t n_cf = 2;
@@ -59,14 +79,15 @@ uint8_t bg_cf[2][6] = {{67, 255, 120, 255,  0, 125},  // blue
                     {70,   255,   0, 120,   0, 125}}; // green
 // uint8_t bg_cf[1][6] = {{70,   255,   0, 130,   0, 130}}; // green
 
-// kernel
-// uint8_t kernel[3][3] = {{0, 1, 0},
-//                         {1, -4, 1},
-//                         {0, 1, 0}};
+// small kernels
+  // uint8_t kernel[3][3] = {{0, 1, 0},
+  //                         {1, -4, 1},
+  //                         {0, 1, 0}};
 
-// uint8_t kernel[3][3] = {{1, 0, -1},
-//                         {2, 0, -2},
-//                         {1, 0, -1}};
+  // uint8_t kernel[3][3] = {{1, 0, -1},
+  //                         {2, 0, -2},
+  //                         {1, 0, -1}};
+//
 
 
 // 3x3 kernel
@@ -75,37 +96,38 @@ uint8_t kernel[3][3] = {{0, 0, 0},
                         {0, 0, 0}};
 
 
-// big kerel
-// uint8_t big_kernel[7][7] = {{1, 1, 0, 0, 0, -1, -1},
-//                             {1, 1, 0, 0, 0, -1, -1},
-//                             {2, 2, 0, 0, 0, -2, -2},
-//                             {5, 5, 0, 0, 0, -5, -5},
-//                             {2, 2, 0, 0, 0, -2, -2},
-//                             {1, 1, 0, 0, 0, -1, -1},
-//                             {1, 1, 0, 0, 0, -1, -1}};
+// big kerels
+  // uint8_t big_kernel[7][7] = {{1, 1, 0, 0, 0, -1, -1},
+  //                             {1, 1, 0, 0, 0, -1, -1},
+  //                             {2, 2, 0, 0, 0, -2, -2},
+  //                             {5, 5, 0, 0, 0, -5, -5},
+  //                             {2, 2, 0, 0, 0, -2, -2},
+  //                             {1, 1, 0, 0, 0, -1, -1},
+  //                             {1, 1, 0, 0, 0, -1, -1}};
 
-// uint8_t big_kernel[7][7] = {{1, 3, 2, 5, 2, 3, 1},
-//                             {1, 3, 2, 5, 2, 3, 1},
-//                             {0, 0, 0, 0, 0, 0, 0},
-//                             {0, 0, 0, 0, 0, 0, 0},
-//                             {0, 0, 0, 0, 0, 0, 0},
-//                             {-1, -3, -2, -5, -2, -3, -1},
-//                             {-1, -3, -2, -5, -2, -3, -1}};
+  // uint8_t big_kernel[7][7] = {{1, 3, 2, 5, 2, 3, 1},
+  //                             {1, 3, 2, 5, 2, 3, 1},
+  //                             {0, 0, 0, 0, 0, 0, 0},
+  //                             {0, 0, 0, 0, 0, 0, 0},
+  //                             {0, 0, 0, 0, 0, 0, 0},
+  //                             {-1, -3, -2, -5, -2, -3, -1},
+  //                             {-1, -3, -2, -5, -2, -3, -1}};
 
-// uint8_t big_kernel[7][7] = {{1, 1, 2, 5, 2, 1, 1},
-//                             {0, 0, 0, 0, 0, 0, 0},
-//                             {0, 0, 0, 0, 0, 0, 0},
-//                             {0, 0, 0, 0, 0, 0, 0},
-//                             {0, 0, 0, 0, 0, 0, 0},
-//                             {0, 0, 0, 0, 0, 0, 0},
-//                             {-1, -1, -2, -5, -2, -1, -1}};
+  // uint8_t big_kernel[7][7] = {{1, 1, 2, 5, 2, 1, 1},
+  //                             {0, 0, 0, 0, 0, 0, 0},
+  //                             {0, 0, 0, 0, 0, 0, 0},
+  //                             {0, 0, 0, 0, 0, 0, 0},
+  //                             {0, 0, 0, 0, 0, 0, 0},
+  //                             {0, 0, 0, 0, 0, 0, 0},
+  //                             {-1, -1, -2, -5, -2, -1, -1}};
 
 
-// const int8_t big_kernel[5][5] = {{1, 2, 5, 2, 1},
-//                             {0, 0, 0, 0, 0},
-//                             {0, 0, 0, 0, 0},
-//                             {0, 0, 0, 0, 0},
-//                             {-1, -2, -5, -2, -1}};
+  // const int8_t big_kernel[5][5] = {{1, 2, 5, 2, 1},
+  //                             {0, 0, 0, 0, 0},
+  //                             {0, 0, 0, 0, 0},
+  //                             {0, 0, 0, 0, 0},
+  //                             {-1, -2, -5, -2, -1}};
+//  
 
 const int8_t big_kernel[5][5] = {{1, 1, 0, -1, -1},
                                  {2, 2, 0, -2, -2},
@@ -131,22 +153,23 @@ const uint8_t blur_l = 20;
 
 
 // Because  image is tilted, so is the kernel -> big vertical blur
-// const uint8_t blur_kernel[3][7] = {{1, 1, 1, 1, 1, 1, 1},
-//                                    {1, 1, 1, 1, 1, 1, 1},
-//                                    {1, 1, 1, 1, 1, 1, 1}};
+  // const uint8_t blur_kernel[3][7] = {{1, 1, 1, 1, 1, 1, 1},
+  //                                    {1, 1, 1, 1, 1, 1, 1},
+  //                                    {1, 1, 1, 1, 1, 1, 1}};
 
-// const uint8_t blur_kernel[3][21] = {{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-//                                     {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-//                                     {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}};
+  // const uint8_t blur_kernel[3][21] = {{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+  //                                     {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+  //                                     {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}};
 
 
-// Blur dimensions
+  // Blur dimensions
 
-// const uint8_t blur_w = 3;
-// const uint8_t blur_w2 = 1;
+  // const uint8_t blur_w = 3;
+  // const uint8_t blur_w2 = 1;
 
-// const uint8_t blur_h = 21;
-// const uint8_t blur_h2 = 10;
+  // const uint8_t blur_h = 21;
+  // const uint8_t blur_h2 = 10;
+//
 
 const uint8_t blur_w = 7;
 const uint8_t blur_w2 = 3;
@@ -155,20 +178,23 @@ const uint8_t blur_h = 5;
 const uint8_t blur_h2 = 2;
 
 // detected poles (max 100 at a time) -> (left_px, right_px, distance)
-// poles 00-29 are used for orange
-// poles 30-59 are used for green
-// poles 60-99 are used for random edges
+  // poles 00-29 are used for orange
+  // poles 30-59 are used for green
+  // poles 60-99 are used for random edges
+//  
 
 uint8_t idx_o = 0;
 uint8_t idx_g = 30;
 uint8_t idx_r = 50;
+
+const float px_dist_scale = 107.232;
 
 
 uint16_t poles[100][3];
 uint16_t poles_comb[100][4]; // left_px, right_px, dist, type
                              // types are: 0 = undefined; 1 = orange pole
 int16_t poles_w_inertia[100][4]; // left_px, right_px, dist, times_seen
-uint16_t final_objs[100][3];
+float final_objs[100][3];
 uint8_t count_o;
 uint8_t count_g;
 uint8_t count;
@@ -217,6 +243,13 @@ struct image_t *observer_func(struct image_t *img){
       final_objs[x][2] = 0;
     }
 
+    // Get the drone's posititon and heading for object detector
+    x_loc = - stateGetPositionEnu_f()->x*0.523599 + stateGetPositionEnu_f()->y*0.851965;
+    y_loc =  stateGetPositionEnu_f()->x*0.851965 + stateGetPositionEnu_f()->y*0.523599;
+    head = stateGetNedToBodyEulers_f()->psi + 0.523599;
+
+    // printf("[%lf, %lf, %lf]\n", stateGetPositionEnu_f()->x, stateGetPositionEnu_f()->y, stateGetNedToBodyEulers_f()->psi);
+
     // Filter poles (orange)
     image_specfilt(img, &processed, &color_mask, orange_cf[0], orange_cf[1], orange_cf[2],
                     orange_cf[3], orange_cf[4], orange_cf[5], &mask_o);
@@ -228,21 +261,21 @@ struct image_t *observer_func(struct image_t *img){
     find_orange_objs();
 
     // Filter ground (green)
-    image_specfilt(&processed, &processed, &color_mask, green_cf[0], green_cf[1], 
-                green_cf[2], green_cf[3], green_cf[4], green_cf[5], &mask_g);
+    // image_specfilt(&processed, &processed, &color_mask, green_cf[0], green_cf[1], 
+    //             green_cf[2], green_cf[3], green_cf[4], green_cf[5], &mask_g);
 
-    find_green_objs();
+    // find_green_objs();
 
-    // // Filter blue color and remove stuff in ground
-    image_bgfilt(&processed, &processed, blue_cf[0], blue_cf[1], 
-                   blue_cf[2], blue_cf[3], blue_cf[4], blue_cf[5], false);
+    // // // Filter blue color and remove stuff in ground
+    // image_bgfilt(&processed, &processed, blue_cf[0], blue_cf[1], 
+    //                blue_cf[2], blue_cf[3], blue_cf[4], blue_cf[5], false);
 
 
-    // // blur_image(&processed, &blurred);
-    blur_big(&processed, &blurred);
+    // // // blur_image(&processed, &blurred);
+    // blur_big(&processed, &blurred);
 
-    // // // // convolve(&blurred, &processed);
-    convolve_big(&blurred, &processed);
+    // // // // // convolve(&blurred, &processed);
+    // convolve_big(&blurred, &processed);
 
 
 
@@ -264,7 +297,7 @@ struct image_t *observer_func(struct image_t *img){
     find_distances();
 
     // copy processed to img for output
-    // copy2img(&processed, img);
+    copy2img(&processed, img);
     // copy2img(&blurred, img);
 
 
@@ -1078,34 +1111,70 @@ void find_green_objs(){
   bool started = false;
 
 
-  // TODO delete behaviour where stuff is detected 
+  check_green = true;
 
-  for (uint16_t x = 2; x < 518; x++){
+  // if close to the top (x+)
+  if (x_loc > top_x_green){
+    // and not looking inside the circle
+    if ((head < head_x_t_green) && (head > -head_x_t_green)){
+      check_green = false;
+    }
+  } 
 
-    // LOGIC WITH THRESHOLD ON 1st DERIVATIVE
-    der1 = floors[x+2] + floors[x+1] - floors[x-1] - floors[x-2];
-
-    if (abs(der1) > 18) {
-      if (der1 < 0){
-        poles[idx_g+count_g][0] = x;
-        started = true;
-      } else {
-        if ((poles[idx_g+count_g][0] != 0) || (count_g < 0.5)){
-          poles[idx_g+count_g][1] = x;
-          count_g++;
-          started = false;
-        }
-      }
-      x += 8;
+  // if close to the bottom (x-)
+  if (x_loc < -top_x_green){
+    // and not looking inside the circle
+    if ((head > head_x_b_green) || (head < -head_x_b_green)){
+      check_green = false;
     }
   }
-    // TODO
-  // calculate distance to pole here?
-  if (started){
-    poles[idx_g+count_g][1] = 519;
-    count_g++;
+
+  // if close to the right (y+)
+  if (y_loc > top_y_green){
+    // and not looking inside the circle
+    if ((head > -head_y_t_green) || (head < -head_y_b_green)){
+      check_green = false;
+    }
   }
 
+  // if close to the left (y-)
+  if (y_loc < -top_y_green){
+    // and not looking inside the circle
+    if ((head < head_y_t_green) || (head > head_y_b_green)){
+      check_green = false;
+    }
+  }
+
+
+  // Only perform gradient based object search if inside circle and looking 
+  // inside to avoid detecting the edge of the floor
+  if (check_green){
+    for (uint16_t x = 2; x < 518; x++){
+
+      // LOGIC WITH THRESHOLD ON 1st DERIVATIVE
+      der1 = floors[x+2] + floors[x+1] - floors[x-1] - floors[x-2];
+
+      if (abs(der1) > 18) {
+        if (der1 < 0){
+          poles[idx_g+count_g][0] = x;
+          started = true;
+        } else {
+          if ((poles[idx_g+count_g][0] != 0) || (count_g < 0.5)){
+            poles[idx_g+count_g][1] = x;
+            count_g++;
+            started = false;
+          }
+        }
+        x += 8;
+      }
+    }
+    if (started){
+      poles[idx_g+count_g][1] = 519;
+      count_g++;
+    }
+  } else {
+    printf("NOT CHECKING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+  }
 
 
   // printf("Poles detected from green mask\n");
@@ -1115,9 +1184,8 @@ void find_green_objs(){
   // printf("\n");
 }
 
-
 // THIS FUNCTION IS COPIED FROM find_orange_objs
-// TODO -> IDENTIFY OBJECTS FROM GREEN MASK LOCATION
+// TODO -> IDENTIFY OBJECTS COMPARING WITH GREEN MASK LOCATION
 //      -> is this even going to be a good idea?
 //      -> otherwise too much noise
 
@@ -1191,13 +1259,12 @@ void find_rand_objs(){
       //   der2new = 0;
       // }
 
-  printf("Poles detected from orange mask\n");
-  for (uint16_t x = 0; x < 10; x++){
-    printf("[%d, %d] \n", poles[x][0], poles[x][1]);
-  }
-  printf("\n");
+  // printf("Poles detected from orange mask\n");
+  // for (uint16_t x = 0; x < 10; x++){
+  //   printf("[%d, %d] \n", poles[x][0], poles[x][1]);
+  // }
+  // printf("\n");
 }
-
 
 
 // Get correct number of poles,
@@ -1212,42 +1279,62 @@ void combine_measurements(){
   uint16_t dist;
   count = 0;
 
-  for (uint8_t co = 0; co < count_o; co++){
-    for (uint8_t cg = 0; cg < count_g; cg++){
-      dist = abs(poles[co][0] - poles[idx_g+cg][0]);
-      if (dist < threshold){
-        // Object is the same
-
-        poles_comb[count][0] = (poles[co][0] + poles[idx_g+cg][0])/2;
-        poles_comb[count][1] = (poles[co][1] + poles[idx_g+cg][1])/2;
-        poles_comb[count][2] = (poles[co][2] + poles[idx_g+cg][2])/2;
-        poles_comb[count][3] = 1;
-
-        obj_merged[cg] = 1;
-        count++;
-
-        break;
-      } 
-
-      // if orange pole is not detected by green filter, add it to list
-      if (cg == count_g-1) {
-        poles_comb[count][0] = poles[co][0];
-        poles_comb[count][1] = poles[co][1];
-        poles_comb[count][2] = poles[co][2];
+  if (count_g == 0){
+    for (uint8_t co = 0; co < count_o; co++){
+      poles_comb[count][0] = poles[co][0];
+      poles_comb[count][1] = poles[co][1];
+      poles_comb[count][2] = poles[co][2];
+      poles_comb[count][3] = 1;
+      count++;
+    }
+  } else {
+    if (count_o == 0){
+      for (uint8_t cg = 0; cg < count_g; cg++){
+        poles_comb[count][0] = poles[cg][0];
+        poles_comb[count][1] = poles[cg][1];
+        poles_comb[count][2] = poles[cg][2];
         poles_comb[count][3] = 1;
         count++;
       }
-    }
-  }
+    } else {  
+      for (uint8_t co = 0; co < count_o; co++){
+        for (uint8_t cg = 0; cg < count_g; cg++){
+          dist = abs(poles[co][0] - poles[idx_g+cg][0]);
+          if (dist < threshold){
+            // Object is the same
 
-  // add green obj not detected by orange filter
-  for (uint8_t cg = 0; cg < count_g; cg++){
-    if (!obj_merged[cg]){
-      poles_comb[count][0] = poles[idx_g+cg][0];
-      poles_comb[count][1] = poles[idx_g+cg][1];
-      poles_comb[count][2] = poles[idx_g+cg][2];
-      poles_comb[count][3] = 0;
-      count++;      
+            poles_comb[count][0] = (poles[co][0] + poles[idx_g+cg][0])/2;
+            poles_comb[count][1] = (poles[co][1] + poles[idx_g+cg][1])/2;
+            poles_comb[count][2] = (poles[co][2] + poles[idx_g+cg][2])/2;
+            poles_comb[count][3] = 1;
+
+            obj_merged[cg] = 1;
+            count++;
+
+            break;
+          } 
+
+          // if orange pole is not detected by green filter, add it to list
+          if (cg == count_g-1) {
+            poles_comb[count][0] = poles[co][0];
+            poles_comb[count][1] = poles[co][1];
+            poles_comb[count][2] = poles[co][2];
+            poles_comb[count][3] = 1;
+            count++;
+          }
+        }
+      }
+
+      // add green obj not detected by orange filter
+      for (uint8_t cg = 0; cg < count_g; cg++){
+        if (!obj_merged[cg]){
+          poles_comb[count][0] = poles[idx_g+cg][0];
+          poles_comb[count][1] = poles[idx_g+cg][1];
+          poles_comb[count][2] = poles[idx_g+cg][2];
+          poles_comb[count][3] = 0;
+          count++;      
+        }
+      }
     }
   }
 
@@ -1414,14 +1501,15 @@ void find_distances(){
 
   // Estimate distance purely from pixel width
   for (uint8_t idx = 0; idx < final_count; idx++){
-    final_objs[idx][2] = final_objs[idx][1]-final_objs[idx][0];
+    final_objs[idx][2] = px_dist_scale/(final_objs[idx][1]-final_objs[idx][0]);
   }
+
 
 
 
   // printf("Final measurements\n");
   // for (uint16_t x = 0; x < 10; x++){
-  //   printf("[%d, %d, %d] \n", final_objs[x][0], final_objs[x][1], final_objs[x][2]);
+  //   printf("[%f, %f, %f] \n", final_objs[x][0], final_objs[x][1], final_objs[x][2]);
   // }
 
   // printf("\n");

@@ -55,7 +55,7 @@ extern void circle(float current_time, float *TRAJECTORY_X, float *TRAJECTORY_Y,
 extern void square(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r);
 extern void lace(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r);
 extern void lace_inverted(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r);
-extern void avoidance_straight_path();
+extern void avoidance_straight_path(float *TRAJECTORY_X, float *TRAJECTORY_Y);
 extern float convert_index_to_heading(int index, int N);
 extern int convert_heading_to_index(float heading, int N);
 extern void quickSort(float array[], int indecis[], int first,int last);

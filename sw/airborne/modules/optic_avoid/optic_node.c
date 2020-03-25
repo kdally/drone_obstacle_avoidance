@@ -31,7 +31,7 @@ struct image_t *optic_avoid_func(struct image_t *img){
     // End Clock and print time spend
     clock_t optic_end = clock();
     double optic_time_spent = (double)(optic_end - optic_begin) / CLOCKS_PER_SEC;
-    printf("Time for Optic Avoid: %lf \n", optic_time_spent);
+    // printf("Time for Optic Avoid: %lf \n", optic_time_spent);
 
     return img;
   }
