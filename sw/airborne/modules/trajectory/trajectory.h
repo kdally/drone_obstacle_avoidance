@@ -67,5 +67,6 @@ extern uint8_t moveWaypointForward(uint8_t waypoint, float distanceMeters);
 extern uint8_t moveWaypoint(uint8_t waypoint, struct EnuCoor_i *new_coor);
 extern uint8_t increase_nav_heading(float incrementDegrees);
 extern uint8_t moveWaypointForwardWithDirection(uint8_t waypoint, float distanceMeters, float direction);
+extern bool isCoordInRadius(struct EnuCoor_i *new_coor, float radius);
 #endif
 
