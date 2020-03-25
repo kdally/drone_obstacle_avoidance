@@ -72,7 +72,7 @@ int AVOID_biggest_threat;
 //**** FOR OF TUNNING
 float AVOID_OF_angle = 3.5 * M_PI/180;
 float OF_NEXT_HEADING_INFLUENCE = 0.2;
-float OPTICAL_FLOW_THRESHOLD=0.7;
+float OPTICAL_FLOW_THRESHOLD=0.6;
 
 float dt=0.0005; // 0.6 m/s speed
 struct EnuCoor_i AVOID_start_avoid_coord;
