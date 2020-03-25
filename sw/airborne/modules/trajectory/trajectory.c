@@ -46,29 +46,32 @@ enum trajectory_mode_t trajectory_mode = CIRCLE;
 enum safety_level_t safety_level = THREAT;
 int TRAJECTORY_L = 1800; //for a dt f 0.0011, razor thin margins
 // int TRAJECTORY_L = 1550; //for a dt f 0.0004
+
+//initializing variables
 int TRAJECTORY_D = 0;
 float TRAJECTORY_X=0;
 float TRAJECTORY_Y=0;
-float TRAJECTORY_SWITCHING_TIME=20;
-
 float current_time = 0;
 int square_mode = 1;
 int lace_mode = 1;
 int mode=1;
-
 int AVOID_number_of_objects = 0;
 float AVOID_h1,AVOID_h2;
 float AVOID_d;
-float AVOID_safety_angle = 20 * M_PI/180;
-float AVOID_FOV = 80;
-int AVOID_PERCENTAGE_THRESHOLD=30;
-float AVOID_OF_angle = 5 * M_PI/180;
 float AVOID_objects[100][3];
-float AVOID_slow_dt = 0.0002;
-float AVOID_normal_dt = 0.0007;
-int AVOID_keep_slow_count = 0;
 
-float dt=0.0007; // 0.6 m/s speed
+//********************* TUNNING PARAMETERS *********************
+float TRAJECTORY_SWITCHING_TIME=20;
+float AVOID_safety_angle = 20 * M_PI/180;
+int AVOID_PERCENTAGE_THRESHOLD=30;
+float AVOID_slow_dt = 0.0002;
+float AVOID_normal_dt = 0.0005;
+int AVOID_keep_slow_count = 0;
+float dt=0.0004; // 0.6 m/s speed
+//**** FOR OF TUNNING
+float AVOID_OF_angle = 5 * M_PI/180;
+float OF_NEXT_HEADING_INFLUENCE = 100;
+
 
 void trajectory_init(void){}
 
@@ -121,26 +124,39 @@ printf("change_heading: %d \n", change_heading);
 
 if(change_heading){
   float next_heading=safe_heading(GLOBAL_OF_VECTOR);
-  printf("\n OPTICAL FLOW - SAFE HEADING ACTIVATED!!!");
+  printf("\nCurrent heading: %f", (stateGetNedToBodyEulers_f()->psi)*180/M_PI);
+  printf("\nheading correction: %f", (next_heading*180/M_PI));
   next_heading+=stateGetNedToBodyEulers_f()->psi;
   FLOAT_ANGLE_NORMALIZE(next_heading);
-  float y_next = stateGetPositionEnu_i()->y + 1 * sin(next_heading);
-  float x_next = stateGetPositionEnu_i()->x + 1 * cos(next_heading); //confirm this angles tomorrow with values in excel!!
-  waypoint_set_xy_i(WP_STDBY,x_next,y_next);
+  ANGLE_BFP_OF_REAL(next_heading);
+  printf("\nheading next: %f", next_heading*180/M_PI);
+
+  float dx=OF_NEXT_HEADING_INFLUENCE * cos(next_heading-M_PI/2);
+  float dy=OF_NEXT_HEADING_INFLUENCE * sin(next_heading-M_PI/2);
+  int x_next = stateGetPositionEnu_i()->x + dx;  
+  int y_next = stateGetPositionEnu_i()->y + dy;
+  printf("\nThis position: x:%d ",stateGetPositionEnu_i()->x);
+  printf(" y: %d",stateGetPositionEnu_i()->y);  
+  printf("\n dx: %f",dx);
+  printf("dy: %f",dy);
+  printf("\nNext x: %d ",x_next);
+  printf(" Next y: %d\n \n",y_next);
+
+  //waypoint_set_xy_i(WP_STDBY,x_next,y_next);
 }
  else{
-   waypoint_set_xy_i(WP_STDBY,x_rotated,y_rotated);
+    waypoint_set_xy_i(WP_STDBY,x_rotated,y_rotated);
+    nav_set_heading_towards_waypoint(WP_STDBY);
  }
-
  
+  //nav_set_heading_towards_waypoint(WP_STDBY);
+
 if(AVOID_keep_slow_count==0){
-  waypoint_set_xy_i(WP_STDBY,x_rotated,y_rotated);
-  nav_set_heading_towards_waypoint(WP_STDBY);
+  //waypoint_set_xy_i(WP_STDBY,x_rotated,y_rotated);
+  //nav_set_heading_towards_waypoint(WP_STDBY);
   // waypoint_set_xy_i(WP_GOAL,x_rotated,y_rotated);
   // waypoint_set_xy_i(WP_TRAJECTORY,x_rotated,y_rotated);
 }
-
-
 
   // Deallocate
 // float *GLOBAL_OF_VECTOR = NULL; 
@@ -184,7 +200,7 @@ for(int i; i < AVOID_number_of_objects; i++){
       }
     }
   }
-
+float TRAJECTORY_SWITCHING_TIME=20;
   float new_heading = stateGetNedToBodyEulers_f()->psi + heading_increment;
   FLOAT_ANGLE_NORMALIZE(new_heading);
   nav_heading = ANGLE_BFP_OF_REAL(new_heading);
@@ -196,7 +212,7 @@ bool safety_check_optical_flow(float *AVOID_safety_optical_flow, float x2, float
   //returns true if it's not safe and there's the need to change heading
   //tunning parameters: AVOID_PERCENTAGE_THRESHOLD and AVOID_OF_angle
 
-  float x1=stateGetPositionEnu_i()->x;
+/*   float x1=stateGetPositionEnu_i()->x;
   float y1=stateGetPositionEnu_i()->y;
   //find next abssolute heading
   float next_absolute_heading=atan((y2-y1)/(x2-x1));
@@ -206,14 +222,22 @@ bool safety_check_optical_flow(float *AVOID_safety_optical_flow, float x2, float
   FLOAT_ANGLE_NORMALIZE(next_absolute_heading);
 
   float relative_heading=next_absolute_heading-stateGetNedToBodyEulers_f()->psi;
-  FLOAT_ANGLE_NORMALIZE(relative_heading);
-  /*
-  printf("next_absolute_heading: %f \n", next_absolute_heading*180/M_PI);
+  FLOAT_ANGLE_NORMALIZE(relative_heading); */
+  
+/*   printf("next_absolute_heading: %f \n", next_absolute_heading*180/M_PI);
   printf("current_absolute_heading: %f \n", (stateGetNedToBodyEulers_f()->psi)*180/M_PI);
-  printf("relative_heading: %f \n", relative_heading*180/M_PI);*/
+  printf("relative_heading: %f \n", relative_heading*180/M_PI);
+ */
 
-  int i1=convert_heading_to_index(relative_heading-AVOID_OF_angle, OF_NUMBER_ELEMENTS);
-  int i2=convert_heading_to_index(relative_heading+AVOID_OF_angle, OF_NUMBER_ELEMENTS);
+  //int i1=convert_heading_to_index(relative_heading-AVOID_OF_angle, OF_NUMBER_ELEMENTS);
+  //int i2=convert_heading_to_index(relative_heading+AVOID_OF_angle, OF_NUMBER_ELEMENTS);
+  int i1=convert_heading_to_index(-AVOID_OF_angle, OF_NUMBER_ELEMENTS);
+  int i2=convert_heading_to_index(AVOID_OF_angle, OF_NUMBER_ELEMENTS);
+/*   printf("h1: %f, ", (-AVOID_OF_angle)*180/M_PI); printf(" h2: %f \n", AVOID_OF_angle*180/M_PI);
+  printf("i1: %d \n", i1); printf(" i2: %d \n", i2); */
+
+/*   if(-M_PI/4 > relative_heading-AVOID_OF_angle || M_PI/4 < relative_heading-AVOID_OF_angle || -M_PI/4 > relative_heading+AVOID_OF_angle || M_PI/4 < relative_heading+AVOID_OF_angle)
+    return false; */
 
   //array with the positions
   int indecis[OF_NUMBER_ELEMENTS];
@@ -223,7 +247,6 @@ bool safety_check_optical_flow(float *AVOID_safety_optical_flow, float x2, float
 
 /*
   quickSort(AVOID_safety_optical_flow,indecis,0,OF_NUMBER_ELEMENTS-1);
-
   bool change_heading=false;
   for(int i=0;i<OF_NUMBER_ELEMENTS;i++){  //runs through the entire sorted array
       if(i1<indecis[i] && indecis[i]<i2){  //checks the values inside the original interval
@@ -234,16 +257,15 @@ bool safety_check_optical_flow(float *AVOID_safety_optical_flow, float x2, float
   }
   */
 
-  printf("OF array:\n");
+/*   printf("Print the OF array:\n");
   for(int i=0;i<OF_NUMBER_ELEMENTS;i++){
     printf("%d: %f \n",indecis[i],AVOID_safety_optical_flow[i]);
-  }
+  } */
 
   bool change_heading=false;
   for (int i = i1; i <= i2; i++){
-    if(AVOID_safety_optical_flow[i]>0.1){
+    if(AVOID_safety_optical_flow[i]>0.2){
           change_heading=true;
-
       }
   }
 
@@ -254,19 +276,18 @@ bool safety_check_optical_flow(float *AVOID_safety_optical_flow, float x2, float
 float safe_heading(float array_of[]){
   //returns the safest heading according to OF values
   //saffest heading is the middle value of the i-th partition with span="angular_span"
-  float angular_span=M_PI/NUMBER_OF_PARTITIONS;
+  float field_of_view=M_PI/2;
+  float angular_span=field_of_view/NUMBER_OF_PARTITIONS;
   
   float partition_OF[NUMBER_OF_PARTITIONS];
   int indexis[NUMBER_OF_PARTITIONS];
-  //float* partition_OF=malloc(NUMBER_OF_PARTITIONS * sizeof(float));
-  //int* indexis=malloc(NUMBER_OF_PARTITIONS * sizeof(int));
   
   for (int i=0; i<NUMBER_OF_PARTITIONS; i++){   
       partition_OF[i]=0;
       indexis[i]=i;
   }
 
-  float h1=-1*M_PI/2;     //h2 and h1 are the limits of the partition being processed
+  float h1=-1*field_of_view/2;     //h2 and h1 are the limits of the partition being processed
   float h2=h1+angular_span;  
   int i1,i2;      //i1 and i2 are the indices corresponding to h1 and h2 
 
@@ -284,34 +305,33 @@ float safe_heading(float array_of[]){
     h1+=angular_span;
     h2=h1+angular_span;
   }
-  /*
-  printf("\n \n Array before quick sorting: \n");
+  
+/*   printf("\n \n Array before quick sorting: \n");
   for(int i=0;i<NUMBER_OF_PARTITIONS;i++){
     printf("i: %d , value: %f \n", indexis[i], partition_OF[i]);
-  }
-  */
+  } */
+  
   quickSort(partition_OF,indexis,0,NUMBER_OF_PARTITIONS-1);
-  /*
-  printf("\n \n Array after quick sorting: \n");
+  
+/*   printf("\n \n Array after quick sorting: \n");
   for(int i=0;i<NUMBER_OF_PARTITIONS;i++){
     printf("i: %d , value: %f \n", indexis[i], partition_OF[i]);
-  }*/
+  } */
 
-  float safest_heading = indexis[0] * angular_span + angular_span/2; //partition with lowest OF average
-  //free(partition_OF);
-  //free(indexis);
+  float safest_heading = -1*field_of_view/2 + indexis[0] * angular_span + angular_span/2; //partition with lowest OF average
+  printf("safest heading: %f", safest_heading);
   return safest_heading;
 }
 
 
 float convert_index_to_heading(int index, int N){
   float heading=2.0*index/(N-1)-1.0;  //normalize the index 
-  heading=asin(heading); 
+  heading=atan(heading); 
   return heading; //heading in radians
 }
 
 int convert_heading_to_index(float heading, int N){
-  int index=(1+sin(heading))*(N-1)/2;
+  int index=(1+tan(heading))*(N-1)/2;
   return index; 
 }
 
@@ -488,7 +508,7 @@ void lace(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r)
             printf("[%d]", r);
             //r-=fabs(AVOID_objects[i][1])*1000;
             r -= 200;
-            printf("[%d %d %0.3f] \n", r, AVOID_number_of_objects, AVOID_objects[i][1]);
+            //printf("[%d %d %0.3f] \n", r, AVOID_number_of_objects, AVOID_objects[i][1]);
           }
           else{
             avoidance_straight_path();
@@ -554,7 +574,7 @@ void lace_inverted(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r)
 
             printf("[%d]", r);
             r-=fabs(AVOID_objects[i][1])*1000;
-            printf("[%d %d %0.3f] \n", r, AVOID_number_of_objects, AVOID_objects[i][1]);
+            //printf("[%d %d %0.3f] \n", r, AVOID_number_of_objects, AVOID_objects[i][1]);
           }
           else{
             avoidance_straight_path();
