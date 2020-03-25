@@ -74,7 +74,7 @@ float AVOID_OF_angle = 5 * M_PI/180;
 float OF_NEXT_HEADING_INFLUENCE = 100;
 
 float dt=0.0007; // 0.6 m/s speed
-struct EnuCoor_i target_coord; 
+struct EnuCoor_i AVOID_start_avoid_coord; 
 
 
 void trajectory_init(void){}
@@ -121,7 +121,7 @@ switch (trajectory_mode){
 float x_rotated=TRAJECTORY_X*0.5+TRAJECTORY_Y*0.866025;
 float y_rotated=-TRAJECTORY_X*0.866025+TRAJECTORY_Y*0.5;
 
-setCoord(&target_coord, x_rotated, y_rotated); 
+setCoord(&AVOID_start_avoid_coord, x_rotated, y_rotated); 
 
  //after having the next way point --> double check with OF
  bool change_heading=safety_check_optical_flow(GLOBAL_OF_VECTOR, x_rotated, y_rotated);
@@ -182,8 +182,8 @@ void determine_if_safe(){
     safety_level = ESCAPE_IN_PROGRESS;
     AVOID_keep_slow_count += 1;
   
-    if(isCoordInRadius(&target_coord, 5.0) == true){
-    //if(AVOID_keep_slow_count>50){
+    //if(isCoordInRadius(&AVOID_start_avoid_coord, 5.0) == true){
+    if(AVOID_keep_slow_count>10){
         AVOID_keep_slow_count = 0;
         }
     return;
