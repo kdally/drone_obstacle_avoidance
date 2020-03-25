@@ -70,8 +70,9 @@ float AVOID_normal_dt = 0.0007;
 int AVOID_keep_slow_count = 0;
 int AVOID_biggest_threat;
 //**** FOR OF TUNNING
-float AVOID_OF_angle = 5 * M_PI/180;
-float OF_NEXT_HEADING_INFLUENCE = 100;
+float AVOID_OF_angle = 3.5 * M_PI/180;
+float OF_NEXT_HEADING_INFLUENCE = 0.5;
+float OPTICAL_FLOW_THRESHOLD=0.6;
 
 float dt=0.0007; // 0.6 m/s speed
 struct EnuCoor_i AVOID_start_avoid_coord; 
@@ -132,33 +133,13 @@ else{
   printf("HOLD for iteration %c \n", AVOID_keep_slow_count);
 }
 
-//  //after having the next way point --> double check with OF
-//  bool change_heading=safety_check_optical_flow(GLOBAL_OF_VECTOR, x_rotated, y_rotated);
-//  printf("change_heading: %d \n", change_heading);
+ //after having the next way point --> double check with OF
+ bool change_heading=safety_check_optical_flow(GLOBAL_OF_VECTOR, x_rotated, y_rotated);
+ printf("\nchange_heading: %d \n", change_heading);
 
-// if(change_heading){
-//   float next_heading=safe_heading(GLOBAL_OF_VECTOR);
-//   printf("\nCurrent heading: %f", (stateGetNedToBodyEulers_f()->psi)*180/M_PI);
-//   printf("\nheading correction: %f", (next_heading*180/M_PI));
-//   next_heading+=stateGetNedToBodyEulers_f()->psi;
-//   FLOAT_ANGLE_NORMALIZE(next_heading);
-//   ANGLE_BFP_OF_REAL(next_heading);
-//   printf("\nheading next: %f", next_heading*180/M_PI);
-
-//   float dx=OF_NEXT_HEADING_INFLUENCE * cosf(next_heading-M_PI/2);
-//   float dy=OF_NEXT_HEADING_INFLUENCE * sinf(next_heading-M_PI/2);
-//   int x_next = stateGetPositionEnu_i()->x + dx;  
-//   int y_next = stateGetPositionEnu_i()->y + dy;
-//   printf("\nThis position: x:%d ",stateGetPositionEnu_i()->x);
-//   printf(" y: %d",stateGetPositionEnu_i()->y);  
-//   printf("\n dx: %f",dx);
-//   printf("dy: %f",dy);
-//   printf("\nNext x: %d ",x_next);
-//   printf(" Next y: %d\n \n",y_next);
-
-//   moveWaypointForwardWithDirection(WP_STDBY,OF_NEXT_HEADING_INFLUENCE,safe_heading(GLOBAL_OF_VECTOR));
-//   //waypoint_set_xy_i(WP_STDBY,x_next,y_next);
-// }
+if(change_heading){
+  moveWaypointForwardWithDirection(WP_STDBY,OF_NEXT_HEADING_INFLUENCE,safe_heading(GLOBAL_OF_VECTOR));
+}
 
 
 
@@ -255,24 +236,16 @@ bool safety_check_optical_flow(float *AVOID_safety_optical_flow, float x2, float
     next_absolute_heading+=M_PI;
   }
   FLOAT_ANGLE_NORMALIZE(next_absolute_heading);
-
   float relative_heading=next_absolute_heading-stateGetNedToBodyEulers_f()->psi;
-  FLOAT_ANGLE_NORMALIZE(relative_heading); */
+  FLOAT_ANGLE_NORMALIZE(relative_heading); 
+  if(-M_PI/4 > relative_heading-AVOID_OF_angle || M_PI/4 < relative_heading-AVOID_OF_angle || -M_PI/4 > relative_heading+AVOID_OF_angle || M_PI/4 < relative_heading+AVOID_OF_angle)
+    return false;
+  */
   
-/*   printf("next_absolute_heading: %f \n", next_absolute_heading*180/M_PI);
-  printf("current_absolute_heading: %f \n", (stateGetNedToBodyEulers_f()->psi)*180/M_PI);
-  printf("relative_heading: %f \n", relative_heading*180/M_PI);
- */
-
   //int i1=convert_heading_to_index(relative_heading-AVOID_OF_angle, OF_NUMBER_ELEMENTS);
   //int i2=convert_heading_to_index(relative_heading+AVOID_OF_angle, OF_NUMBER_ELEMENTS);
   int i1=convert_heading_to_index(-AVOID_OF_angle, OF_NUMBER_ELEMENTS);
   int i2=convert_heading_to_index(AVOID_OF_angle, OF_NUMBER_ELEMENTS);
-/*   printf("h1: %f, ", (-AVOID_OF_angle)*180/M_PI); printf(" h2: %f \n", AVOID_OF_angle*180/M_PI);
-  printf("i1: %d \n", i1); printf(" i2: %d \n", i2); */
-
-/*   if(-M_PI/4 > relative_heading-AVOID_OF_angle || M_PI/4 < relative_heading-AVOID_OF_angle || -M_PI/4 > relative_heading+AVOID_OF_angle || M_PI/4 < relative_heading+AVOID_OF_angle)
-    return false; */
 
   //array with the positions
   int indecis[OF_NUMBER_ELEMENTS];
@@ -291,15 +264,9 @@ bool safety_check_optical_flow(float *AVOID_safety_optical_flow, float x2, float
     }
   }
   */
-
-/*   printf("Print the OF array:\n");
-  for(int i=0;i<OF_NUMBER_ELEMENTS;i++){
-    printf("%d: %f \n",indecis[i],AVOID_safety_optical_flow[i]);
-  } */
-
   bool change_heading=false;
   for (int i = i1; i <= i2; i++){
-    if(AVOID_safety_optical_flow[i]>0.2){
+    if(AVOID_safety_optical_flow[i]>OPTICAL_FLOW_THRESHOLD){
           change_heading=true;
       }
   }
@@ -341,20 +308,20 @@ float safe_heading(float array_of[]){
     h2=h1+angular_span;
   }
   
-/*   printf("\n \n Array before quick sorting: \n");
+  printf("\n \n Array before quick sorting: \n");
   for(int i=0;i<NUMBER_OF_PARTITIONS;i++){
     printf("i: %d , value: %f \n", indexis[i], partition_OF[i]);
-  } */
+  }
   
   quickSort(partition_OF,indexis,0,NUMBER_OF_PARTITIONS-1);
   
-/*   printf("\n \n Array after quick sorting: \n");
+  printf("\n \n Array after quick sorting: \n");
   for(int i=0;i<NUMBER_OF_PARTITIONS;i++){
     printf("i: %d , value: %f \n", indexis[i], partition_OF[i]);
-  } */
+  }
 
   float safest_heading = -1*field_of_view/2 + indexis[0] * angular_span + angular_span/2; //partition with lowest OF average
-  printf("safest heading: %f", safest_heading);
+  printf("safest heading: %f \n", safest_heading*180/M_PI);
   return safest_heading;
 }
 
@@ -397,8 +364,8 @@ void quickSort(float array[], int indecis[], int first,int last){
       temp=array[pivot];
       array[pivot]=array[j];
       array[j]=temp;
-      temp2=indecis[i];
-      indecis[i]=indecis[j];
+      temp2=indecis[pivot];
+      indecis[pivot]=indecis[j];
       indecis[j]=temp2;
       quickSort(array, indecis, first,j-1);
       quickSort(array, indecis ,j+1,last);
