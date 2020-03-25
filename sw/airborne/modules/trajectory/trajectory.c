@@ -121,38 +121,6 @@ switch (trajectory_mode){
 float x_rotated=TRAJECTORY_X*0.5+TRAJECTORY_Y*0.866025;
 float y_rotated=-TRAJECTORY_X*0.866025+TRAJECTORY_Y*0.5;
 
- //after having the next way point --> double check with OF
- bool change_heading=safety_check_optical_flow(GLOBAL_OF_VECTOR, x_rotated, y_rotated);
- printf("change_heading: %d \n", change_heading);
-
-if(change_heading){
-  float next_heading=safe_heading(GLOBAL_OF_VECTOR);
-  printf("\nCurrent heading: %f", (stateGetNedToBodyEulers_f()->psi)*180/M_PI);
-  printf("\nheading correction: %f", (next_heading*180/M_PI));
-  next_heading+=stateGetNedToBodyEulers_f()->psi;
-  FLOAT_ANGLE_NORMALIZE(next_heading);
-  ANGLE_BFP_OF_REAL(next_heading);
-  printf("\nheading next: %f", next_heading*180/M_PI);
-
-  float dx=OF_NEXT_HEADING_INFLUENCE * cosf(next_heading-M_PI/2);
-  float dy=OF_NEXT_HEADING_INFLUENCE * sinf(next_heading-M_PI/2);
-  int x_next = stateGetPositionEnu_i()->x + dx;  
-  int y_next = stateGetPositionEnu_i()->y + dy;
-  printf("\nThis position: x:%d ",stateGetPositionEnu_i()->x);
-  printf(" y: %d",stateGetPositionEnu_i()->y);  
-  printf("\n dx: %f",dx);
-  printf("dy: %f",dy);
-  printf("\nNext x: %d ",x_next);
-  printf(" Next y: %d\n \n",y_next);
-
-  //waypoint_set_xy_i(WP_STDBY,x_next,y_next);
-}
- else{
-    waypoint_set_xy_i(WP_STDBY,x_rotated,y_rotated);
-    nav_set_heading_towards_waypoint(WP_STDBY);
- }
- 
-  //nav_set_heading_towards_waypoint(WP_STDBY);
 
 if(safety_level!=ESCAPE_IN_PROGRESS){
   waypoint_set_xy_i(WP_STDBY,x_rotated,y_rotated);
@@ -163,6 +131,36 @@ if(safety_level!=ESCAPE_IN_PROGRESS){
 else{
   printf("HOLD for iteration %c \n", AVOID_keep_slow_count);
 }
+
+//  //after having the next way point --> double check with OF
+//  bool change_heading=safety_check_optical_flow(GLOBAL_OF_VECTOR, x_rotated, y_rotated);
+//  printf("change_heading: %d \n", change_heading);
+
+// if(change_heading){
+//   float next_heading=safe_heading(GLOBAL_OF_VECTOR);
+//   printf("\nCurrent heading: %f", (stateGetNedToBodyEulers_f()->psi)*180/M_PI);
+//   printf("\nheading correction: %f", (next_heading*180/M_PI));
+//   next_heading+=stateGetNedToBodyEulers_f()->psi;
+//   FLOAT_ANGLE_NORMALIZE(next_heading);
+//   ANGLE_BFP_OF_REAL(next_heading);
+//   printf("\nheading next: %f", next_heading*180/M_PI);
+
+//   float dx=OF_NEXT_HEADING_INFLUENCE * cosf(next_heading-M_PI/2);
+//   float dy=OF_NEXT_HEADING_INFLUENCE * sinf(next_heading-M_PI/2);
+//   int x_next = stateGetPositionEnu_i()->x + dx;  
+//   int y_next = stateGetPositionEnu_i()->y + dy;
+//   printf("\nThis position: x:%d ",stateGetPositionEnu_i()->x);
+//   printf(" y: %d",stateGetPositionEnu_i()->y);  
+//   printf("\n dx: %f",dx);
+//   printf("dy: %f",dy);
+//   printf("\nNext x: %d ",x_next);
+//   printf(" Next y: %d\n \n",y_next);
+
+//   moveWaypointForwardWithDirection(WP_STDBY,OF_NEXT_HEADING_INFLUENCE,safe_heading(GLOBAL_OF_VECTOR));
+//   //waypoint_set_xy_i(WP_STDBY,x_next,y_next);
+// }
+
+
 
       //moveWaypointForwardWithDirection(WP_STDBY, 100.0, -45*M_PI/180.0);
       // printf("[%d] \n", AVOID_number_of_objects);
@@ -181,7 +179,7 @@ void determine_if_safe(){
     AVOID_keep_slow_count += 1;
   
  //   if(isCoordInRadius(&AVOID_start_avoid_coord, 5.0) == true){
-    if(AVOID_keep_slow_count>10){
+    if(AVOID_keep_slow_count>0){
         AVOID_keep_slow_count = 0;
         }
     return;
