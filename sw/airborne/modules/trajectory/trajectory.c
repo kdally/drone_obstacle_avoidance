@@ -79,7 +79,7 @@ int AVOID_keep_escape_count = 40;   // typically between 0 and 90. This is to av
 //**** FOR Optical Flow TUNNING
 float AVOID_OF_angle = 3.5 * M_PI/180;  // angle for which we look at the Optical flow
 float OF_NEXT_HEADING_INFLUENCE = 0.2;  // Gain of escpae route from the optical flow-based avoidance
-float OPTICAL_FLOW_THRESHOLD=0.8;  // Optical flow above which it's dangerous to move forward
+float OPTICAL_FLOW_THRESHOLD=0.6;  // Optical flow above which it's dangerous to move forward
 
 void trajectory_init(void){}
 
