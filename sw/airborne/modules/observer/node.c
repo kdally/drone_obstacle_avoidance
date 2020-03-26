@@ -300,7 +300,7 @@ struct image_t *observer_func(struct image_t *img){
 
     // copy processed to img for output
     // copy2img(&processed, img);
-    copy2img(&blurred, img);
+    //copy2img(&blurred, img);
 
 
 
@@ -309,8 +309,8 @@ struct image_t *observer_func(struct image_t *img){
     // //printf("Time: %lf \n", time_spent);
     // //printf("///////////////////////////////////////////////////////////////\n");
   }
-  return &color_mask;
-  // return img;
+  //return &color_mask;
+  return img;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
