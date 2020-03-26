@@ -60,7 +60,7 @@ int AVOID_number_of_objects = 0;
 float AVOID_h1,AVOID_h2;
 float AVOID_d;
 float AVOID_objects[100][3];
-float TRAJECTORY_SWITCHING_TIME=20;
+float TRAJECTORY_SWITCHING_TIME=19;
 float AVOID_safety_angle = 15 * M_PI/180;
 //int AVOID_PERCENTAGE_THRESHOLD=30;
 float AVOID_slow_dt = 0.00008;
@@ -74,7 +74,7 @@ int last_iteration_safe_heading=0;
 
 //********************* TUNNNG PARAMETERS *********************
 //**** FOR Color filter TUNNING
-float AVOID_dist_threat = 3.1; // typically between 35 and 90. The higher, the smaller is the distance from which we consider poles a threat
+float AVOID_dist_threat = 3.5; // typically between 2 and 3.5. 
 int AVOID_keep_escape_count = 40;   // typically between 0 and 90. This is to avoid oscillations in the escape route. The higher, the fewer oscillations
 //**** FOR Optical Flow TUNNING
 float AVOID_OF_angle = 3.5 * M_PI/180;  // angle for which we look at the Optical flow
@@ -141,7 +141,7 @@ if(safety_level!=ESCAPE_IN_PROGRESS){
     }
   }
 }
-else{
+else if(trajectory_mode!=SQUARE){
   bool change_heading = safety_check_optical_flow(GLOBAL_OF_VECTOR, x_rotated, y_rotated);
   if(change_heading){
     moveWaypointForwardWithDirection(WP_GOAL,OF_NEXT_HEADING_INFLUENCE,safe_heading(GLOBAL_OF_VECTOR));
