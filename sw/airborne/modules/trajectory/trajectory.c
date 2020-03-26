@@ -78,8 +78,8 @@ float AVOID_dist_threat = 3.2; // typically between 35 and 90. The higher, the s
 int AVOID_keep_escape_count = 35;   // typically between 0 and 90. This is to avoid oscillations in the escape route. The higher, the fewer oscillations
 //**** FOR Optical Flow TUNNING
 float AVOID_OF_angle = 3.5 * M_PI/180;  // angle for which we look at the Optical flow
-float OF_NEXT_HEADING_INFLUENCE = 0.25;  // Gain of escpae route from the optical flow-based avoidance
-float OPTICAL_FLOW_THRESHOLD=0.8;  // Optical flow above which it's dangerous to move forward
+float OF_NEXT_HEADING_INFLUENCE = 0.2;  // Gain of escpae route from the optical flow-based avoidance
+float OPTICAL_FLOW_THRESHOLD=0.6;  // Optical flow above which it's dangerous to move forward
 
 void trajectory_init(void){}
 
@@ -275,6 +275,14 @@ float safe_heading(float array_of[]){
     }
   }
    */
+
+  if(safe_mode_previous){
+    if(partition_OF[last_iteration_safe_heading]<0.1){
+      float safest_heading = -1*field_of_view/2 + last_iteration_safe_heading * angular_span + angular_span/2;
+      printf("SAME HEADING");
+      return safest_heading;
+    }
+  }
   quickSort(partition_OF,indexis,0,NUMBER_OF_PARTITIONS-1);
   
   printf("\n \n Array after quick sorting: \n");
@@ -283,16 +291,6 @@ float safe_heading(float array_of[]){
   }
 
   float safest_heading = -1*field_of_view/2 + indexis[0] * angular_span + angular_span/2; //partition with lowest OF average
-
-  printf("last iteration i: %d \n this iteration i: %d \n", safest_heading, indexis[0]);
-
-  if(safe_mode_previous){
-    if(partition_OF[last_iteration_safe_heading]<0.1+partition_OF[0]){
-      safest_heading = -1*field_of_view/2 + last_iteration_safe_heading * angular_span + angular_span/2;
-      printf("HEYYYY");
-      return safest_heading;
-    }
-  }
 
   last_iteration_safe_heading=indexis[0];
   printf("safest heading: %f \n", safest_heading*180/M_PI);
