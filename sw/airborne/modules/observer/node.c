@@ -40,6 +40,10 @@
 float x_loc;
 float y_loc;
 float head;
+float vx_loc;
+float vy_loc;
+float v_tot;
+float rot_loc;
 
 // orange filter       y_m  y_M  u_m  u_M  v_m  v_M
 uint8_t orange_cf[6] = {26, 164,  45, 130, 160, 192};
@@ -65,7 +69,7 @@ const float head_y_b_green = 2.5; // capo is on 2.618
 // const float head_y_pi_green = 3.58;
 
 
-// bool to check 
+// bool to check (if close to the edge, don't look)
 bool check_green;
 
 
@@ -96,7 +100,7 @@ uint8_t kernel[3][3] = {{0, 0, 0},
                         {0, 0, 0}};
 
 
-// big kerels
+// big kernels
   // uint8_t big_kernel[7][7] = {{1, 1, 0, 0, 0, -1, -1},
   //                             {1, 1, 0, 0, 0, -1, -1},
   //                             {2, 2, 0, 0, 0, -2, -2},
@@ -213,6 +217,8 @@ struct image_t processed;
 struct image_t color_mask;
 struct image_t blurred;
 
+bool first_time = true;
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // MAIN FUNCTION
@@ -223,10 +229,13 @@ struct image_t *observer_func(struct image_t *img){
     // Take the time
     clock_t begin = clock();
 
-    // Copy input image to processed
-    create_img(img, &processed);
-    create_img(img, &color_mask);
-    create_img(img, &blurred);
+    // Copy input image to processed, convoluted and color masks
+    if (first_time){
+      create_img(img, &processed);
+      create_img(img, &color_mask);
+      create_img(img, &blurred);
+      first_time = false;
+    }
 
     // Clean poles
     for (uint16_t x = 0; x < 100; x++) {
@@ -244,37 +253,30 @@ struct image_t *observer_func(struct image_t *img){
     }
 
     // Get the drone's posititon and heading for object detector
-    x_loc = - stateGetPositionEnu_f()->x*0.523599 + stateGetPositionEnu_f()->y*0.851965;
-    y_loc =  stateGetPositionEnu_f()->x*0.851965 + stateGetPositionEnu_f()->y*0.523599;
-    head = stateGetNedToBodyEulers_f()->psi + 0.523599;
+    read_drone_state();
 
     // printf("[%lf, %lf, %lf]\n", stateGetPositionEnu_f()->x, stateGetPositionEnu_f()->y, stateGetNedToBodyEulers_f()->psi);
 
-    // Filter poles (orange)
+    // Filter poles (orange) and find objects from mask
     image_specfilt(img, &processed, &color_mask, orange_cf[0], orange_cf[1], orange_cf[2],
                     orange_cf[3], orange_cf[4], orange_cf[5], &mask_o);
 
-    // convolve(&orange_mask, &blurred);
-
-    // detect_poles(&poles);
-
     find_orange_objs();
 
-    // Filter ground (green)
-    // image_specfilt(&processed, &processed, &color_mask, green_cf[0], green_cf[1], 
-    //             green_cf[2], green_cf[3], green_cf[4], green_cf[5], &mask_g);
+    // Filter ground (green) and find objects from mask
+    image_specfilt(&processed, &processed, &color_mask, green_cf[0], green_cf[1], 
+                green_cf[2], green_cf[3], green_cf[4], green_cf[5], &mask_g);
 
     // find_green_objs();
 
-    // // // Filter blue color and remove stuff in ground
-    // image_bgfilt(&processed, &processed, blue_cf[0], blue_cf[1], 
-    //                blue_cf[2], blue_cf[3], blue_cf[4], blue_cf[5], false);
+    // // Filter blue color and remove noise in ground
+    image_bgfilt(&processed, &processed, blue_cf[0], blue_cf[1], 
+                   blue_cf[2], blue_cf[3], blue_cf[4], blue_cf[5], false);
 
 
-    // // // blur_image(&processed, &blurred);
-    // blur_big(&processed, &blurred);
+    // Blur the rest of the image to 
+    blur_big(&processed, &blurred);
 
-    // // // // // convolve(&blurred, &processed);
     // convolve_big(&blurred, &processed);
 
 
@@ -297,8 +299,8 @@ struct image_t *observer_func(struct image_t *img){
     find_distances();
 
     // copy processed to img for output
-    copy2img(&processed, img);
-    // copy2img(&blurred, img);
+    // copy2img(&processed, img);
+    copy2img(&blurred, img);
 
 
 
@@ -307,11 +309,30 @@ struct image_t *observer_func(struct image_t *img){
     // printf("Time: %lf \n", time_spent);
     // printf("///////////////////////////////////////////////////////////////\n");
   }
-  return img;
+  return &color_mask;
   // return img;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+void read_drone_state(){
+  // Get position and transform
+  x_loc = - stateGetPositionEnu_f()->x*0.523599 + stateGetPositionEnu_f()->y*0.851965;
+  y_loc =  stateGetPositionEnu_f()->x*0.851965 + stateGetPositionEnu_f()->y*0.523599;
+  head = stateGetNedToBodyEulers_f()->psi + 0.523599;
+  if (head > 3.141592){
+    head -= 3.141592*2;
+  }
+
+  // Get velocity and transform
+  vx_loc = - stateGetSpeedEnu_f()->x*0.523599 + stateGetSpeedEnu_f()->y*0.851965;
+  vy_loc =  stateGetSpeedEnu_f()->x*0.851965 + stateGetSpeedEnu_f()->y*0.523599;
+  v_tot = sqrt(vx_loc*vx_loc + vy_loc*vy_loc);
+
+  // Get angular rate
+  rot_loc = stateGetBodyRates_f()->r;
+  printf("ROT SPEED: %.2lf", rot_loc);
+}
+
 void create_img(struct image_t *input, struct image_t *output){
   // Set the variables
   output->type = input->type;
@@ -1064,11 +1085,11 @@ void find_orange_objs(){
       //   der2new = 0;
       // }
 
-  // printf("Poles detected from orange mask\n");
-  // for (uint16_t x = 0; x < 10; x++){
-  //   printf("[%d, %d] \n", poles[x][0], poles[x][1]);
-  // }
-  // printf("\n");
+  printf("Poles detected from orange mask\n");
+  for (uint16_t x = 0; x < 10; x++){
+    printf("[%d, %d] \n", poles[x][0], poles[x][1]);
+  }
+  printf("\n");
 }
 
 // Find poles from green mask
@@ -1084,8 +1105,8 @@ void find_green_objs(){
       // the first white pixel
       if ((mask_g[x][y] == 1)){
         // define upper boundary seach
-        if (y>6){ // if there are more than 8 pixels in the row left
-          top_l = 6;
+        if (y>15){ // if there are more than 8 pixels in the row left
+          top_l = 15;
         } else { // else
           top_l = y;
         }
@@ -1093,7 +1114,7 @@ void find_green_objs(){
           sum += mask_g[x][y+i];
         }
         // if not just one random pixel
-        if (sum > top_l - 1){
+        if (sum > top_l - 2){
           floors[x] = y;
           break;
         }
@@ -1177,11 +1198,11 @@ void find_green_objs(){
   }
 
 
-  // printf("Poles detected from green mask\n");
-  // for (uint16_t x = idx_g; x < idx_g+9; x++){
-  //   printf("[%d, %d] \n", poles[x][0], poles[x][1]);
-  // }
-  // printf("\n");
+  printf("Poles detected from green mask\n");
+  for (uint16_t x = idx_g; x < idx_g+9; x++){
+    printf("[%d, %d] \n", poles[x][0], poles[x][1]);
+  }
+  printf("\n");
 }
 
 // THIS FUNCTION IS COPIED FROM find_orange_objs
@@ -1233,51 +1254,15 @@ void find_rand_objs(){
     poles[count_o][1] = 519;
     count_o++;
   }
-
-
-  // LOGIC WITH 2nd DERIVATIVE
-      // der1 = sums[x+1] - sums[x-1];
-
-      // if (abs(der1) > 15){    // if there are more than X 1's difference
-      //   der2new = sums[x+1] + sums[x-1] - 2*sums[x];
-
-      //   // if 2nd derivative have opposite sign, we have a pole!
-      //   if (((der2new < 0) && (der2old > 0)) || ((der2new > 0) && (der2old < 0))){
-  
-      //     if (der1 > 0){ // if the pole begins
-      //       poles[count][0] = x;
-      //     } else {       // if the pole ends
-      //       poles[count][1] = x;
-      //       count ++;
-      //     }
-
-      //   } else {
-      //     der2old = der2new;
-      //   }
-      // } else {
-      //   der2old = 0;
-      //   der2new = 0;
-      // }
-
-  // printf("Poles detected from orange mask\n");
-  // for (uint16_t x = 0; x < 10; x++){
-  //   printf("[%d, %d] \n", poles[x][0], poles[x][1]);
-  // }
-  // printf("\n");
 }
-
-
-// Get correct number of poles,
-// void fix_pole_list(){
-//   for (uint8_t o_i = 0; o_i < count_o+1; o_i++){
-
-//   }
-// }
 
 // Associate measurements to each other
 void combine_measurements(){
   uint16_t dist;
   count = 0;
+
+  printf("Count orange: %d\n", count_o);
+  printf("Count green: %d\n", count_g);
 
   if (count_g == 0){
     for (uint8_t co = 0; co < count_o; co++){
@@ -1290,9 +1275,9 @@ void combine_measurements(){
   } else {
     if (count_o == 0){
       for (uint8_t cg = 0; cg < count_g; cg++){
-        poles_comb[count][0] = poles[cg][0];
-        poles_comb[count][1] = poles[cg][1];
-        poles_comb[count][2] = poles[cg][2];
+        poles_comb[count][0] = poles[idx_g+cg][0];
+        poles_comb[count][1] = poles[idx_g+cg][1];
+        poles_comb[count][2] = poles[idx_g+cg][2];
         poles_comb[count][3] = 1;
         count++;
       }
@@ -1327,6 +1312,7 @@ void combine_measurements(){
 
       // add green obj not detected by orange filter
       for (uint8_t cg = 0; cg < count_g; cg++){
+        printf("Obj [idx] merged: %d\n", !obj_merged[cg]);          
         if (!obj_merged[cg]){
           poles_comb[count][0] = poles[idx_g+cg][0];
           poles_comb[count][1] = poles[idx_g+cg][1];
@@ -1338,11 +1324,11 @@ void combine_measurements(){
     }
   }
 
-  // printf("Combined measurements\n");
-  // for (uint16_t x = 0; x < 10; x++){
-  //   printf("[%d, %d] \n", poles_comb[x][0], poles_comb[x][1]);
-  // }
-  // printf("\n");
+  printf("Combined measurements\n");
+  for (uint16_t x = 0; x < 10; x++){
+    printf("[%d, %d] \n", poles_comb[x][0], poles_comb[x][1]);
+  }
+  printf("\n");
 
 }
 
@@ -1374,58 +1360,74 @@ void delete_outliers(){
     }
     new_count = count;
   } else{
+    // if object is rotating or moving fast, then take all the measurements
+    if ((v_tot > 1) || (rot_loc > 0.4)){
+      printf("rotating too fast, calm down\n");
+      for (uint8_t c_old = 0; c_old < count; c_old++){
 
-    // o/w for all objects seen
-    for (uint8_t c_old = 0; c_old < count; c_old++){
-      min_dist = 1000;
-      for (uint8_t c_inrt = 0; c_inrt < count_inertia; c_inrt++){
+        // Add object location
+        poles_w_inertia[c_old][0] = poles_comb[c_old][0];
+        poles_w_inertia[c_old][1] = poles_comb[c_old][1];
+        poles_w_inertia[c_old][2] = poles_comb[c_old][2];
 
-        dist = abs(poles_comb[c_old][0] - poles_w_inertia[c_inrt][0]);
-
-
-        // printf("Threshold: %d  of cone [%d, %d] with cone [%d, %d];\tNew count: %d\t\t", dist,  
-        //                 poles_comb[c_old][0], poles_comb[c_old][1],
-        //                 poles_w_inertia[c_inrt][0], poles_w_inertia[c_inrt][1], new_count);
-
-
-        if (dist<min_dist){
-          min_dist = dist;
-          min_idx = c_inrt;
-        }
-
-      if ((c_inrt == count_inertia-1) && (min_dist > threshold)){
-          // if object was not seen before
-          // Add object location
-          poles_w_inertia[count_inertia+new_count][0] = poles_comb[c_old][0];
-          poles_w_inertia[count_inertia+new_count][1] = poles_comb[c_old][1];
-          poles_w_inertia[count_inertia+new_count][2] = poles_comb[c_old][2];
-
-          // Add # of times seen
-          poles_w_inertia[count_inertia+new_count][3] = 2;
-
-          new_count++;
-        }
+        // Add # of times seen
+        poles_w_inertia[c_old][3] = 9;
       }
+      new_count = count - count_inertia;
 
-      // if object was seen before
-      if (min_dist < associate_threshold){
-        // Update the measurement to new location
-        poles_w_inertia[min_idx][0] = poles_comb[c_old][0];
-        poles_w_inertia[min_idx][1] = poles_comb[c_old][1];
-        poles_w_inertia[min_idx][2] = poles_comb[c_old][2];
-        // Update times seen
-        poles_w_inertia[min_idx][3] += 2;
+    } else{
+      // o/w for all objects seen
+      for (uint8_t c_old = 0; c_old < count; c_old++){
+        min_dist = 1000;
+        for (uint8_t c_inrt = 0; c_inrt < count_inertia; c_inrt++){
+
+          dist = abs(poles_comb[c_old][0] - poles_w_inertia[c_inrt][0]);
+
+
+          // printf("Threshold: %d  of cone [%d, %d] with cone [%d, %d];\tNew count: %d\t\t", dist,  
+          //                 poles_comb[c_old][0], poles_comb[c_old][1],
+          //                 poles_w_inertia[c_inrt][0], poles_w_inertia[c_inrt][1], new_count);
+
+
+          if (dist<min_dist){
+            min_dist = dist;
+            min_idx = c_inrt;
+          }
+
+        if ((c_inrt == count_inertia-1) && (min_dist > threshold)){
+            // if object was not seen before
+            // Add object location
+            poles_w_inertia[count_inertia+new_count][0] = poles_comb[c_old][0];
+            poles_w_inertia[count_inertia+new_count][1] = poles_comb[c_old][1];
+            poles_w_inertia[count_inertia+new_count][2] = poles_comb[c_old][2];
+
+            // Add # of times seen
+            poles_w_inertia[count_inertia+new_count][3] = 2;
+
+            new_count++;
+          }
+        }
+
+        // if object was seen before
+        if (min_dist < associate_threshold){
+          // Update the measurement to new location
+          poles_w_inertia[min_idx][0] = poles_comb[c_old][0];
+          poles_w_inertia[min_idx][1] = poles_comb[c_old][1];
+          poles_w_inertia[min_idx][2] = poles_comb[c_old][2];
+          // Update times seen
+          poles_w_inertia[min_idx][3] += 2;
+        }
       }
     }
   }
 
   // printf("count intertia: %d \n", count_inertia);
   // printf("New count: %d\n", new_count);
-  // printf("Intertial measurements 2\n");
-  // for (uint16_t x = 0; x < 10; x++){
-  //   printf("[%d, %d, %d] \n", poles_w_inertia[x][0], poles_w_inertia[x][1], poles_w_inertia[x][3]);
-  // }
-  // printf("\n");
+  printf("Intertial measurements 2\n");
+  for (uint16_t x = 0; x < 10; x++){
+    printf("[%d, %d, %d] \n", poles_w_inertia[x][0], poles_w_inertia[x][1], poles_w_inertia[x][3]);
+  }
+  printf("\n");
 
 
   count_inertia += new_count;
@@ -1441,8 +1443,8 @@ void delete_outliers(){
       idx_to_rm[elem_to_rm] = c_inrt;
       elem_to_rm ++;
 
-      // printf("REMOVEEE!!!\n");
-      // printf("Obj idx: %d\t Obj to rm: %d\n", c_inrt, elem_to_rm-1);
+      printf("REMOVEEE!!!\n");
+      printf("Obj idx: %d\t Obj to rm: %d\n", c_inrt, elem_to_rm-1);
 
     } else {
 
@@ -1499,7 +1501,32 @@ void find_distances(){
 
   // printf("Final count: %d\n", final_count);
 
-  // Estimate distance purely from pixel width
+  float dist1;
+  float dist2;
+
+  // angle from pose to
+  float head_1 = atan2(( 3.85-y_loc), ( 3.85-x_loc)); // top r (+, +) 
+  float head_2 = atan2(( 3.85-y_loc), (-3.85-x_loc)); // bot r (+, -)
+  float head_3 = atan2((-3.85-y_loc), (-3.85-x_loc)); // bot l (-, -)
+  float head_4 = atan2((-3.85-y_loc), ( 3.85-x_loc)); // top l (-, +))
+
+  // // angle from pose to 
+  // float head_1 = atan2(( 3.85-x_loc), ( 3.85-y_loc)); // top r (+, +) 
+  // float head_2 = atan2(( 3.85-x_loc), (-3.85-y_loc)); // bot r (+, -)
+  // float head_3 = atan2((-3.85-x_loc), (-3.85-y_loc)); // bot l (-, -)
+  // float head_4 = atan2((-3.85-x_loc), ( 3.85-y_loc)); // top l (-, +))
+
+
+  // printf("HEADS: \n");
+  // printf("H1: %.2lf\n", head_1);
+  // printf("H2: %.2lf\n", head_2);
+  // printf("H3: %.2lf\n", head_3);
+  // printf("H4: %.2lf\n", head_4);
+
+  printf("Own loc: [%.2lf, %.2lf]\n", x_loc, y_loc);
+  printf("Our head: %.2lf\n", head);
+  printf("Final count: %d\n", final_count);
+
   for (uint8_t idx = 0; idx < final_count; idx++){
     final_objs[idx][2] = px_dist_scale/(final_objs[idx][1]-final_objs[idx][0]);
   }
