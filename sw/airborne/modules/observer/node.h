@@ -41,7 +41,6 @@
 struct image_t *observer_func(struct image_t *img);
 
 // Image processing functions
-void read_drone_state();
 void create_img(struct image_t *input, struct image_t *output);
 void copy2img(struct image_t *input, struct image_t *output);
 void image_specfilt(struct image_t *input, struct image_t *output1, 
