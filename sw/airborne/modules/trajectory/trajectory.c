@@ -141,17 +141,17 @@ if(safety_level!=ESCAPE_IN_PROGRESS){
     }
   }
 }
-// else{
-//   bool change_heading = safety_check_optical_flow(GLOBAL_OF_VECTOR, x_rotated, y_rotated);
-//   if(change_heading){
-//     moveWaypointForwardWithDirection(WP_GOAL,OF_NEXT_HEADING_INFLUENCE,safe_heading(GLOBAL_OF_VECTOR));
-//     safe_mode_previous=true;
-//     printf("[%f] \n", safe_heading(GLOBAL_OF_VECTOR)*180/M_PI);
-//   }
-//   else{
-//     safe_mode_previous=false;
-//   }
-// }
+else{
+  bool change_heading = safety_check_optical_flow(GLOBAL_OF_VECTOR, x_rotated, y_rotated);
+  if(change_heading){
+    moveWaypointForwardWithDirection(WP_GOAL,OF_NEXT_HEADING_INFLUENCE,safe_heading(GLOBAL_OF_VECTOR));
+    safe_mode_previous=true;
+    printf("[%f] \n", safe_heading(GLOBAL_OF_VECTOR)*180/M_PI);
+  }
+  else{
+    safe_mode_previous=false;
+  }
+}
 nav_set_heading_towards_waypoint(WP_GOAL);
 // Deallocate
 // float *GLOBAL_OF_VECTOR = NULL; 
