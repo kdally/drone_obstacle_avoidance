@@ -200,9 +200,8 @@ void determine_if_safe(){
   for(int i; i < AVOID_number_of_objects; i++){
     if((fabs(AVOID_objects[i][0]) < AVOID_safety_angle || fabs(AVOID_objects[i][1]) < AVOID_safety_angle || AVOID_objects[i][0]*AVOID_objects[i][1] < 0) &&  final_objs[i][2]<AVOID_dist_threat){
       
-      if(i==0 || fabs(AVOID_objects[i][0]) > fabs(AVOID_objects[i-1][0]) || fabs(AVOID_objects[i][1]) > fabs(AVOID_objects[i-1][1])){
+      if(i==0 || final_objs[i][2] < final_objs[i-1][2]){
           AVOID_biggest_threat = i;
-          //printf("[%d] \n", AVOID_objects[AVOID_biggest_threat][2]);
       }
     safety_level = THREAT;
     setCoord(&AVOID_start_avoid_coord, stateGetPositionEnu_i()->x, stateGetPositionEnu_i()->y); 
