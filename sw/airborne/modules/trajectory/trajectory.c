@@ -78,7 +78,7 @@ float AVOID_dist_threat = 3.5; // typically between 2 and 3.5.
 int AVOID_keep_escape_count = 40;   // typically between 0 and 90. This is to avoid oscillations in the escape route. The higher, the fewer oscillations
 //**** FOR Optical Flow TUNNING
 float AVOID_OF_angle = 3.5 * M_PI/180;  // angle for which we look at the Optical flow
-float OF_NEXT_HEADING_INFLUENCE = 0.2;  // Gain of escpae route from the optical flow-based avoidance
+float OF_NEXT_HEADING_INFLUENCE = 0.25;  // Gain of escpae route from the optical flow-based avoidance
 float OPTICAL_FLOW_THRESHOLD=0.6;  // Optical flow above which it's dangerous to move forward
 //****** To Count the Distance
 float distance_travelled;
@@ -104,14 +104,14 @@ switch (trajectory_mode){
   case CIRCLE:
 
     circle(current_time, &TRAJECTORY_X, &TRAJECTORY_Y, r);
-    printf("CIRCLE\n");
+    //printf("CIRCLE\n");
     switch_path(SQUARE);
 
     break;
   case SQUARE:
 
     square(dt, &TRAJECTORY_X, &TRAJECTORY_Y, r);
-    printf("SQUARE\n");
+    //printf("SQUARE\n");
     switch_path(CIRCLE);
 
     break;
@@ -167,6 +167,8 @@ printf("\n Distance tavelled= %f \n", distance_travelled);
 }
 
 //********************************************* COUNT DISTANCE *******************************************
+
+//Returns the distance travelled in the last iteration
 float distance_travelled_last_iteration(){
   float dx=stateGetPositionEnu_f()->x - last_x;
   float dy=stateGetPositionEnu_f()->y - last_y;
@@ -176,13 +178,12 @@ float distance_travelled_last_iteration(){
   //add new distance travelleds
   float r=sqrt(dx*dx+dy*dy);
   return r;
-  
 }
 
 //***************************************** AVOIDANCE STRATEGIES *****************************************
 
+//determines the safety level 
 void determine_if_safe(){
-
   if(AVOID_keep_slow_count!=0){
     safety_level = ESCAPE_IN_PROGRESS;
     AVOID_keep_slow_count += 1;
@@ -209,28 +210,9 @@ void determine_if_safe(){
 return;
 }
 
-
-
+//returns true if it's not safe and there's the need to change heading
+//tunning parameters: AVOID_PERCENTAGE_THRESHOLD and AVOID_OF_angle
 bool safety_check_optical_flow(float *AVOID_safety_optical_flow, float x2, float y2){
-  //returns true if it's not safe and there's the need to change heading
-  //tunning parameters: AVOID_PERCENTAGE_THRESHOLD and AVOID_OF_angle
-
-/*   float x1=stateGetPositionEnu_i()->x;
-  float y1=stateGetPositionEnu_i()->y;
-  //find next abssolute heading
-  float next_absolute_heading=atan((y2-y1)/(x2-x1));
-  if(x2<x1){
-    next_absolute_heading+=M_PI;
-  }
-  FLOAT_ANGLE_NORMALIZE(next_absolute_heading);
-  float relative_heading=next_absolute_heading-stateGetNedToBodyEulers_f()->psi;
-  FLOAT_ANGLE_NORMALIZE(relative_heading); 
-  if(-M_PI/4 > relative_heading-AVOID_OF_angle || M_PI/4 < relative_heading-AVOID_OF_angle || -M_PI/4 > relative_heading+AVOID_OF_angle || M_PI/4 < relative_heading+AVOID_OF_angle)
-    return false;
-  */
-  
-  //int i1=convert_heading_to_index(relative_heading-AVOID_OF_angle, OF_NUMBER_ELEMENTS);
-  //int i2=convert_heading_to_index(relative_heading+AVOID_OF_angle, OF_NUMBER_ELEMENTS);
   int i1=convert_heading_to_index(-AVOID_OF_angle, OF_NUMBER_ELEMENTS);
   int i2=convert_heading_to_index(AVOID_OF_angle, OF_NUMBER_ELEMENTS);
 
@@ -240,17 +222,6 @@ bool safety_check_optical_flow(float *AVOID_safety_optical_flow, float x2, float
       indecis[i]=i;
   }
 
-/*
-  quickSort(AVOID_safety_optical_flow,indecis,0,OF_NUMBER_ELEMENTS-1);
-  bool change_heading=false;
-  for(int i=0;i<OF_NUMBER_ELEMENTS;i++){  //runs through the entire sorted array
-      if(i1<indecis[i] && indecis[i]<i2){  //checks the values inside the original interval
-        if(i>(OF_NUMBER_ELEMENTS*AVOID_PERCENTAGE_THRESHOLD/100)){
-          change_heading=true;
-      }
-    }
-  }
-  */
   bool change_heading=false;
   for (int i = i1; i <= i2; i++){
     if(AVOID_safety_optical_flow[i]>OPTICAL_FLOW_THRESHOLD){
@@ -261,10 +232,12 @@ bool safety_check_optical_flow(float *AVOID_safety_optical_flow, float x2, float
   return change_heading;
 }
 
-
+//Function: Returns the safest heading according to OF values
+// - divides the field of view in NUMBER_OF_PARTITIONS partitions
+// - Finds the partition with smallest OF (partition i)
+// - saffest heading is the middle value of the i-th partition with span="angular_span"
 float safe_heading(float array_of[]){
-  //returns the safest heading according to OF values
-  //saffest heading is the middle value of the i-th partition with span="angular_span"
+  printf("\nOF activated\n");
   float field_of_view=M_PI/2;
   float angular_span=field_of_view/NUMBER_OF_PARTITIONS;
   
@@ -276,10 +249,11 @@ float safe_heading(float array_of[]){
       indexis[i]=i;
   }
 
-  float h1=-1*field_of_view/2;     //h2 and h1 are the limits of the partition being processed
-  float h2=h1+angular_span;  
+  float h1=-1*field_of_view/2;     //h2 and h1 are the limits 
+  float h2=h1+angular_span;        //of the partition being processed
   int i1,i2;      //i1 and i2 are the indices corresponding to h1 and h2 
 
+  //calculating OF in each partition
   for (int i = 0; i < NUMBER_OF_PARTITIONS; i++){
     i1=convert_heading_to_index(h1, OF_NUMBER_ELEMENTS);
     i2=convert_heading_to_index(h2, OF_NUMBER_ELEMENTS);
@@ -294,54 +268,36 @@ float safe_heading(float array_of[]){
     h1+=angular_span;
     h2=h1+angular_span;
   }
-  
-/*   printf("\n \n Array before quick sorting: \n");
-  for(int i=0;i<NUMBER_OF_PARTITIONS;i++){
-    printf("i: %d , value: %f \n", indexis[i], partition_OF[i]);
-  }   */
-  
-/*   if(safe_mode_previous){
-    if(partition_OF[last_iteration_safe_heading]<0.1){
-      float safest_heading = -1*field_of_view/2 + last_iteration_safe_heading * angular_span + angular_span/2;
-      printf("SAME HEADING: %f\n", safest_heading);
-      return safest_heading;
-    }
-  }
-   */
 
   if(safe_mode_previous){
     if(partition_OF[last_iteration_safe_heading]<0.1){
       float safest_heading = -1*field_of_view/2 + last_iteration_safe_heading * angular_span + angular_span/2;
-      printf("SAME HEADING");
       return safest_heading;
     }
   }
+  //Finds the partition with smallest OF
   quickSort(partition_OF,indexis,0,NUMBER_OF_PARTITIONS-1);
-  
-/*   printf("\n \n Array after quick sorting: \n");
-  for(int i=0;i<NUMBER_OF_PARTITIONS;i++){
-    printf("i: %d , value: %f \n", indexis[i], partition_OF[i]);
-  } */
+
 
   float safest_heading = -1*field_of_view/2 + indexis[0] * angular_span + angular_span/2; //partition with lowest OF average
-
   last_iteration_safe_heading=indexis[0];
-  // printf("safest heading: %f \n", safest_heading*180/M_PI);
   return safest_heading;
 }
 
-
+//Converts the index of OF array to the corresponding heading (due to distortion)
 float convert_index_to_heading(int index, int N){
   float heading=2.0*index/(N-1)-1.0;  //normalize the index 
   heading=atan(heading); 
   return heading; //heading in radians
 }
 
+//Converts the heading to the index of OF array (due to distortion)
 int convert_heading_to_index(float heading, int N){
   int index=(1+tan(heading))*(N-1)/2;
   return index; 
 }
 
+//Sorting function using quick sort algorithm
 void quickSort(float array[], int indecis[], int first,int last){
    int i, j, pivot, temp2;
    float temp;
@@ -659,6 +615,7 @@ void switch_path(enum trajectory_mode_t mode){
 
 }
 
+// ************************************* NAVIGATION USEFUL FUNCTIONS ********************************************
 
 /*
  * Calculates coordinates of a distance of 'distanceMeters' forward w.r.t. current position and heading
