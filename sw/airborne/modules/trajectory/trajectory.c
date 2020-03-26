@@ -125,6 +125,8 @@ switch (trajectory_mode){
 float x_rotated=TRAJECTORY_X*0.5+TRAJECTORY_Y*0.866025;
 float y_rotated=-TRAJECTORY_X*0.866025+TRAJECTORY_Y*0.5;
 
+waypoint_set_xy_i(WP_STDBY,x_rotated,y_rotated);
+nav_set_heading_towards_waypoint(WP_STDBY);
 
  //after having the next way point --> double check with OF
  bool change_heading=safety_check_optical_flow(GLOBAL_OF_VECTOR, x_rotated, y_rotated);
@@ -137,7 +139,6 @@ if(change_heading){
 else{
   safe_mode_previous=false;
 }
-
 
   // Deallocate
 // float *GLOBAL_OF_VECTOR = NULL; 
