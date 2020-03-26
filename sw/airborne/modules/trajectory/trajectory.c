@@ -80,12 +80,19 @@ int AVOID_keep_escape_count = 40;   // typically between 0 and 90. This is to av
 float AVOID_OF_angle = 3.5 * M_PI/180;  // angle for which we look at the Optical flow
 float OF_NEXT_HEADING_INFLUENCE = 0.2;  // Gain of escpae route from the optical flow-based avoidance
 float OPTICAL_FLOW_THRESHOLD=0.6;  // Optical flow above which it's dangerous to move forward
+//****** To Count the Distance
+float distance_travelled;
+float last_x;
+float last_y;
 
-void trajectory_init(void){}
+void trajectory_init(void){
+  distance_travelled=0;
+  last_x=stateGetPositionEnu_f()->x;
+  last_y=stateGetPositionEnu_f()->y;
+}
 
 void trajectory_periodic(void)
 {
-
 AVOID_number_of_objects = 0;
 unpack_object_list();
 count_objects();
@@ -97,12 +104,14 @@ switch (trajectory_mode){
   case CIRCLE:
 
     circle(current_time, &TRAJECTORY_X, &TRAJECTORY_Y, r);
+    printf("CIRCLE\n");
     switch_path(SQUARE);
 
     break;
   case SQUARE:
 
     square(dt, &TRAJECTORY_X, &TRAJECTORY_Y, r);
+    printf("SQUARE\n");
     switch_path(CIRCLE);
 
     break;
@@ -134,7 +143,6 @@ if(safety_level!=ESCAPE_IN_PROGRESS){
     if(change_heading){
       moveWaypointForwardWithDirection(WP_GOAL,OF_NEXT_HEADING_INFLUENCE,safe_heading(GLOBAL_OF_VECTOR));
       safe_mode_previous=true;
-      printf("[%f] \n", safe_heading(GLOBAL_OF_VECTOR)*180/M_PI);
     }
     else{
       safe_mode_previous=false;
@@ -146,17 +154,30 @@ else if(trajectory_mode!=SQUARE){
   if(change_heading){
     moveWaypointForwardWithDirection(WP_GOAL,OF_NEXT_HEADING_INFLUENCE,safe_heading(GLOBAL_OF_VECTOR));
     safe_mode_previous=true;
-    printf("[%f] \n", safe_heading(GLOBAL_OF_VECTOR)*180/M_PI);
   }
   else{
     safe_mode_previous=false;
   }
 }
 nav_set_heading_towards_waypoint(WP_GOAL);
+distance_travelled+=distance_travelled_last_iteration();
+printf("\n Distance tavelled= %f \n", distance_travelled);
 // Deallocate
 // float *GLOBAL_OF_VECTOR = NULL; 
 }
 
+//********************************************* COUNT DISTANCE *******************************************
+float distance_travelled_last_iteration(){
+  float dx=stateGetPositionEnu_f()->x - last_x;
+  float dy=stateGetPositionEnu_f()->y - last_y;
+  //update last position
+  last_x=stateGetPositionEnu_f()->x;
+  last_y=stateGetPositionEnu_f()->y;
+  //add new distance travelleds
+  float r=sqrt(dx*dx+dy*dy);
+  return r;
+  
+}
 
 //***************************************** AVOIDANCE STRATEGIES *****************************************
 
@@ -274,10 +295,10 @@ float safe_heading(float array_of[]){
     h2=h1+angular_span;
   }
   
-  printf("\n \n Array before quick sorting: \n");
+/*   printf("\n \n Array before quick sorting: \n");
   for(int i=0;i<NUMBER_OF_PARTITIONS;i++){
     printf("i: %d , value: %f \n", indexis[i], partition_OF[i]);
-  }  
+  }   */
   
 /*   if(safe_mode_previous){
     if(partition_OF[last_iteration_safe_heading]<0.1){
@@ -297,15 +318,15 @@ float safe_heading(float array_of[]){
   }
   quickSort(partition_OF,indexis,0,NUMBER_OF_PARTITIONS-1);
   
-  printf("\n \n Array after quick sorting: \n");
+/*   printf("\n \n Array after quick sorting: \n");
   for(int i=0;i<NUMBER_OF_PARTITIONS;i++){
     printf("i: %d , value: %f \n", indexis[i], partition_OF[i]);
-  }
+  } */
 
   float safest_heading = -1*field_of_view/2 + indexis[0] * angular_span + angular_span/2; //partition with lowest OF average
 
   last_iteration_safe_heading=indexis[0];
-  printf("safest heading: %f \n", safest_heading*180/M_PI);
+  // printf("safest heading: %f \n", safest_heading*180/M_PI);
   return safest_heading;
 }
 

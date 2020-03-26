@@ -51,6 +51,7 @@ extern float *GLOBAL_OF_VECTOR;
 // functions
 extern void trajectory_init();
 extern void trajectory_periodic();
+extern float distance_travelled_last_iteration();
 extern void circle(float current_time, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r);
 extern void square(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r);
 extern void lace(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r);
