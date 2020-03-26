@@ -129,6 +129,18 @@ float y_rotated=-TRAJECTORY_X*0.866025+TRAJECTORY_Y*0.5;
 if(safety_level!=ESCAPE_IN_PROGRESS){
   waypoint_set_xy_i(WP_GOAL,x_rotated,y_rotated);
   nav_set_heading_towards_waypoint(WP_GOAL);
+  //for the begining and when we change the mode
+  if(current_time<3){
+      bool change_heading = safety_check_optical_flow(GLOBAL_OF_VECTOR, x_rotated, y_rotated);
+    if(change_heading){
+      moveWaypointForwardWithDirection(WP_STDBY,OF_NEXT_HEADING_INFLUENCE,safe_heading(GLOBAL_OF_VECTOR));
+      safe_mode_previous=true;
+      printf("[%f] \n", safe_heading(GLOBAL_OF_VECTOR)*180/M_PI);
+    }
+    else{
+      safe_mode_previous=false;
+    }
+  }
 }
 else{
   bool change_heading = safety_check_optical_flow(GLOBAL_OF_VECTOR, x_rotated, y_rotated);
@@ -141,6 +153,7 @@ else{
     safe_mode_previous=false;
   }
 }
+
 // Deallocate
 // float *GLOBAL_OF_VECTOR = NULL; 
 }
