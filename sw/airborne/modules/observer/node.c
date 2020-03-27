@@ -1302,6 +1302,16 @@ void find_rand_objs(struct image_t *input){
     count_r++;
   }
 
+  // Correct measurement if one is behind another
+  for (uint16_t x = 0; x<count_r; x++){
+    if ((x > 0) && (poles[idx_r+x][0] == 0)){
+      poles[idx_r+x][0] = poles[idx_r+x-1][1];
+    }
+
+    if ((x < count_r-1) && (poles[idx_r+x][1] == 519)){
+      poles[idx_r+x][1] = poles[idx_r+x+1][0];
+    }
+  }
 
   // printf("Edges detected from random gradients\n");
   // for (uint16_t x = idx_r; x < idx_r+10; x++){
@@ -1686,7 +1696,7 @@ void delete_outliers(){
 
   // printf("count intertia: %d \n", count_inertia);
   // printf("New count: %d\n", new_count);
-  // printf("Intertial measurements 2\n");
+  // printf("Intertial measurements\n");
   // for (uint16_t x = 0; x < 10; x++){
   //   printf("[%d, %d, %d] \n", poles_w_inertia[x][0], poles_w_inertia[x][1], poles_w_inertia[x][3]);
   // }
@@ -1835,7 +1845,8 @@ void find_distances(){
       }
 
       // aritmetic expression that yields somewhat good results for pole distance
-      dist1 = 2*9*d_to_edge/(floors[(uint16_t)final_objs[idx][0]-15] + floors[(uint16_t)final_objs[idx][1]-15]);
+      // dist1 = 2*9*d_to_edge/(floors[(uint16_t)final_objs[idx][0]-15] + floors[(uint16_t)final_objs[idx][1]+15]);
+      dist1 = 2*9*d_to_edge/(floors[(uint16_t)final_objs[idx][0]] + floors[(uint16_t)final_objs[idx][1]]);
       dist1 = sin(dist1);
       dist1 = floors[avg_px]*dist1/9 + 0.9;
     }
@@ -1868,6 +1879,11 @@ void find_distances(){
       }
     } else {
       final_objs[idx][2] = dist1;
+    }
+
+    // Sanity check if the number is not positive, place them at one meter distance
+    if (!(final_objs[idx][2] > 0.01)){
+      final_objs[idx][2] = 1;
     }
   }
 
