@@ -64,10 +64,10 @@ float TRAJECTORY_SWITCHING_TIME=19;
 float AVOID_safety_angle = 15 * M_PI/180;
 //int AVOID_PERCENTAGE_THRESHOLD=30;
 float AVOID_slow_dt = 0.00008;
-float AVOID_normal_dt = 0.0007;
+float AVOID_normal_dt = 0.0006;
 int AVOID_keep_slow_count = 0;
 int AVOID_biggest_threat;
-float dt=0.0007; // 0.6 m/s speed
+float dt=0.0006; // 0.6 m/s speed
 struct EnuCoor_i AVOID_start_avoid_coord; 
 bool safe_mode_previous=false;
 int last_iteration_safe_heading=0;
