@@ -43,7 +43,7 @@ enum safety_level_t {
   ESCAPE_IN_PROGRESS
 };
 
-enum trajectory_mode_t trajectory_mode = CIRCLE;
+enum trajectory_mode_t trajectory_mode = SQUARE;
 enum safety_level_t safety_level = SAFE;
 int TRAJECTORY_L = 1800; //for a dt f 0.0011, razor thin margins
 // int TRAJECTORY_L = 1550; //for a dt f 0.0004
@@ -60,11 +60,11 @@ int AVOID_number_of_objects = 0;
 float AVOID_h1,AVOID_h2;
 float AVOID_d;
 float AVOID_objects[100][3];
-float TRAJECTORY_SWITCHING_TIME=19;
-float AVOID_safety_angle = 15 * M_PI/180;
+float TRAJECTORY_SWITCHING_TIME=29;
+float AVOID_safety_angle = 12 * M_PI/180;
 //int AVOID_PERCENTAGE_THRESHOLD=30;
-float AVOID_slow_dt = 0.00008;
-float AVOID_normal_dt = 0.0006;
+float AVOID_slow_dt = 0.00003;
+float AVOID_normal_dt = 0.0003;
 int AVOID_keep_slow_count = 0;
 int AVOID_biggest_threat;
 float dt=0.0006; // 0.6 m/s speed
@@ -74,8 +74,8 @@ int last_iteration_safe_heading=0;
 
 //********************* TUNNNG PARAMETERS *********************
 //**** FOR Color filter TUNNING
-float AVOID_dist_threat = 3.5; // typically between 2 and 3.5. 
-int AVOID_keep_escape_count = 40;   // typically between 0 and 90. This is to avoid oscillations in the escape route. The higher, the fewer oscillations
+float AVOID_dist_threat = 1.6; // typically between 2 and 3.5. 
+int AVOID_keep_escape_count = 1800;   // typically between 0 and 90. This is to avoid oscillations in the escape route. The higher, the fewer oscillations
 //**** FOR Optical Flow TUNNING
 float AVOID_OF_angle = 3.5 * M_PI/180;  // angle for which we look at the Optical flow
 float OF_NEXT_HEADING_INFLUENCE = 0.25;  // Gain of escpae route from the optical flow-based avoidance
@@ -138,30 +138,30 @@ float y_rotated=-TRAJECTORY_X*0.866025+TRAJECTORY_Y*0.5;
 if(safety_level!=ESCAPE_IN_PROGRESS){
   waypoint_set_xy_i(WP_GOAL,x_rotated,y_rotated);
   //for the begining and when we change the mode
-  if(current_time<19){
-      bool change_heading = safety_check_optical_flow(GLOBAL_OF_VECTOR, x_rotated, y_rotated);
-    if(change_heading){
-      moveWaypointForwardWithDirection(WP_GOAL,OF_NEXT_HEADING_INFLUENCE,safe_heading(GLOBAL_OF_VECTOR));
-      safe_mode_previous=true;
-    }
-    else{
-      safe_mode_previous=false;
-    }
-  }
+  // if(current_time<2.5){
+  //     bool change_heading = safety_check_optical_flow(GLOBAL_OF_VECTOR, x_rotated, y_rotated);
+  //   if(change_heading){
+  //     moveWaypointForwardWithDirection(WP_GOAL,OF_NEXT_HEADING_INFLUENCE,safe_heading(GLOBAL_OF_VECTOR));
+  //     safe_mode_previous=true;
+  //   }
+  //   else{
+  //     safe_mode_previous=false;
+  //   }
+  // }
 }
-else if(trajectory_mode!=SQUARE){
-  bool change_heading = safety_check_optical_flow(GLOBAL_OF_VECTOR, x_rotated, y_rotated);
-  if(change_heading){
-    moveWaypointForwardWithDirection(WP_GOAL,OF_NEXT_HEADING_INFLUENCE,safe_heading(GLOBAL_OF_VECTOR));
-    safe_mode_previous=true;
-  }
-  else{
-    safe_mode_previous=false;
-  }
-}
+// else{
+//   bool change_heading = safety_check_optical_flow(GLOBAL_OF_VECTOR, x_rotated, y_rotated);
+//   if(change_heading){
+//     moveWaypointForwardWithDirection(WP_GOAL,OF_NEXT_HEADING_INFLUENCE,safe_heading(GLOBAL_OF_VECTOR));
+//     safe_mode_previous=true;
+//   }
+//   else{
+//     safe_mode_previous=false;
+//   }
+// }
 nav_set_heading_towards_waypoint(WP_GOAL);
 distance_travelled+=distance_travelled_last_iteration();
-printf("\n Distance tavelled= %f \n", distance_travelled);
+/rintf("\n Distance tavelled= %f \n", distance_travelled);
 // Deallocate
 // float *GLOBAL_OF_VECTOR = NULL; 
 }
@@ -187,9 +187,9 @@ void determine_if_safe(){
   if(AVOID_keep_slow_count!=0){
     safety_level = ESCAPE_IN_PROGRESS;
     AVOID_keep_slow_count += 1;
-  
-   //if(isCoordInRadius(&AVOID_start_avoid_coord, 2.4) == true){
-   if(AVOID_keep_slow_count > AVOID_keep_escape_count){
+    //printf("Hold in progress \n");
+
+   if(isCoordInRadius(&AVOID_start_avoid_coord, 1.2) == true || AVOID_keep_slow_count > AVOID_keep_escape_count){
         AVOID_keep_slow_count = 0;
         }
     return;
@@ -199,12 +199,11 @@ void determine_if_safe(){
   for(int i; i < AVOID_number_of_objects; i++){
     if((fabs(AVOID_objects[i][0]) < AVOID_safety_angle || fabs(AVOID_objects[i][1]) < AVOID_safety_angle || AVOID_objects[i][0]*AVOID_objects[i][1] < 0) &&  final_objs[i][2]<AVOID_dist_threat){
       
-      if(i==0 || fabs(AVOID_objects[i][0]) > fabs(AVOID_objects[i-1][0]) || fabs(AVOID_objects[i][1]) > fabs(AVOID_objects[i-1][1])){
+      if(i==0 || final_objs[i][2] < final_objs[i-1][2]){
           AVOID_biggest_threat = i;
-          //printf("[%d] \n", AVOID_objects[AVOID_biggest_threat][2]);
       }
     safety_level = THREAT;
-    setCoord(&AVOID_start_avoid_coord, stateGetPositionEnu_i()->x, stateGetPositionEnu_i()->y); 
+    setCoordHere(&AVOID_start_avoid_coord); 
   }
 }
 return;
@@ -382,8 +381,13 @@ void circle(float current_time, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r)
 
   if(safety_level==THREAT){
     dt = AVOID_slow_dt;
-    r-=fabs(AVOID_objects[AVOID_biggest_threat][1])*450;
-    //printf("[%d %d] \n", final_objs[AVOID_biggest_threat][2], r);
+    if(AVOID_objects[AVOID_biggest_threat][0]<-0.70){
+        r-=400;
+    }
+    else{
+      r-=200;
+    }
+    printf("[%d %0.2f] \n", r, AVOID_objects[AVOID_biggest_threat][0]);
     AVOID_keep_slow_count += 1;
   }
   else if(safety_level==SAFE){
@@ -408,16 +412,19 @@ void square(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r)
 
   if(safety_level==THREAT){
     dt = AVOID_slow_dt;
-    r-=fabs(AVOID_objects[AVOID_biggest_threat][1])*600;
-    //moveWaypointForwaifrdWithDirection(WP_STDBY, 100.0, -45*M_PI/180.0);
-    //printf("[%d %d] \n", final_objs[AVOID_biggest_threat][2], r);
+    if(AVOID_objects[AVOID_biggest_threat][0]<-0.70){
+        r-=400;
+    }
+    else{
+      r-=200;
+    }
     AVOID_keep_slow_count += 1;
   }
   else if(safety_level==SAFE){
     dt = AVOID_normal_dt;
   }
   else if(safety_level==ESCAPE_IN_PROGRESS){
-    dt = AVOID_slow_dt;
+    dt = AVOID_normal_dt;
   }
 
   if(square_mode==1){
@@ -722,16 +729,17 @@ uint8_t moveWaypointForwardWithDirection(uint8_t waypoint, float distanceMeters,
   return false;
 }
 
-void setCoord(struct EnuCoor_i *coord, float x, float y){
-  coord->x = stateGetPositionEnu_i()->x;
-  coord->y = stateGetPositionEnu_i()->y;
+void setCoordHere(struct EnuCoor_i *coord){
+  coord->x = stateGetPositionEnu_f()->x;
+  coord->y = stateGetPositionEnu_f()->y;
 }
 
 bool isCoordInRadius(struct EnuCoor_i *coord, float radius){
 
-  float dist = sqrt(pow(coord->x - stateGetPositionEnu_i()->x,2) + pow(coord->y - stateGetPositionEnu_i()->y,2));
-  printf("%f \n", dist);
-
+  float dx = coord->x - stateGetPositionEnu_f()->x;
+  float dy = coord->y - stateGetPositionEnu_f()->y;
+  float dist = sqrt(dx*dx+dy*dy);
+  
   if(dist > radius){
     return true;
   }
@@ -739,3 +747,4 @@ bool isCoordInRadius(struct EnuCoor_i *coord, float radius){
   return false;
   }
 }
+
