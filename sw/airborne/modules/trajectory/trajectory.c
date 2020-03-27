@@ -64,10 +64,10 @@ float TRAJECTORY_SWITCHING_TIME=19;
 float AVOID_safety_angle = 15 * M_PI/180;
 //int AVOID_PERCENTAGE_THRESHOLD=30;
 float AVOID_slow_dt = 0.00008;
-float AVOID_normal_dt = 0.0005;
+float AVOID_normal_dt = 0.0003;
 int AVOID_keep_slow_count = 0;
 int AVOID_biggest_threat;
-float dt=0.0005; // 0.6 m/s speed
+float dt=0.0003; // 0.6 m/s speed
 struct EnuCoor_i AVOID_start_avoid_coord; 
 bool safe_mode_previous=false;
 int last_iteration_safe_heading=0;
@@ -138,7 +138,7 @@ float y_rotated=-TRAJECTORY_X*0.866025+TRAJECTORY_Y*0.5;
 if(safety_level!=ESCAPE_IN_PROGRESS){
   waypoint_set_xy_i(WP_GOAL,x_rotated,y_rotated);
   //for the begining and when we change the mode
-  if(current_time<3){
+  if(current_time<19){
       bool change_heading = safety_check_optical_flow(GLOBAL_OF_VECTOR, x_rotated, y_rotated);
     if(change_heading){
       moveWaypointForwardWithDirection(WP_GOAL,OF_NEXT_HEADING_INFLUENCE,safe_heading(GLOBAL_OF_VECTOR));
@@ -216,6 +216,7 @@ bool safety_check_optical_flow(float *AVOID_safety_optical_flow, float x2, float
   int i1=convert_heading_to_index(-AVOID_OF_angle, OF_NUMBER_ELEMENTS);
   int i2=convert_heading_to_index(AVOID_OF_angle, OF_NUMBER_ELEMENTS);
 
+  //printf("\n Optical flow array:\n");
   //array with the positions
   int indecis[OF_NUMBER_ELEMENTS];
   for(int i=0;i<OF_NUMBER_ELEMENTS;i++){
@@ -224,6 +225,7 @@ bool safety_check_optical_flow(float *AVOID_safety_optical_flow, float x2, float
 
   bool change_heading=false;
   for (int i = i1; i <= i2; i++){
+    //printf("%d: %f \n", i, AVOID_safety_optical_flow[i]);
     if(AVOID_safety_optical_flow[i]>OPTICAL_FLOW_THRESHOLD){
           change_heading=true;
       }
@@ -269,15 +271,35 @@ float safe_heading(float array_of[]){
     h2=h1+angular_span;
   }
 
-  if(safe_mode_previous){
-    if(partition_OF[last_iteration_safe_heading]<0.1){
-      float safest_heading = -1*field_of_view/2 + last_iteration_safe_heading * angular_span + angular_span/2;
-      return safest_heading;
-    }
+  float last_iteration_partition_OF=partition_OF[last_iteration_safe_heading];
+  float left_partition_OF=partition_OF[0];
+
+  printf("\n Partitions before sorting: \n");
+  for (int i = 0; i < NUMBER_OF_PARTITIONS; i++){
+    printf("%d: %f\n", indexis[i], partition_OF[i]);
   }
+  
   //Finds the partition with smallest OF
   quickSort(partition_OF,indexis,0,NUMBER_OF_PARTITIONS-1);
 
+  if(left_partition_OF<partition_OF[0]+0.2){
+      float safest_heading = -1*field_of_view/2 + angular_span/2;
+      printf("GO LEFT");
+      return safest_heading;
+    }
+
+  if(safe_mode_previous){
+    if(last_iteration_partition_OF<0.2+partition_OF[0]){
+      float safest_heading = -1*field_of_view/2 + last_iteration_safe_heading * angular_span + angular_span/2;
+      printf("SAME HEADING: %f\n", safest_heading);
+      return safest_heading;
+    }
+  }
+
+  printf("\n Partitions after sorting: \n");
+  for (int i = 0; i < NUMBER_OF_PARTITIONS; i++){
+    printf("%d: %f\n", indexis[i], partition_OF[i]);
+  }
 
   float safest_heading = -1*field_of_view/2 + indexis[0] * angular_span + angular_span/2; //partition with lowest OF average
   last_iteration_safe_heading=indexis[0];
