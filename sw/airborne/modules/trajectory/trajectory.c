@@ -43,7 +43,7 @@ enum safety_level_t {
   ESCAPE_IN_PROGRESS
 };
 
-enum trajectory_mode_t trajectory_mode = SQUARE;
+enum trajectory_mode_t trajectory_mode = CIRCLE;
 enum safety_level_t safety_level = SAFE;
 int TRAJECTORY_L = 1800; //for a dt f 0.0011, razor thin margins
 // int TRAJECTORY_L = 1550; //for a dt f 0.0004
@@ -138,16 +138,16 @@ float y_rotated=-TRAJECTORY_X*0.866025+TRAJECTORY_Y*0.5;
 if(safety_level!=ESCAPE_IN_PROGRESS){
   waypoint_set_xy_i(WP_GOAL,x_rotated,y_rotated);
   //for the begining and when we change the mode
-  // if(current_time<2.5){
-  //     bool change_heading = safety_check_optical_flow(GLOBAL_OF_VECTOR, x_rotated, y_rotated);
-  //   if(change_heading){
-  //     moveWaypointForwardWithDirection(WP_GOAL,OF_NEXT_HEADING_INFLUENCE,safe_heading(GLOBAL_OF_VECTOR));
-  //     safe_mode_previous=true;
-  //   }
-  //   else{
-  //     safe_mode_previous=false;
-  //   }
-  // }
+  if(current_time<2.0){
+      bool change_heading = safety_check_optical_flow(GLOBAL_OF_VECTOR, x_rotated, y_rotated);
+    if(change_heading){
+      moveWaypointForwardWithDirection(WP_GOAL,OF_NEXT_HEADING_INFLUENCE,safe_heading(GLOBAL_OF_VECTOR));
+      safe_mode_previous=true;
+    }
+    else{
+      safe_mode_previous=false;
+    }
+  }
 }
 // else{
 //   bool change_heading = safety_check_optical_flow(GLOBAL_OF_VECTOR, x_rotated, y_rotated);
@@ -161,7 +161,7 @@ if(safety_level!=ESCAPE_IN_PROGRESS){
 // }
 nav_set_heading_towards_waypoint(WP_GOAL);
 distance_travelled+=distance_travelled_last_iteration();
-/rintf("\n Distance tavelled= %f \n", distance_travelled);
+printf("\n Distance tavelled= %f \n", distance_travelled);
 // Deallocate
 // float *GLOBAL_OF_VECTOR = NULL; 
 }
