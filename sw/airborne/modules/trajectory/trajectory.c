@@ -271,40 +271,35 @@ float safe_heading(float array_of[]){
     h2=h1+angular_span;
   }
 
-  // float last_iteration_partition_OF=partition_OF[last_iteration_safe_heading];
+  float last_iteration_partition_OF=partition_OF[last_iteration_safe_heading];
+  float left_partition_OF=partition_OF[0];
 
-     if(safe_mode_previous){
-    if(partition_OF[last_iteration_safe_heading]<0.5){
-      float safest_heading = -1*field_of_view/2 + last_iteration_safe_heading * angular_span + angular_span/2;
-      printf("SAME HEADING: %f\n", safest_heading);
-      return safest_heading;
-    }
-  }
-
+  printf("\n Partitions before sorting: \n");
   for (int i = 0; i < NUMBER_OF_PARTITIONS; i++){
-    if(partition_OF[i]<0.5){
-      float safest_heading = -1*field_of_view/2 + i * angular_span + angular_span/2;
-      printf("Safest heading: %f \n", safest_heading);
-      last_iteration_safe_heading=i;
-      return safest_heading;
-    }
+    printf("%d: %f\n", indexis[i], partition_OF[i]);
   }
   
   //Finds the partition with smallest OF
   quickSort(partition_OF,indexis,0,NUMBER_OF_PARTITIONS-1);
 
-/*   if(safe_mode_previous){
+  if(left_partition_OF<partition_OF[0]+0.2){
+      float safest_heading = -1*field_of_view/2 + angular_span/2;
+      printf("GO LEFT");
+      return safest_heading;
+    }
+
+  if(safe_mode_previous){
     if(last_iteration_partition_OF<0.2+partition_OF[0]){
       float safest_heading = -1*field_of_view/2 + last_iteration_safe_heading * angular_span + angular_span/2;
       printf("SAME HEADING: %f\n", safest_heading);
       return safest_heading;
     }
-  } */
+  }
 
-/*   printf("\n Partitions after sorting: \n");
+  printf("\n Partitions after sorting: \n");
   for (int i = 0; i < NUMBER_OF_PARTITIONS; i++){
     printf("%d: %f\n", indexis[i], partition_OF[i]);
-  } */
+  }
 
   float safest_heading = -1*field_of_view/2 + indexis[0] * angular_span + angular_span/2; //partition with lowest OF average
   last_iteration_safe_heading=indexis[0];
