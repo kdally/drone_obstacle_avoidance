@@ -74,7 +74,7 @@ int last_iteration_safe_heading=0;
 
 //********************* TUNNNG PARAMETERS *********************
 //**** FOR Color filter TUNNING
-float AVOID_dist_threat = 1.6; // typically between 2 and 3.5. 
+float AVOID_dist_threat = 1.45; // typically between 2 and 3.5. 
 int AVOID_keep_escape_count = 1800;   // typically between 0 and 90. This is to avoid oscillations in the escape route. The higher, the fewer oscillations
 //**** FOR Optical Flow TUNNING
 float AVOID_OF_angle = 3.5 * M_PI/180;  // angle for which we look at the Optical flow
@@ -224,7 +224,7 @@ bool safety_check_optical_flow(float *AVOID_safety_optical_flow, float x2, float
 
   bool change_heading=false;
   for (int i = i1; i <= i2; i++){
-    //printf("%d: %f \n", i, AVOID_safety_optical_flow[i]);
+    printf("%d: %f \n", i, AVOID_safety_optical_flow[i]);
     if(AVOID_safety_optical_flow[i]>OPTICAL_FLOW_THRESHOLD){
           change_heading=true;
       }
