@@ -1,6 +1,6 @@
 /**
  * @file "modules/optic_avoid/optic_node.c"
- * @author B. Keltjens & M. Gonzalez
+ * @author Group 11 2020
  * Node for avoidance with optical flow
  */
 
@@ -23,14 +23,14 @@ struct image_t *optic_avoid_func(struct image_t *img){
   if (img->type == IMAGE_YUV422) {
 
     // Begin clock
-    clock_t optic_begin = clock();
+    // clock_t optic_begin = clock();
 
     // call the optic avoid function
     optic_avoid((char *) img->buf, img->w, img->h);
 
     // End Clock and print time spend
-    clock_t optic_end = clock();
-    double optic_time_spent = (double)(optic_end - optic_begin) / CLOCKS_PER_SEC;
+    // clock_t optic_end = clock();
+    // double optic_time_spent = (double)(optic_end - optic_begin) / CLOCKS_PER_SEC;
     // printf("Time for Optic Avoid: %lf \n", optic_time_spent);
 
     return img;
