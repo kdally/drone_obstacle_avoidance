@@ -1,6 +1,6 @@
 /**
  * @file "modules/optic_avoid/optic_node.h"
- * @author M. Gonzalez & B. Keltjens
+ * @author Group 11 2020
  * Node for avoidance with optical flow
  */
 
