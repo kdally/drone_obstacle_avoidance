@@ -84,7 +84,7 @@ extern void observer_node_init(void);
 // const int n_cols = 6;
 //                     // y_m  y_M  u_m  u_M  v_m  v_M 
 // const extern uint8_t cf[n_cf][n_cols] = {{0,   255, 0,   255, 0,   255},
-//    z                               {100, 255, 100, 255, 100, 255}};
+//                                   {100, 255, 100, 255, 100, 255}};
 
 
 

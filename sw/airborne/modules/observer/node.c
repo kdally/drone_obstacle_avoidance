@@ -331,14 +331,14 @@ struct image_t *observer_func(struct image_t *img){
 
     // copy processed to img for output
     // copy2img(&processed, img);
-    //copy2img(&blurred, img);
+    // copy2img(&blurred, img);
 
 
 
     clock_t end = clock();
     double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
-    // //printf("Time: %lf \n", time_spent);
-    // //printf("///////////////////////////////////////////////////////////////\n");
+    // printf("Time: %lf \n", time_spent);
+    // printf("///////////////////////////////////////////////////////////////\n");
   }
   // return &color_mask;
   return img;
@@ -562,13 +562,13 @@ void blur_image(struct image_t *input, struct image_t *output){
       // dest[2] = (uint8_t)128;
       // dest[3] = (uint8_t)val3/(top_l - bot_l);
       
-      // //printf("%d ", (dest + 2*x + 2*y*input->w)[3]);
-      // //printf("[%d, %d]", x, y);
-      // //printf("%d ", dest[1]);
+      // printf("%d ", (dest + 2*x + 2*y*input->w)[3]);
+      // printf("[%d, %d]", x, y);
+      // printf("%d ", dest[1]);
       // source += 4;
       // dest += 4;
     }
-    // //printf("\n");
+    // printf("\n");
   }
 }
 
@@ -586,7 +586,7 @@ void convolve(struct image_t *input, struct image_t *output){
   int16_t val1;
   int16_t val3;
 
-  // //printf("first\n");
+  // printf("first\n");
   for (uint16_t y = 1; y < (input->h)-1; y++) { // horizontal (for every column) 520
     dest += 4;
     source += 4;
@@ -639,14 +639,14 @@ void convolve(struct image_t *input, struct image_t *output){
 
       dest += 4;
       source += 4;
-      // //printf("%d ", dest[1]);
+      // printf("%d ", dest[1]);
 
     }
-    // //printf("\n");
+    // printf("\n");
   }
 
 
-  // //printf("second\n");
+  // printf("second\n");
   dest = ((uint8_t *)output->buf)+(2*output->w);
 
   for (uint16_t y = 1; y < (input->h)-1; y++) { // horizontal (for every column) 520
@@ -675,10 +675,10 @@ void convolve(struct image_t *input, struct image_t *output){
         dest[3] = 0;
       }
 
-      // //printf("%d ", mask_r[y][x]);
+      // printf("%d ", mask_r[y][x]);
       dest += 4;
     }
-    // //printf("\n");
+    // printf("\n");
   }
 }
 
@@ -731,8 +731,8 @@ void blur_big(struct image_t *input, struct image_t *output){
 
       sum_b = (top_l2 - bot_l2) * (top_l1 - bot_l1);
 
-      // //printf("[[%d, %d], [%d, %d]], ", bot_l1, top_l1, bot_l2, top_l2);
-      // //printf("%d ", (dest + 2*x + 2*y*output->w)[1]);
+      // printf("[[%d, %d], [%d, %d]], ", bot_l1, top_l1, bot_l2, top_l2);
+      // printf("%d ", (dest + 2*x + 2*y*output->w)[1]);
 
 
 
@@ -740,25 +740,25 @@ void blur_big(struct image_t *input, struct image_t *output){
         for (int8_t j = bot_l2; j < top_l2; j++){
           val1 += (source + 2*(x+2*i) + 2*(y+j)*output->w)[1];// * blur_kernel[i+blur_w2][j+blur_h2];
           val3 += (source + 2*(x+2*i) + 2*(y+j)*output->w)[3];// * blur_kernel[i+blur_w2][j+blur_h2];
-          // //printf("[%d, %d]: ", i, j);
-          // //printf("%d ", kernel[i][j]);
+          // printf("[%d, %d]: ", i, j);
+          // printf("%d ", kernel[i][j]);
         }
       }
 
-      // //printf("%d ", val1);
+      // printf("%d ", val1);
 
       (dest + 2*x + 2*y*output->w)[0] = 128;
       (dest + 2*x + 2*y*output->w)[1] = abs(val1 / sum_b);
       (dest + 2*x + 2*y*output->w)[2] = 128;
       (dest + 2*x + 2*y*output->w)[3] = abs(val3 / sum_b);
 
-      // //printf("%d ", val1);
-      // //printf("%d ", sum_b);
-      // //printf("%d ", (dest + 2*x + 2*y*output->w)[1]);
+      // printf("%d ", val1);
+      // printf("%d ", sum_b);
+      // printf("%d ", (dest + 2*x + 2*y*output->w)[1]);
     }
-    // //printf("\n");
+    // printf("\n");
   }
-  // //printf("\n");
+  // printf("\n");
 }
 
 // Convolve an image by multiplying pixels next to it with big_kernel
@@ -788,7 +788,7 @@ void convolve_big(struct image_t *input, struct image_t *output){
           val3 += (source + 2*(x+2*i) + 2*(y+j)*output->w)[3] * big_kernel[i+ker_l2][j+ker_l2];
         }
       }
-      // //printf("%d ", abs(val1));
+      // printf("%d ", abs(val1));
 
       (dest + 2*x + 2*y*output->w)[0] = 128;
       (dest + 2*x + 2*y*output->w)[1] = abs(val1/sum_k);
@@ -806,12 +806,12 @@ void convolve_big(struct image_t *input, struct image_t *output){
         min_k3 = (dest + 2*x + 2*y*output->w)[3];
       }
 
-      // //printf("%d ", (dest + 2*x + 2*y*output->w)[1]);
+      // printf("%d ", (dest + 2*x + 2*y*output->w)[1]);
     }
-    // //printf("\n");
+    // printf("\n");
   }
 
-  // //printf("");
+  // printf("");
 
 
   for (uint16_t y = ker_l2; y < (input->h)-ker_l2; y++) { // horizontal (for every column) 520
@@ -835,10 +835,10 @@ void convolve_big(struct image_t *input, struct image_t *output){
         (dest + 2*x + 2*y*output->w)[3] = 0;
       }
 
-      // //printf("%d ",(dest + 2*x + 2*y*output->w)[1]);
-      // //printf("%d ", mask_r[y][x]);
+      // printf("%d ",(dest + 2*x + 2*y*output->w)[1]);
+      // printf("%d ", mask_r[y][x]);
     }
-    // //printf("\n");
+    // printf("\n");
   }
 }
 
@@ -871,14 +871,14 @@ void blur_mask(struct image_t *input, uint8_t *mask){
       // val1 = (source-(4*input->w))[1] + (source+(4*input->w))[1] - 2*(source[1]);
       // val3 = (source-(4*input->w))[3] + (source+(4*input->w))[3] - 4*(source[3]);
 
-      // //printf("%d ", source[1]/255);
+      // printf("%d ", source[1]/255);
 
       if ((source-4)[1] + (source+4)[1] + (source-(4*input->w))[1] + (source+(4*input->w))[1] + source[1] > (255*3)){
-      //   //printf("111");
+      //   printf("111");
       //   dest[1] = 255;
         *(mask+x+y*(input->w)) = 1;
       } else {
-      //   //printf("000");
+      //   printf("000");
       //   dest[1] = 0;
         *(mask+x+y*(input->w)) = 0;
       }
@@ -895,7 +895,7 @@ void blur_mask(struct image_t *input, uint8_t *mask){
       // dest += 4;
       source += 4;
     }
-    // //printf("\n");
+    // printf("\n");
     // dest += 4;
     // source += 4;
   }
@@ -968,11 +968,11 @@ void find_orange_objs(){
       //   der2new = 0;
       // }
 
-  ////printf("Poles detected from orange mask\n");
-  for (uint16_t x = 0; x < 10; x++){
-    ////printf("[%d, %d] \n", poles[x][0], poles[x][1]);
-  }
-  ////printf("\n");
+  // printf("Poles detected from orange mask\n");
+  // for (uint16_t x = 0; x < 10; x++){
+  //   printf("[%d, %d] \n", poles[x][0], poles[x][1]);
+  // }
+  // printf("\n");
 }
 
 // Find poles from green mask
@@ -1083,8 +1083,12 @@ void find_green_objs(){
   }
 
 
-      // LOGIC WITH THRESHOLD ON 1st DERIVATIVE
-      der1 = floors[x+2] + floors[x+1] - floors[x-1] - floors[x-2];
+  // printf("Poles detected from green mask\n");
+  // for (uint16_t x = idx_g; x < idx_g+9; x++){
+  //   printf("[%d, %d] \n", poles[x][0], poles[x][1]);
+  // }
+  // printf("\n");
+}
 
 // THIS FUNCTION IS COPIED FROM find_orange_objs
 // TODO -> IDENTIFY OBJECTS COMPARING WITH GREEN MASK LOCATION
@@ -1596,12 +1600,12 @@ void delete_outliers(){
   uint16_t min_dist;
   uint8_t min_idx;
 
-  // //printf("count intertia: %d \n", count_inertia);
-  // //printf("Intertial measurements 1\n");
+  // printf("count intertia: %d \n", count_inertia);
+  // printf("Intertial measurements 1\n");
   // for (uint16_t x = 0; x < 10; x++){
-  //   //printf("[%d, %d, %d] \n", poles_w_inertia[x][0], poles_w_inertia[x][1], poles_w_inertia[x][3]);
+  //   printf("[%d, %d, %d] \n", poles_w_inertia[x][0], poles_w_inertia[x][1], poles_w_inertia[x][3]);
   // }
-  // //printf("\n");
+  // printf("\n");
 
   // if list obj_w_inertia is empty, add all seen cones
   if (count_inertia == 0){
@@ -1712,8 +1716,8 @@ void delete_outliers(){
       idx_to_rm[elem_to_rm] = c_inrt;
       elem_to_rm ++;
 
-      ////printf("REMOVEEE!!!\n");
-      ////printf("Obj idx: %d\t Obj to rm: %d\n", c_inrt, elem_to_rm-1);
+      // printf("REMOVEEE!!!\n");
+      // printf("Obj idx: %d\t Obj to rm: %d\n", c_inrt, elem_to_rm-1);
 
     } else {
 
@@ -1739,14 +1743,14 @@ void delete_outliers(){
   for (uint8_t c_rm = 0; c_rm < elem_to_rm; c_rm++){
     rm_idx_i = idx_to_rm[c_rm];
     for (uint8_t c_mv = rm_idx_i; c_mv < count_inertia-1; c_mv++){
-      // //printf("Moving %d to %d\n", c_mv+1, c_mv);
+      // printf("Moving %d to %d\n", c_mv+1, c_mv);
       poles_w_inertia[c_mv][0] = poles_w_inertia[c_mv+1][0];
       poles_w_inertia[c_mv][1] = poles_w_inertia[c_mv+1][1];
       poles_w_inertia[c_mv][2] = poles_w_inertia[c_mv+1][2];
       poles_w_inertia[c_mv][3] = poles_w_inertia[c_mv+1][3];
       poles_w_inertia[c_mv][4] = poles_w_inertia[c_mv+1][4];
     }
-    // //printf("Deleting obj %d\n", last_idx);
+    // printf("Deleting obj %d\n", last_idx);
     poles_w_inertia[last_idx][0] = 0;
     poles_w_inertia[last_idx][1] = 0;
     poles_w_inertia[last_idx][2] = 0;
@@ -1759,12 +1763,12 @@ void delete_outliers(){
 
 
 
-  // //printf("Intertial measurements 3\n");
+  // printf("Intertial measurements 3\n");
   // for (uint16_t x = 0; x < 10; x++){
-  //   //printf("[%d, %d, %d] \n", poles_w_inertia[x][0], poles_w_inertia[x][1], poles_w_inertia[x][3]);
+  //   printf("[%d, %d, %d] \n", poles_w_inertia[x][0], poles_w_inertia[x][1], poles_w_inertia[x][3]);
   // }
 
-  // //printf("\n");
+  // printf("\n");
 
 
 }
@@ -1885,13 +1889,12 @@ void find_distances(){
 
   // printf("||||||||||||||||||\n");
 
-
-  // //printf("Final measurements\n");
+  // printf("Final measurements\n");
   // for (uint16_t x = 0; x < 10; x++){
   //   printf("[%f, %f, %f] \n", final_objs[x][0], final_objs[x][1], final_objs[x][2]);
   // }
 
-  // //printf("\n");
+  // printf("\n");
 
 
 }

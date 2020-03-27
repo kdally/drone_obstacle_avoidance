@@ -223,7 +223,6 @@ bool safety_check_optical_flow(float *AVOID_safety_optical_flow, float x2, float
   }
 
   bool change_heading=false;
-  printf("Optical Flow\n");
   for (int i = i1; i <= i2; i++){
     printf("%d: %f \n", i, AVOID_safety_optical_flow[i]);
     if(AVOID_safety_optical_flow[i]>OPTICAL_FLOW_THRESHOLD){
@@ -409,7 +408,7 @@ void square(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r)
 {
   int V = 700;
 
-  //determine_if_safe();
+  determine_if_safe();
 
   if(safety_level==THREAT){
     dt = AVOID_slow_dt;
