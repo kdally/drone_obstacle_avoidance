@@ -61,7 +61,7 @@ float AVOID_h1,AVOID_h2;
 float AVOID_d;
 float AVOID_objects[100][3];
 float TRAJECTORY_SWITCHING_TIME=29;
-float AVOID_safety_angle = 12 * M_PI/180;
+float AVOID_safety_angle = 11 * M_PI/180;
 //int AVOID_PERCENTAGE_THRESHOLD=30;
 float AVOID_slow_dt = 0.00003;
 float AVOID_normal_dt = 0.0003;
@@ -74,8 +74,8 @@ int last_iteration_safe_heading=0;
 
 //********************* TUNNNG PARAMETERS *********************
 //**** FOR Color filter TUNNING
-float AVOID_dist_threat = 1.45; // typically between 2 and 3.5. 
-int AVOID_keep_escape_count = 1800;   // typically between 0 and 90. This is to avoid oscillations in the escape route. The higher, the fewer oscillations
+float AVOID_dist_threat = 1.25; // typically between 2 and 3.5. 
+int AVOID_keep_escape_count = 2100;   // typically between 0 and 90. This is to avoid oscillations in the escape route. The higher, the fewer oscillations
 //**** FOR Optical Flow TUNNING
 float AVOID_OF_angle = 3.5 * M_PI/180;  // angle for which we look at the Optical flow
 float OF_NEXT_HEADING_INFLUENCE = 0.25;  // Gain of escpae route from the optical flow-based avoidance
@@ -161,7 +161,7 @@ if(safety_level!=ESCAPE_IN_PROGRESS){
 // }
 nav_set_heading_towards_waypoint(WP_GOAL);
 distance_travelled+=distance_travelled_last_iteration();
-printf("\n Distance tavelled= %f \n", distance_travelled);
+//printf("\n Distance tavelled= %f \n", distance_travelled);
 // Deallocate
 // float *GLOBAL_OF_VECTOR = NULL; 
 }
@@ -189,7 +189,8 @@ void determine_if_safe(){
     AVOID_keep_slow_count += 1;
     //printf("Hold in progress \n");
 
-   if(isCoordInRadius(&AVOID_start_avoid_coord, 1.2) == true || AVOID_keep_slow_count > AVOID_keep_escape_count){
+   if(isCoordInRadius(&AVOID_start_avoid_coord, 1.3) == true || AVOID_keep_slow_count > AVOID_keep_escape_count){
+     printf("[%d %d] \n", isCoordInRadius(&AVOID_start_avoid_coord, 1.2), AVOID_keep_slow_count);
         AVOID_keep_slow_count = 0;
         }
     return;
@@ -224,7 +225,7 @@ bool safety_check_optical_flow(float *AVOID_safety_optical_flow, float x2, float
 
   bool change_heading=false;
   for (int i = i1; i <= i2; i++){
-    printf("%d: %f \n", i, AVOID_safety_optical_flow[i]);
+    //printf("%d: %f \n", i, AVOID_safety_optical_flow[i]);
     if(AVOID_safety_optical_flow[i]>OPTICAL_FLOW_THRESHOLD){
           change_heading=true;
       }
@@ -238,7 +239,7 @@ bool safety_check_optical_flow(float *AVOID_safety_optical_flow, float x2, float
 // - Finds the partition with smallest OF (partition i)
 // - saffest heading is the middle value of the i-th partition with span="angular_span"
 float safe_heading(float array_of[]){
-  printf("\nOF activated\n");
+  //printf("\nOF activated\n");
   float field_of_view=M_PI/2;
   float angular_span=field_of_view/NUMBER_OF_PARTITIONS;
   
@@ -273,9 +274,9 @@ float safe_heading(float array_of[]){
   float last_iteration_partition_OF=partition_OF[last_iteration_safe_heading];
   float left_partition_OF=partition_OF[0];
 
-  printf("\n Partitions before sorting: \n");
+  //printf("\n Partitions before sorting: \n");
   for (int i = 0; i < NUMBER_OF_PARTITIONS; i++){
-    printf("%d: %f\n", indexis[i], partition_OF[i]);
+    //printf("%d: %f\n", indexis[i], partition_OF[i]);
   }
   
   //Finds the partition with smallest OF
@@ -283,7 +284,7 @@ float safe_heading(float array_of[]){
 
   if(left_partition_OF<partition_OF[0]+0.2){
       float safest_heading = -1*field_of_view/2 + angular_span/2;
-      printf("GO LEFT");
+      //printf("GO LEFT");
       return safest_heading;
     }
 
@@ -385,7 +386,7 @@ void circle(float current_time, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r)
         r-=400;
     }
     else{
-      r-=200;
+      r-=300;
     }
     printf("[%d %0.2f] \n", r, AVOID_objects[AVOID_biggest_threat][0]);
     AVOID_keep_slow_count += 1;
@@ -416,7 +417,7 @@ void square(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r)
         r-=400;
     }
     else{
-      r-=200;
+      r-=300;
     }
     AVOID_keep_slow_count += 1;
   }
