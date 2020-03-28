@@ -389,8 +389,11 @@ void determine_if_safe(float safety_angle, float dist_stop_escape, float dist_th
 return;
 }
 
-//returns true if it's not safe and there's the need to change heading
-//tunning parameters: AVOID_PERCENTAGE_THRESHOLD and AVOID_OF_angle
+/* 
+ * Function that checks the safety according to optical flow input
+ * Returns true if it's not safe and there's the need to change heading
+ * Tuning parameters: AVOID_PERCENTAGE_THRESHOLD and AVOID_OF_angle 
+ */
 bool safety_check_optical_flow(float *AVOID_safety_optical_flow, float x2, float y2){
   int i1=convert_heading_to_index(-AVOID_OF_angle, OF_NUMBER_ELEMENTS);
   int i2=convert_heading_to_index(AVOID_OF_angle, OF_NUMBER_ELEMENTS);
@@ -413,18 +416,18 @@ bool safety_check_optical_flow(float *AVOID_safety_optical_flow, float x2, float
   return change_heading;
 }
 
-//Function: Returns the safest heading according to OF values
-// - divides the field of view in NUMBER_OF_PARTITIONS partitions
-// - Finds the partition with smallest OF (partition i)
-// - saffest heading is the middle value of the i-th partition with span="angular_span"
+/* Function that returns the safest heading according to OF values
+ * - divides the field of view in NUMBER_OF_PARTITIONS partitions
+ * - Finds the partition with smallest OF (partition i)
+ * - saffest heading is the middle value of the i-th partition with span="angular_span"
+ */
 float safe_heading(float array_of[]){
-  //printf("\nOF activated\n");
+  printf("\nOF activated\n");
   float field_of_view=M_PI/2;
   float angular_span=field_of_view/NUMBER_OF_PARTITIONS;
   
-  float partition_OF[NUMBER_OF_PARTITIONS];
-  int indexis[NUMBER_OF_PARTITIONS];
-  
+  float partition_OF[NUMBER_OF_PARTITIONS]; //array with field of view partitions
+  int indexis[NUMBER_OF_PARTITIONS];        //array with indexis correspondent to each partition
   for (int i=0; i<NUMBER_OF_PARTITIONS; i++){   
       partition_OF[i]=0;
       indexis[i]=i;
@@ -444,61 +447,58 @@ float safe_heading(float array_of[]){
       partition_OF[i]+=array_of[j];
     }
     partition_OF[i]=partition_OF[i]/(i2-i1+1);
-    //printf("h1: %f  i1: %d \n h2: %f i2: %d \n \n", h1*180/M_PI, i1, h2*180/M_PI, i2);
 
+    //updating the values for next iteration
     h1+=angular_span;
     h2=h1+angular_span;
   }
 
-  float last_iteration_partition_OF=partition_OF[last_iteration_safe_heading];
-  float left_partition_OF=partition_OF[0];
+  //prioritizing the last heading for consistency
+  if(safe_mode_previous){
+    if(partition_OF[last_iteration_safe_heading]<0.5){
+      float safest_heading = -1*field_of_view/2 + last_iteration_safe_heading * angular_span + angular_span/2;
+      return safest_heading;
+    }
+  }
 
-  //printf("\n Partitions before sorting: \n");
+  //prioriziting left headings
   for (int i = 0; i < NUMBER_OF_PARTITIONS; i++){
-    //printf("%d: %f\n", indexis[i], partition_OF[i]);
+    if(partition_OF[i]<0.5){
+      float safest_heading = -1*field_of_view/2 + i * angular_span + angular_span/2;
+      last_iteration_safe_heading=i;
+      return safest_heading;
+    }
   }
   
   //Finds the partition with smallest OF
   quickSort(partition_OF,indexis,0,NUMBER_OF_PARTITIONS-1);
-
-  if(left_partition_OF<partition_OF[0]+0.2){
-      float safest_heading = -1*field_of_view/2 + angular_span/2;
-      //printf("GO LEFT");
-      return safest_heading;
-    }
-
-  if(safe_mode_previous){
-    if(last_iteration_partition_OF<0.2+partition_OF[0]){
-      float safest_heading = -1*field_of_view/2 + last_iteration_safe_heading * angular_span + angular_span/2;
-      //printf("SAME HEADING: %f\n", safest_heading);
-      return safest_heading;
-    }
-  }
-
-  //printf("\n Partitions after sorting: \n");
-  for (int i = 0; i < NUMBER_OF_PARTITIONS; i++){
-    //printf("%d: %f\n", indexis[i], partition_OF[i]);
-  }
 
   float safest_heading = -1*field_of_view/2 + indexis[0] * angular_span + angular_span/2; //partition with lowest OF average
   last_iteration_safe_heading=indexis[0];
   return safest_heading;
 }
 
-//Converts the index of OF array to the corresponding heading (due to distortion)
+/* 
+ * Function that converts the index of OF array to the corresponding heading 
+ * (due to distortion)
+ */
 float convert_index_to_heading(int index, int N){
   float heading=2.0*index/(N-1)-1.0;  //normalize the index 
   heading=atan(heading); 
   return heading; //heading in radians
 }
 
-//Converts the heading to the index of OF array (due to distortion)
+/* 
+ * Converts the heading to the index of OF array (due to distortion)
+ */
 int convert_heading_to_index(float heading, int N){
   int index=(1+tan(heading))*(N-1)/2;
   return index; 
 }
 
-//Sorting function using quick sort algorithm
+/* 
+ * Sorting function using quick sort algorithm
+ */
 void quickSort(float array[], int indecis[], int first,int last){
    int i, j, pivot, temp2;
    float temp;
