@@ -133,18 +133,20 @@ float y_rotated=-TRAJECTORY_X*0.866025+TRAJECTORY_Y*0.5;
 waypoint_set_xy_i(WP_GOAL,x_rotated,y_rotated);
 
 // use optical flow-based avoidance right after take-off and when the trajectory mode is changed
-if(current_time<2.0){
-    bool change_heading = safety_check_optical_flow(GLOBAL_OF_VECTOR, x_rotated, y_rotated);
+if(safety_mode!=ESCAPE_IN_PROGRESS){  
+  if(current_time<2.0){
+      bool change_heading = safety_check_optical_flow(GLOBAL_OF_VECTOR, x_rotated, y_rotated);
 
-  // explain
-  if(change_heading){
-    moveWaypointForwardWithDirection(WP_GOAL,OF_NEXT_HEADING_INFLUENCE,safe_heading(GLOBAL_OF_VECTOR));
-    safe_mode_previous=true;
-  }
+    // explain
+    if(change_heading){
+      moveWaypointForwardWithDirection(WP_GOAL,OF_NEXT_HEADING_INFLUENCE,safe_heading(GLOBAL_OF_VECTOR));
+      safe_mode_previous=true;
+    }
 
-  // explain
-  else{
-    safe_mode_previous=false;
+    // explain
+    else{
+      safe_mode_previous=false;
+    }
   }
 }
 
