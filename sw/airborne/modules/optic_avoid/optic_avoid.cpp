@@ -117,9 +117,11 @@ void optic_avoid(char *img, int width, int height) {
 
   // Write to external array
   for (int i = 0; i < lower_height; i++) {
+    // Add value if above threshold
     if(smoothed_normalised_heading_flow[i] > OPTIC_AVOID_GOTO_THRESHOLD){
       optic_avoid_heading_information[i] = smoothed_normalised_heading_flow[i];
     }
+    // Add zero if below threshold
     else {
       optic_avoid_heading_information[i] = 0.0;
     }
