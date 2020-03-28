@@ -34,19 +34,9 @@
 #include "modules/computer_vision/cv.h"
 
 
-// settings
-extern int TRAJECTORY_L;
-extern int TRAJECTORY_D;
-extern int AVOID_number_of_objects;
-extern float AVOID_h1,AVOID_h2;
-extern float AVOID_d;
-extern float AVOID_safety_angle;
-extern float TRAJECTORY_X;
-extern float TRAJECTORY_Y;
-extern float TRAJECTORY_SWITCHING_TIME;
-
+// declare external variables
 extern float *GLOBAL_OF_VECTOR;
-//extern uint16_t *GLOBAL_OBJECTS_VECTOR;
+
 
 // functions
 extern void trajectory_init();
@@ -54,6 +44,7 @@ extern void trajectory_periodic();
 extern float distance_travelled_last_iteration();
 extern void circle(float current_time, float *TRAJECTORY_X, float *TRAJECTORY_Y);
 extern void square(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y);
+extern void take_off(float *TRAJECTORY_X, float *TRAJECTORY_Y);
 extern void lace(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r);
 extern void lace_inverted(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r);
 extern float convert_index_to_heading(int index, int N);
@@ -67,7 +58,7 @@ extern uint8_t moveWaypointForward(uint8_t waypoint, float distanceMeters);
 extern uint8_t moveWaypoint(uint8_t waypoint, struct EnuCoor_i *new_coor);
 extern uint8_t increase_nav_heading(float incrementDegrees);
 extern uint8_t moveWaypointForwardWithDirection(uint8_t waypoint, float distanceMeters, float direction);
-extern bool isCoordInRadius(struct EnuCoor_i *new_coor, float radius);
+extern bool isCoordOutsideRadius(struct EnuCoor_i *new_coor, float radius);
 
 #endif
 
