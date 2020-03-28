@@ -1078,8 +1078,8 @@ void find_green_objs(){
     }
   } else {
     // TODO implement logic where you don't search from given pixel where the corner is
-    printf("NOT CHECKING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
-    printf("TOO CLOSE TO THE BORDER FOR GREEN MASK\n");
+    //printf("NOT CHECKING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+    //printf("TOO CLOSE TO THE BORDER FOR GREEN MASK\n");
   }
 
 
