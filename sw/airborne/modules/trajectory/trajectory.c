@@ -56,11 +56,11 @@ float TRAJECTORY_Y = 0.0;                       // y coodinate for trajectory in
 float TRAJECTORY_LOCAL_X = 0.0;                 // x coodinate for trajectory in cyberzoo reference system
 float TRAJECTORY_LOCAL_Y = 0.0;                 // x coodinate for trajectory in cyberzoo reference system
 int TRAJECTORY_L = 1800;                        // cyberzoo length in given coordinate system
-float TRAJECTORY_SWITCHING_TIME=19;             // time after which trajectory switches mode
+float TRAJECTORY_SWITCHING_TIME=2.9;             // time after which trajectory switches mode
 int TRAJECTORY_RADIUS;                          // radius of the trajectory  
 int square_mode = 1;                            // indication of which part of the square trajectory to follow
-float current_time;                             // elapsed time
-int dt;                                         // time steo
+float current_time = 0;                         // elapsed time
+float dt=0.0003;                                // time steo
 
 // ***** COLOR-FILTERS BASED-AVOIDANCE variables *****
 float AVOID_objects[50][3];                    // 2D array storing objects' relative heading and distance
@@ -89,14 +89,9 @@ float last_x;
 float last_y;
 
 /*
- * Initialisation function, setting the initial time variables and distance tracker
+ * Initialisation function, setting the initial distance tracker
  */
 void trajectory_init(void){
-
-  // initialize time variables
-  current_time = 0;
-  dt = AVOID_normal_dt;
-
   // initialise the distance tracker
   distance_travelled=0;
   last_x=stateGetPositionEnu_f()->x;
@@ -157,8 +152,9 @@ nav_set_heading_towards_waypoint(WP_GOAL);
 //printf("\n Distance tavelled= %f \n", distance_travelled);
 
 // update time
+printf("dt: %f\n", dt);
 current_time += dt;
-
+printf("\ncurrent time: %f\n ", current_time);
 return;
 }
 
@@ -168,6 +164,7 @@ return;
  */
 void circle(float current_time, float *TRAJECTORY_X, float *TRAJECTORY_Y)
 {
+    printf("CIRCLE\n");
   // choose the ecentricty
   double e = 1;
 
@@ -220,6 +217,7 @@ return;
  */
 void square(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y)
 {
+    printf("SQUARE\n");
   // choose the speed factor
   int V = 700;
 
@@ -301,6 +299,7 @@ void square(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y)
  * Function that updates the trajectory to safely take-off and join the next trajectory
  */
 void take_off(float *TRAJECTORY_X, float *TRAJECTORY_Y){
+  printf("TAKING OFF\n");
 
   // distance to travel to complete take-off procedure
   float distance_forward = 2.0;
