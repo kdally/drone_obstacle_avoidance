@@ -394,7 +394,7 @@ void determine_if_safe(float dist_stop_escape, float dist_threat){
     if(trajectory_mode==TAKE_OFF){
       if(isCoordOutsideRadius(&AVOID_start_avoid_coord, dist_stop_escape) == true){
         AVOID_keep_escape_count = 0;
-        trajectory_mode = CIRCLE;
+        trajectory_mode = SQUARE;
         current_time = 0;
       }
     }
