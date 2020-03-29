@@ -3,24 +3,24 @@
  *
  * This file is part of paparazzi
  *
- * paparazzi is free software; TRAJECTORY_You can redistribute it and/or modifTRAJECTORY_Y
- * it under the terms of the GNU General Public License as published bTRAJECTORY_Y
- * the Free Software Foundation; either version 2, or (at TRAJECTORY_Your option)
- * anTRAJECTORY_Y later version.
+ * paparazzi is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2, or (at your option)
+ * any later version.
  *
  * paparazzi is distributed in the hope that it will be useful,
- * but WITHOUT ANTRAJECTORY_Y WARRANTTRAJECTORY_Y; without even the implied warrantTRAJECTORY_Y of
- * MERCHANTABILITTRAJECTORY_Y or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * but WITHOUT ANy WARRANTy; without even the implied warranty of
+ * MERCHANTABILITy or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * TRAJECTORY_You should have received a copTRAJECTORY_Y of the GNU General Public License
- * along with paparazzi; see the file COPTRAJECTORY_YING.  If not, see
+ * you should have received a copy of the GNU General Public License
+ * along with paparazzi; see the file COPYING.  If not, see
  * <http://www.gnu.org/licenses/>.
  */
 /**
  * @file "modules/circle/circle.c"
  * @author Team Wonder
- * Just pathing in circle
+ * File containing trajectory functions, implementing avoidance mechanisms from color filters and optical flow
  */
 
 #include "modules/trajectory/trajectory.h"
@@ -77,7 +77,7 @@ float AVOID_slow_dt = 0.00003;                  // time step when a threatening 
 int AVOID_hold_position = 1;
 
 // ***** OPTICAL FLOW-BASED AVOIDANCE variables *****
-float AVOID_OF_angle = 3.5 * M_PI/180;          // Angle in front of the drone in which the OF is tested to test if it's safe to move forward
+float AVOID_OF_angle = 3.5 * M_PI/180;          // angle in front of the drone in which the OF is tested to test if it's safe to move forward
 bool safe_mode_previous=false;                  // has the value of true if optical flow based safe mode was activated in the last iteration
 int last_iteration_safe_heading=0;              // influence that the safest heading computed based on OF has on the trajectory  
 float OF_NEXT_HEADING_INFLUENCE = 0.25;         // gain of escpae route from the optical flow-based avoidance
@@ -309,9 +309,10 @@ void take_off(float *TRAJECTORY_X, float *TRAJECTORY_Y){
   dt = AVOID_slow_dt;
 
   // check if threatening objects are present, or if one is currently being avoided. 
-  // Leave the take-off mode after having travelled 1.5m, and consider obstacles up to a 4m distance a threat (entire cyberzoo)
+  // leave the take-off mode after having travelled 1.5m, and consider obstacles up to a 4m distance a threat (entire cyberzoo)
   determine_if_safe(1.5, 4.0);
 
+  // when the drone has taken-off, point towards start of the global trajectory but remain static
   if(safety_mode==HOLD){
     float new_heading = 150*M_PI/180;
     FLOAT_ANGLE_NORMALIZE(new_heading);
@@ -319,8 +320,6 @@ void take_off(float *TRAJECTORY_X, float *TRAJECTORY_Y){
     *TRAJECTORY_X = 0.0;
     *TRAJECTORY_Y = 0.0;
   }
-  printf("\n dist %f \n", final_objs[AVOID_biggest_threat][2]);
- 
   if(safety_mode==THREAT){
     
     // choose next heading 45 deg to the right of the right edge of the closest obstacle
@@ -341,7 +340,6 @@ void take_off(float *TRAJECTORY_X, float *TRAJECTORY_Y){
     
     // set current heading to next heading since no obstacles forward
     float new_heading  = stateGetNedToBodyEulers_f()->psi;
-    //printf("\n safe %f \n", new_heading*180/M_PI);
 
     // update trajectory coordinates based on the new heading and distance forward
     *TRAJECTORY_X = stateGetPositionEnu_i()->x + POS_BFP_OF_REAL(sinf(new_heading) * (distance_forward));
@@ -354,7 +352,6 @@ void take_off(float *TRAJECTORY_X, float *TRAJECTORY_Y){
   
   // if a threatening object is currently being avoided, keep the same radius
   //else if(safety_mode==ESCAPE_IN_PROGRESS){}
-
 }
 
 /*
@@ -377,26 +374,30 @@ return;
  */
 void determine_if_safe(float dist_stop_escape, float dist_threat){
 
+  // make the drone wait until it has taken off (positive altitude)
   if(stateGetPositionEnu_f()->z < 0.1){
     safety_mode = WAIT;
     return;
   }
 
+  // once it has taken-off, enter position hold so that heading change is completed
   if(AVOID_hold_position!=0){
     safety_mode = HOLD;
     AVOID_hold_position += 1;
 
-    if(AVOID_hold_position>3000){
+    // once enough iterations have passed, the correct heading is reached
+    if(AVOID_hold_position>2600){
       AVOID_hold_position = 0; 
     }
   return;
   }
 
-  // if the trajectory function has determined an escpae trajectory
+  // if the trajectory function has determined an escape trajectory
   if(AVOID_keep_escape_count!=0){
     safety_mode = ESCAPE_IN_PROGRESS;
     AVOID_keep_escape_count += 1;
 
+    // in take-off mode, leave the escape trajectory after having travelled enough distance, and then change trajectory mode
     if(trajectory_mode==TAKE_OFF){
       if(isCoordOutsideRadius(&AVOID_start_avoid_coord, dist_stop_escape) == true){
         AVOID_keep_escape_count = 0;
@@ -404,6 +405,7 @@ void determine_if_safe(float dist_stop_escape, float dist_threat){
         current_time = 0;
       }
     }
+    // in other modes, leave the escape trajectory after having travelled enough distance or having waited enough times
     else{
       if(isCoordOutsideRadius(&AVOID_start_avoid_coord, dist_stop_escape) == true || AVOID_keep_escape_count > AVOID_keep_escape_count_max){
           AVOID_keep_escape_count = 0;
