@@ -3,24 +3,24 @@
  *
  * This file is part of paparazzi
  *
- * paparazzi is free software; TRAJECTORY_You can redistribute it and/or modifTRAJECTORY_Y
- * it under the terms of the GNU General Public License as published bTRAJECTORY_Y
- * the Free Software Foundation; either version 2, or (at TRAJECTORY_Your option)
- * anTRAJECTORY_Y later version.
+ * paparazzi is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2, or (at your option)
+ * any later version.
  *
  * paparazzi is distributed in the hope that it will be useful,
- * but WITHOUT ANTRAJECTORY_Y WARRANTTRAJECTORY_Y; without even the implied warrantTRAJECTORY_Y of
- * MERCHANTABILITTRAJECTORY_Y or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * but WITHOUT ANy WARRANTy; without even the implied warranty of
+ * MERCHANTABILITy or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * TRAJECTORY_You should have received a copTRAJECTORY_Y of the GNU General Public License
- * along with paparazzi; see the file COPTRAJECTORY_YING.  If not, see
+ * you should have received a copy of the GNU General Public License
+ * along with paparazzi; see the file COPYING.  If not, see
  * <http://www.gnu.org/licenses/>.
  */
 /**
  * @file "modules/circle/circle.c"
  * @author Team Wonder
- * Just pathing in circle
+ * File containing trajectory functions, implementing avoidance mechanisms from color filters and optical flow
  */
 
 #include "modules/trajectory/trajectory.h"
@@ -39,17 +39,22 @@ enum trajectory_mode_t {
 enum safety_mode_t {
   SAFE,
   THREAT,
-  ESCAPE_IN_PROGRESS
+  ESCAPE_IN_PROGRESS,
+  HOLD,
+  WAIT
 };
 
 // set initial trajectory and safety modes
 enum trajectory_mode_t trajectory_mode = TAKE_OFF;
 enum safety_mode_t safety_mode = SAFE;
+void switch_path(enum trajectory_mode_t next_mode);
 
 // define and initialise global variables
 // ***** TRAJECTORY variables *****
-float TRAJECTORY_X=0;                           // x coodinate for trajectory
-float TRAJECTORY_Y=0;                           // y coodinate for trajectory
+float TRAJECTORY_X = 0.0;                       // x coodinate for trajectory in global reference system
+float TRAJECTORY_Y = 0.0;                       // y coodinate for trajectory in global reference system
+float TRAJECTORY_LOCAL_X = 0.0;                 // x coodinate for trajectory in cyberzoo reference system
+float TRAJECTORY_LOCAL_Y = 0.0;                 // x coodinate for trajectory in cyberzoo reference system
 int TRAJECTORY_L = 1800;                        // cyberzoo length in given coordinate system
 float TRAJECTORY_SWITCHING_TIME=19;             // time after which trajectory switches mode
 int TRAJECTORY_RADIUS;                          // radius of the trajectory  
@@ -63,17 +68,18 @@ int AVOID_number_of_objects = 0;                // count for the number of detec
 int AVOID_biggest_threat;                       // index of objetc representing the biggest threat
 float AVOID_safety_angle = 15 * M_PI/180;       // angle within which objects are considered a threat
 float AVOID_dist_threat = 1.2;                  // distance at which objects are considered a threat
-int AVOID_keep_escape_count = 0;                 // number of iterations since the avoidance trajectory has started
-int AVOID_keep_escape_count_max = 2200;             // maximum number of iterations to keep following the avoidance trajectory
+int AVOID_keep_escape_count = 0;                // number of iterations since the avoidance trajectory has started
+int AVOID_keep_escape_count_max = 2200;         // maximum number of iterations to keep following the avoidance trajectory
 float AVOID_dist_stop_escape = 1.4;             // maximum travelled distance to keep following the avoidance trajectory
 struct EnuCoor_i AVOID_start_avoid_coord;       // coordinate of the location where the avoidance trajectory has started
 float AVOID_normal_dt = 0.0003;                 // time step when no threatening object is dectected
 float AVOID_slow_dt = 0.00003;                  // time step when a threatening object is dectected
+int AVOID_hold_position = 1;
 
 // ***** OPTICAL FLOW-BASED AVOIDANCE variables *****
-float AVOID_OF_angle = 3.5 * M_PI/180;          //
-bool safe_mode_previous=false;                  //
-int last_iteration_safe_heading=0;              //
+float AVOID_OF_angle = 3.5 * M_PI/180;          // angle in front of the drone in which the OF is tested to test if it's safe to move forward
+bool safe_mode_previous=false;                  // has the value of true if optical flow based safe mode was activated in the last iteration
+int last_iteration_safe_heading=0;              // influence that the safest heading computed based on OF has on the trajectory  
 float OF_NEXT_HEADING_INFLUENCE = 0.25;         // gain of escpae route from the optical flow-based avoidance
 float OPTICAL_FLOW_THRESHOLD=0.6;               // optical flow above which it's dangerous to move forward
 
@@ -108,7 +114,7 @@ AVOID_number_of_objects = 0;
 count_objects();
 unpack_object_list();
 
-// update trajectory in cyberzoo local coordinate system
+// update trajectory coordinates
 switch (trajectory_mode){
   case TAKE_OFF:
     take_off(&TRAJECTORY_X, &TRAJECTORY_Y);
@@ -125,11 +131,8 @@ switch (trajectory_mode){
     break;
   }
 
-// rotate trajectory to match orientation of the ciberzoo
-float x_rotated=TRAJECTORY_X*0.5+TRAJECTORY_Y*0.866025;
-float y_rotated=-TRAJECTORY_X*0.866025+TRAJECTORY_Y*0.5;
-
 // update goal waypoint based on trajectory
+<<<<<<< HEAD
 waypoint_set_xy_i(WP_GOAL,x_rotated,y_rotated);
 
 // // use optical flow-based avoidance right after take-off and when the trajectory mode is changed
@@ -138,12 +141,24 @@ waypoint_set_xy_i(WP_GOAL,x_rotated,y_rotated);
 //       bool change_heading = safety_check_optical_flow(GLOBAL_OF_VECTOR, x_rotated, y_rotated);
 
 //     // explain
+=======
+waypoint_set_xy_i(WP_GOAL,TRAJECTORY_X,TRAJECTORY_Y);
+
+// DISABLED FOR COMPETITION BECAUSE OF OPTICAL-FLOW FUNCTIONHIGH RUN TIME
+// use optical flow-based avoidance right after take-off and when the trajectory mode is changed 
+// if(safety_mode!=ESCAPE_IN_PROGRESS){  
+//   if(current_time<2.0){
+//       bool change_heading = safety_check_optical_flow(GLOBAL_OF_VECTOR, TRAJECTORY_X, TRAJECTORY_Y);
+>>>>>>> 19468c2552657b587b2d259425e1d6a95310dab4
 //     if(change_heading){
 //       moveWaypointForwardWithDirection(WP_GOAL,OF_NEXT_HEADING_INFLUENCE,safe_heading(GLOBAL_OF_VECTOR));
 //       safe_mode_previous=true;
 //     }
+<<<<<<< HEAD
 
 //     // explain
+=======
+>>>>>>> 19468c2552657b587b2d259425e1d6a95310dab4
 //     else{
 //       safe_mode_previous=false;
 //     }
@@ -153,9 +168,15 @@ waypoint_set_xy_i(WP_GOAL,x_rotated,y_rotated);
 // align drone with goal
 nav_set_heading_towards_waypoint(WP_GOAL);
 
+<<<<<<< HEAD
 // update the travelled distance counter
 distance_travelled+=distance_travelled_last_iteration();
 // printf("\n Distance travelled= %f \n", distance_travelled);
+=======
+// update the travelled distance counter (removed for the competition)
+//distance_travelled+=distance_travelled_last_iteration();
+//printf("\n Distance tavelled= %f \n", distance_travelled);
+>>>>>>> 19468c2552657b587b2d259425e1d6a95310dab4
 
 // update time
 current_time += dt;
@@ -176,7 +197,7 @@ void circle(float current_time, float *TRAJECTORY_X, float *TRAJECTORY_Y)
   dt = AVOID_normal_dt;
 
   // check if threatening objects are present, or if one is currently being avoided
-  determine_if_safe(AVOID_safety_angle, AVOID_dist_stop_escape, AVOID_dist_threat);
+  determine_if_safe(AVOID_dist_stop_escape, AVOID_dist_threat);
 
   if(safety_mode==SAFE){
 
@@ -206,8 +227,12 @@ void circle(float current_time, float *TRAJECTORY_X, float *TRAJECTORY_Y)
   //else if(safety_mode==ESCAPE_IN_PROGRESS){}
 
   // convert to cartesian coordinates, in the cyberzoo local coordinate system 
-  *TRAJECTORY_X = TRAJECTORY_RADIUS * cos(current_time);
-  *TRAJECTORY_Y = e * TRAJECTORY_RADIUS * sin(current_time);
+  TRAJECTORY_LOCAL_X = TRAJECTORY_RADIUS * cos(current_time);
+  TRAJECTORY_LOCAL_Y = e * TRAJECTORY_RADIUS * sin(current_time);
+
+  // rotate trajectory to match orientation of the ciberzoo
+  *TRAJECTORY_X = TRAJECTORY_LOCAL_X*0.5+TRAJECTORY_LOCAL_Y*0.866025;
+  *TRAJECTORY_Y = -TRAJECTORY_LOCAL_X*0.866025+TRAJECTORY_LOCAL_Y*0.5;
 
 return;
 }
@@ -220,11 +245,11 @@ void square(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y)
   // choose the speed factor
   int V = 700;
 
-  // define the default time step
+  // define the default time step and local coordinates
   dt = AVOID_normal_dt;
 
   // check if threatening objects are present, or if one is currently being avoided
-  determine_if_safe(AVOID_safety_angle, AVOID_dist_stop_escape, AVOID_dist_threat);
+  determine_if_safe(AVOID_dist_stop_escape, AVOID_dist_threat);
 
   if(safety_mode==SAFE){
 
@@ -253,39 +278,44 @@ void square(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y)
   // if a threatening object is currently being avoided, keep the same radius
   //else if(safety_mode==ESCAPE_IN_PROGRESS){}
 
-  // update coordinates depending on which side of the circle the drone
+  //update coordinates depending on which side of the circle the drone
   if(square_mode==1){
-    *TRAJECTORY_X = TRAJECTORY_RADIUS;
-    *TRAJECTORY_Y += dt*V;
+    TRAJECTORY_LOCAL_X = TRAJECTORY_RADIUS;
+    TRAJECTORY_LOCAL_Y += dt*V;
 
-    if (*TRAJECTORY_Y > TRAJECTORY_RADIUS){
+    if (TRAJECTORY_LOCAL_Y > TRAJECTORY_RADIUS){
       square_mode=2;
     }
   }
   if(square_mode==2){
-    *TRAJECTORY_X -= dt*V;
-    *TRAJECTORY_Y=TRAJECTORY_RADIUS;
+    TRAJECTORY_LOCAL_X -= dt*V;
+    TRAJECTORY_LOCAL_Y = TRAJECTORY_RADIUS;
 
-    if (*TRAJECTORY_X<-TRAJECTORY_RADIUS){
+    if (TRAJECTORY_LOCAL_X<-TRAJECTORY_RADIUS){
       square_mode=3;
     }
   }
   if(square_mode==3){
-    *TRAJECTORY_X=-TRAJECTORY_RADIUS;
-    *TRAJECTORY_Y-=dt*V;
+    TRAJECTORY_LOCAL_X =-TRAJECTORY_RADIUS;
+    TRAJECTORY_LOCAL_Y -= dt*V;
 
-    if (*TRAJECTORY_Y<-TRAJECTORY_RADIUS){
+    if (TRAJECTORY_LOCAL_Y<-TRAJECTORY_RADIUS){
       square_mode=4;
     }
   }
   if(square_mode==4){
-    *TRAJECTORY_X+=dt*V;
-    *TRAJECTORY_Y=-TRAJECTORY_RADIUS;
+    TRAJECTORY_LOCAL_X += dt*V;
+    TRAJECTORY_LOCAL_Y =- TRAJECTORY_RADIUS;
 
-    if (*TRAJECTORY_X>TRAJECTORY_RADIUS){
+    if (TRAJECTORY_LOCAL_X>TRAJECTORY_RADIUS){
       square_mode=1;
     }
   }
+  
+  // rotate trajectory to match orientation of the ciberzoo
+  *TRAJECTORY_X = TRAJECTORY_LOCAL_X*0.5+TRAJECTORY_LOCAL_Y*0.866025;
+  *TRAJECTORY_Y = -TRAJECTORY_LOCAL_X*0.866025+TRAJECTORY_LOCAL_Y*0.5;
+
   return;
 }
 
@@ -295,21 +325,30 @@ void square(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y)
 void take_off(float *TRAJECTORY_X, float *TRAJECTORY_Y){
 
   // distance to travel to complete take-off procedure
-  float distance_forward = 2.5;
+  float distance_forward = 2.0;
 
   // use a small time step during take-off the remain slow
   dt = AVOID_slow_dt;
 
-  // check if threatening objects are present, or if one is currently being avoided
-  determine_if_safe(40 * M_PI/180, 2.0, 5.0);
- 
+  // check if threatening objects are present, or if one is currently being avoided. 
+  // leave the take-off mode after having travelled 1.5m, and consider obstacles up to a 4m distance a threat (entire cyberzoo)
+  determine_if_safe(1.5, 4.0);
+
+  // when the drone has taken-off, point towards start of the global trajectory but remain static
+  if(safety_mode==HOLD){
+    float new_heading = 150*M_PI/180;
+    FLOAT_ANGLE_NORMALIZE(new_heading);
+    nav_heading = ANGLE_BFP_OF_REAL(new_heading);
+    *TRAJECTORY_X = 0.0;
+    *TRAJECTORY_Y = 0.0;
+  }
   if(safety_mode==THREAT){
     
-    // choose next heading 100 deg to the right of the right edge of the closest obstacle
-    float new_heading = stateGetNedToBodyEulers_f()->psi + AVOID_objects[AVOID_biggest_threat][1] + 100*M_PI/180;
+    // choose next heading 45 deg to the right of the right edge of the closest obstacle
+    float new_heading = stateGetNedToBodyEulers_f()->psi + AVOID_objects[AVOID_biggest_threat][0] - 35*M_PI/180;
     FLOAT_ANGLE_NORMALIZE(new_heading);
-    new_heading = ANGLE_BFP_OF_REAL(new_heading);
-    
+    nav_heading = ANGLE_BFP_OF_REAL(new_heading);
+
     // update trajectory coordinates based on the new heading and distance forward
     *TRAJECTORY_X = stateGetPositionEnu_i()->x + POS_BFP_OF_REAL(sinf(new_heading) * (distance_forward));
     *TRAJECTORY_Y = stateGetPositionEnu_i()->y + POS_BFP_OF_REAL(cosf(new_heading) * (distance_forward));
@@ -319,7 +358,7 @@ void take_off(float *TRAJECTORY_X, float *TRAJECTORY_Y){
     AVOID_keep_escape_count += 1;
   }
   else if(safety_mode==SAFE){
-
+    
     // set current heading to next heading since no obstacles forward
     float new_heading  = stateGetNedToBodyEulers_f()->psi;
 
@@ -327,13 +366,13 @@ void take_off(float *TRAJECTORY_X, float *TRAJECTORY_Y){
     *TRAJECTORY_X = stateGetPositionEnu_i()->x + POS_BFP_OF_REAL(sinf(new_heading) * (distance_forward));
     *TRAJECTORY_Y = stateGetPositionEnu_i()->y + POS_BFP_OF_REAL(cosf(new_heading) * (distance_forward));
 
-// keep the escape trajectory by setting the safety mode and iteration count
+    // keep the escape trajectory by setting the safety mode and iteration count
     safety_mode = ESCAPE_IN_PROGRESS;
     AVOID_keep_escape_count += 1;
     }
+  
   // if a threatening object is currently being avoided, keep the same radius
   //else if(safety_mode==ESCAPE_IN_PROGRESS){}
-  return;
 }
 
 /*
@@ -354,18 +393,45 @@ return;
 /*
  * Function that determines the safety mode
  */
-void determine_if_safe(float safety_angle, float dist_stop_escape, float dist_threat){
+void determine_if_safe(float dist_stop_escape, float dist_threat){
 
-  // if the trajectory function has determined an escpae trajectory
+  // make the drone wait until it has taken off (positive altitude)
+  if(stateGetPositionEnu_f()->z < 0.1){
+    safety_mode = WAIT;
+    return;
+  }
+
+  // once it has taken-off, enter position hold so that heading change is completed
+  if(AVOID_hold_position!=0){
+    safety_mode = HOLD;
+    AVOID_hold_position += 1;
+
+    // once enough iterations have passed, the correct heading is reached
+    if(AVOID_hold_position>2600){
+      AVOID_hold_position = 0; 
+    }
+  return;
+  }
+
+  // if the trajectory function has determined an escape trajectory
   if(AVOID_keep_escape_count!=0){
     safety_mode = ESCAPE_IN_PROGRESS;
     AVOID_keep_escape_count += 1;
 
-  // if the drone has travelled more than a certain distance or enough iterations have passed, leave the take-off mode
-   if(isCoordOutsideRadius(&AVOID_start_avoid_coord, dist_stop_escape) == true || AVOID_keep_escape_count > AVOID_keep_escape_count_max){
+    // in take-off mode, leave the escape trajectory after having travelled enough distance, and then change trajectory mode
+    if(trajectory_mode==TAKE_OFF){
+      if(isCoordOutsideRadius(&AVOID_start_avoid_coord, dist_stop_escape) == true){
         AVOID_keep_escape_count = 0;
-        if (trajectory_mode==TAKE_OFF){trajectory_mode=SQUARE;}
-        }
+        trajectory_mode = SQUARE;
+        current_time = 0;
+      }
+    }
+    // in other modes, leave the escape trajectory after having travelled enough distance or having waited enough times
+    else{
+      if(isCoordOutsideRadius(&AVOID_start_avoid_coord, dist_stop_escape) == true || AVOID_keep_escape_count > AVOID_keep_escape_count_max){
+          AVOID_keep_escape_count = 0;
+      }
+    }
     return;
   }
 
@@ -373,10 +439,10 @@ void determine_if_safe(float safety_angle, float dist_stop_escape, float dist_th
   safety_mode = SAFE;
 
   // iterating trhough each identified objects
-  for(int i; i < AVOID_number_of_objects; i++){
+  for(int i = 0; i < AVOID_number_of_objects; i++){
 
      // checks whether the object is contained within the vision cone defined by AVOID_safety_angle
-    if((fabs(AVOID_objects[i][0]) < safety_angle || fabs(AVOID_objects[i][1]) < safety_angle || AVOID_objects[i][0]*AVOID_objects[i][1] < 0) &&  final_objs[i][2]<dist_threat){
+    if((fabs(AVOID_objects[i][0]) < AVOID_safety_angle || fabs(AVOID_objects[i][1]) < AVOID_safety_angle || AVOID_objects[i][0]*AVOID_objects[i][1] < 0) &&  final_objs[i][2]<dist_threat){
       
       // define the biggest threat as the closest object (final_objs[i][2] is the distance of object i to the drone)
       if(i==0 || final_objs[i][2] < final_objs[i-1][2]){
@@ -400,16 +466,8 @@ bool safety_check_optical_flow(float *AVOID_safety_optical_flow, float x2, float
   int i1=convert_heading_to_index(-AVOID_OF_angle, OF_NUMBER_ELEMENTS);
   int i2=convert_heading_to_index(AVOID_OF_angle, OF_NUMBER_ELEMENTS);
 
-  //printf("\n Optical flow array:\n");
-  //array with the positions
-  int indecis[OF_NUMBER_ELEMENTS];
-  for(int i=0;i<OF_NUMBER_ELEMENTS;i++){
-      indecis[i]=i;
-  }
-
   bool change_heading=false;
   for (int i = i1; i <= i2; i++){
-    //printf("%d: %f \n", i, AVOID_safety_optical_flow[i]);
     if(AVOID_safety_optical_flow[i]>OPTICAL_FLOW_THRESHOLD){
           change_heading=true;
       }
@@ -424,7 +482,10 @@ bool safety_check_optical_flow(float *AVOID_safety_optical_flow, float x2, float
  * - saffest heading is the middle value of the i-th partition with span="angular_span"
  */
 float safe_heading(float array_of[]){
+<<<<<<< HEAD
   // printf("\nOF activated\n");
+=======
+>>>>>>> 19468c2552657b587b2d259425e1d6a95310dab4
   float field_of_view=M_PI/2;
   float angular_span=field_of_view/NUMBER_OF_PARTITIONS;
   
