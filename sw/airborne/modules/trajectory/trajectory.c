@@ -322,7 +322,7 @@ void take_off(float *TRAJECTORY_X, float *TRAJECTORY_Y){
   }
   if(safety_mode==THREAT){
     
-    // choose next heading 45 deg to the right of the right edge of the closest obstacle
+    // choose next heading 35 deg to the left of the left edge of the closest obstacle
     float new_heading = stateGetNedToBodyEulers_f()->psi + AVOID_objects[AVOID_biggest_threat][0] - 35*M_PI/180;
     FLOAT_ANGLE_NORMALIZE(new_heading);
     nav_heading = ANGLE_BFP_OF_REAL(new_heading);
