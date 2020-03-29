@@ -6,7 +6,6 @@
 
 
 #include "optic_avoid.h"
-#include "modules/trajectory/trajectory.h"
 #include "modules/computer_vision/lib/vision/image.h"
 
 #include <opencv2/core/core.hpp>
@@ -24,6 +23,12 @@
 
 bool init_optic_avoid_ = false; // Information if the node is intialised
 bool first_round_flag_ = true; // Check if this is the first iteration as there is no image history to calculate optical flow
+
+
+int OPTIC_RESOLUTION_STEP_DOWN = 3;// <!-- Factor of decrease in resolution of original image -->
+int GB_WINDOW_PARAMETER = 33;// <!-- Window for Guassian Blur of avoidance information -->
+float OPTIC_AVOID_GOTO_THRESHOLD = 0.1; // <!-- Threshold for minimising the confidence of a row of pixels -->
+
 
 // Declaration of Image Variables
 cv::Mat im1_optic_avoid_low; // Previous Image gray and low resolution (always copied from current image in previous step)
@@ -46,7 +51,7 @@ std::vector<float> normalised_heading_flow (lower_height, 0); // Create std::vec
 std::vector<float> smoothed_normalised_heading_flow (lower_height, 0); // Create std::vecotr of shape (1,lower_height) filled with zeros
 
 // Create global variable for heading safety
-float optic_avoid_heading_information[lower_height];
+float optic_avoid_heading_information[173];
 float *GLOBAL_OF_VECTOR = &optic_avoid_heading_information[0];
 
 

@@ -35,6 +35,34 @@
 #define COLORFILTER_CAMERA front_camera
 #endif
 
+// Resized image size
+
+// #define scale_h 3
+// #define scale_w 3
+
+// #define new_h 173 // 520/scale_h
+// #define new_w 80  // 240/scale_w
+
+// #define scale_h 2
+// #define scale_w 2
+
+// #define new_h 260 // 520/scale_h
+// #define new_w 120 // 240/scale_w
+
+// #define scale_h 4
+// #define scale_w 4
+
+// #define new_h 130 // 520/scale_h
+// #define new_w 60  // 240/scale_w
+
+#define scale_h 1
+#define scale_w 1
+
+#define new_h 520 // 520/scale_h
+#define new_w 240  // 240/scale_w
+
+
+
 // Variables declaration
   // Drone state
   float x_loc;
@@ -52,11 +80,11 @@
   uint8_t black_cf[6]  = {116, 140, 116, 140,   0,  120};
 
   // orange mask
-  uint8_t mask_o[520][240];
+  uint8_t mask_o[new_h][new_w];
   // green mask
-  uint8_t mask_g[520][240];
+  uint8_t mask_g[new_h][new_w];
   // edge mask
-  uint8_t mask_e[520][240];
+  uint8_t mask_e[new_h][new_w];
 
   // limits on green mask object detection:
   // do not check if outside these boundaries
@@ -74,65 +102,76 @@
 
 
   // floor of green mask
-  uint16_t floors[520];
+  uint16_t floors[new_h];
 
   // 3x3 kernel
   uint8_t kernel[3][3] = {{0, 0, 0},
                           {1, 0, -1},
                           {0, 0, 0}};
 
-  const int8_t big_kernel[5][5] = {{1, 1, 0, -1, -1},
-                                  {2, 2, 0, -2, -2},
-                                  {3, 3, 0, -3, -3},
-                                  {2, 2, 0, -2, -2},
-                                  {1, 1, 0, -1, -1}};
+  // const int8_t big_kernel[5][5] = {{1, 1, 0, -1, -1},
+  //                                 {2, 2, 0, -2, -2},
+  //                                 {3, 3, 0, -3, -3},
+  //                                 {2, 2, 0, -2, -2},
+  //                                 {1, 1, 0, -1, -1}};
+
+
+  const int8_t big_kernel[5][5] = {{1, 0, -1},
+                                   {3, 0, -3},
+                                   {1, 0, -1}};
+
 
   // big kernel length
-  const uint8_t ker_l = 5;
-  const uint8_t ker_l2 = 2;
+  // const uint8_t ker_l = 5;
+  // const uint8_t ker_l2 = 2;
+  const uint8_t ker_l = 3;
+  const uint8_t ker_l2 = 1;
 
-  const uint8_t sum_k = 36;
+  // const uint8_t sum_k = 36;
+  const uint8_t sum_k = 10;
 
   // Blur size
-  const uint8_t blur_w = 21;
-  const uint8_t blur_w2 = 10;
+  // const uint8_t blur_w = 21;
+  // const uint8_t blur_w2 = 10;
+  const uint8_t blur_w = 11;
+  const uint8_t blur_w2 = 5;
 
   const uint8_t blur_h = 1;
   const uint8_t blur_h2 = 0;
 
-  // detected poles (max 100 at a time) -> (left_px, right_px, distance)
-    // poles 00-29 are used for orange
-    // poles 30-59 are used for green
-    // poles 60-99 are used for edge detector
+  // detected poles (max 50 at a time) -> (left_px, right_px, distance)
+    // poles 00-14 are used for orange
+    // poles 15-29 are used for green
+    // poles 30-49 are used for edge detector
   //  
   uint8_t idx_o = 0;
-  uint8_t idx_g = 30;
-  uint8_t idx_e = 50;
+  uint8_t idx_g = 15;
+  uint8_t idx_e = 30;
 
   const float px_dist_scale = 107.232;
 
-  // 100 objects was assumed to be the maximum number of object to be at once 
+  // 50 objects was assumed to be the maximum number of object to be at once 
   // in the cyberzoo
-  uint16_t poles[100][2];           // left px, right px
-  uint16_t poles_comb[100][3];      // left_px, right_px, type
+  uint16_t poles[50][2];           // left px, right px
+  uint16_t poles_comb[50][3];      // left_px, right_px, type
                                     // types are: 0 = undefined; 1 = orange pole
-  int16_t poles_w_inertia[100][4];  // left_px, right_px, type, times_seen
-  float final_objs[100][4];         // left px, right px, dist, type
+  int16_t poles_w_inertia[50][4];  // left_px, right_px, type, times_seen
+  float final_objs[50][4];         // left px, right px, dist, type
   uint8_t count_o;
   uint8_t count_g;
   uint8_t count_e;
   uint8_t count;
   uint8_t count_inertia;
   uint8_t final_count;
-  uint8_t obj_merged[100];
-  uint8_t idx_to_rm[100];
+  uint8_t obj_merged[50];
+  uint8_t idx_to_rm[50];
   uint8_t elem_to_rm;
   uint8_t edge_search_type;
   uint16_t px_change;
 
-  uint16_t sums_o[520]; // cumulative sum
-  uint16_t sums_e[520]; // cumulative sum
-  uint16_t sums_e_smooth[520]; // smoothed cumulative sum
+  uint16_t sums_o[new_h]; // cumulative sum
+  uint16_t sums_e[new_h]; // cumulative sum
+  uint16_t sums_e_smooth[new_h]; // smoothed cumulative sum
 
   // Distance threshold for same object [pixels]
   const uint8_t threshold = 30;
@@ -149,6 +188,8 @@
 // MAIN FUNCTION
 struct image_t *observer_func(struct image_t *img){
 
+// nav_set_heading_towards_waypoint(WP_STDBY);
+
   if (img->type == IMAGE_YUV422) {
 
     // Take the time
@@ -156,13 +197,17 @@ struct image_t *observer_func(struct image_t *img){
 
     // Copy input image to processed, blurred
     if (first_time){
-      create_img(img, &processed);
-      create_img(img, &blurred);
+      // create_img(img, &processed);
+      // create_img(img, &blurred);
+
+      create_small_img(&processed);
+      create_small_img(&blurred);
+
       first_time = false;
     }
 
     // Clean pole lists data
-    for (uint16_t x = 0; x < 100; x++) {
+    for (uint16_t x = 0; x < 50; x++) {
       poles[x][0] = 0;
       poles[x][1] = 0;
       poles_comb[x][0] = 0;
@@ -176,11 +221,14 @@ struct image_t *observer_func(struct image_t *img){
       final_objs[x][3] = 0;
     }
 
+    // Downsize the input image
+    downsize_img(img, &processed);
+
     // Get the drone's posititon and heading for object detector
     read_drone_state();
 
     // Filter poles (orange) and find objects from mask
-    image_specfilt(img, &processed, orange_cf[0], orange_cf[1], orange_cf[2],
+    image_specfilt(&processed, &processed, orange_cf[0], orange_cf[1], orange_cf[2],
                     orange_cf[3], orange_cf[4], orange_cf[5], &mask_o);
     find_orange_objs();
 
@@ -197,6 +245,10 @@ struct image_t *observer_func(struct image_t *img){
     // Blur the processed image
     blur_big(&processed, &blurred);
 
+
+    // copy2img(&processed, &blurred);
+    // convolve_big(&processed, &processed);
+
     // Convolve the blurred image and find objects from edge mask
     convolve_big(&blurred, &processed);
     find_edge_objs(img);
@@ -207,17 +259,46 @@ struct image_t *observer_func(struct image_t *img){
     combine_measurements();
     delete_outliers();
     find_distances();
+    remap_to_original_img();
 
     // copy processed to img for output
-    // copy2img(&processed, img);
     // copy2img(&blurred, img);
+
+    // printf("Final measurements\n");
+    // for (uint16_t x = 0; x < 10; x++){
+    //   printf("[%.1lf, %.1lf, %.1lf] \n", final_objs[x][0], final_objs[x][1], final_objs[x][2]);
+    // }
+
+    // printf("\n");
+    // printf("////////////////////////////////////////////////////////////\n");
+    // copy2img(&processed, img);
+
+
+
+
+    // copy2bigimg(&processed, img);
+
+    // This is just to show the mask
+    // for (uint16_t x=0; x<520; x++){
+    //   sum = 0;
+    //   for (uint16_t y=0; y<240; y++){
+    //     printf("%d ",mask_r[x][y]);
+    //     sum += mask_r[x][y];
+    //   }
+    //   printf("\t %d\n", sum);
+    // }
+
+
+
 
     clock_t end = clock();
     double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
-    printf("Time: %lf \n", time_spent);
-    // printf("////////////////////////////////////////////////////////////\n");
+    // printf("Time: %lf \n", time_spent);
   }
-  return img;
+
+  return &processed;
+  // return img;
+  // return NULL;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -256,6 +337,39 @@ void create_img(struct image_t *input, struct image_t *output){
   output->buf_size = sizeof(uint8_t) * 2 * input->w * input->h;
   output->buf = malloc(input->buf_size);
 }
+
+// define shape of downsized images
+void create_small_img(struct image_t *output){
+  // Set the variables
+  output->type = IMAGE_YUV422;
+  output->w = new_w;
+  output->h = new_h;
+
+  output->buf_size = sizeof(uint8_t) * 2 * new_w * new_h;
+  output->buf = malloc(output->buf_size);
+}  
+
+// Decrease image resolution to 'new_h' and 'new_w'
+void downsize_img(struct image_t *input, struct image_t *output){
+
+  uint8_t *source = (uint8_t *)input->buf;
+  uint8_t *dest = (uint8_t *)output->buf;
+
+  output->ts = input->ts;
+
+  for (uint16_t y = 0; y < new_h; y++) { // horizontal (columns) 173
+    for (uint16_t x = 0; x < new_w; x += 2) { // vertical (rows) 80
+
+      dest[0] = (source + 2*x*scale_w + 2*y*scale_h*input->w)[0];
+      dest[1] = (source + 2*x*scale_w + 2*y*scale_h*input->w)[1];
+      dest[2] = (source + 2*x*scale_w + 2*y*scale_h*input->w)[2];
+      dest[3] = (source + 2*x*scale_w + 2*y*scale_h*input->w)[3];
+
+      dest += 4;
+    }
+  }
+}
+
 
 // copy output of input image to output image
 void copy2img(struct image_t *input, struct image_t *output){
@@ -338,8 +452,8 @@ void image_bgfilt(struct image_t *input, struct image_t *output, uint8_t y_m,
   output->ts = input->ts;
 
   // Go trough all the pixels
-  for (uint16_t y = 0; y < output->h; y++) {
-    for (uint16_t x = 0; x < output->w; x += 2) {
+  for (uint16_t y = 0; y < input->h; y++) {
+    for (uint16_t x = 0; x < input->w; x += 2) {
 
       // Remove all ground below the floor to remove ground not classified as 
       // such
@@ -509,16 +623,16 @@ void convolve_big(struct image_t *input, struct image_t *output){
       (dest + 2*x + 2*y*output->w)[3] = 
             ((dest + 2*x + 2*y*output->w)[3]-min_k3) * 255 / (max_k3-min_k3+1);
 
-      // only consider as edges those pixels with value > 30 (/255) to reduce 
+      // only consider as edges those pixels with value > 20 (/new_w) to reduce 
       // noise
-      if ((dest + 2*x + 2*y*output->w)[1] > 30) {
+      if ((dest + 2*x + 2*y*output->w)[1] > 20) {
         mask_e[y][x] = 1;
         (dest + 2*x + 2*y*output->w)[1] = 255;
       } else {
         mask_e[y][x] = 0;
         (dest + 2*x + 2*y*output->w)[1] = 0;
       }
-      if ((dest + 2*x + 2*y*output->w)[3] > 30) {
+      if ((dest + 2*x + 2*y*output->w)[3] > 20) {
         mask_e[y][x+1] = 1;   
         (dest + 2*x + 2*y*output->w)[3] = 255; 
       } else {
@@ -533,9 +647,9 @@ void convolve_big(struct image_t *input, struct image_t *output){
 void find_orange_objs(void){
 
   // Get number of appearances
-  for (uint16_t x = 0; x < 520; x++){
+  for (uint16_t x = 0; x < new_h; x++){
     sums_o[x] = 0;
-    for (uint16_t y = 0; y < 240; y++){
+    for (uint16_t y = 0; y < new_w; y++){
       sums_o[x] += mask_o[x][y];
     }
   }
@@ -545,7 +659,7 @@ void find_orange_objs(void){
   count_o = 0;
   bool started = false;
 
-  for (uint16_t x = 1; x < 519; x++){
+  for (uint16_t x = 1; x < new_h-1; x++){
 
     // LOGIC WITH THRESHOLD ON 1st DERIVATIVE
     der1 = sums_o[x+1] - sums_o[x-1];
@@ -566,7 +680,7 @@ void find_orange_objs(void){
   // if an object has detected to begin, but its end has not been found, set end
   // of image as end of obejct
   if (started){
-    poles[count_o][1] = 519;
+    poles[count_o][1] = new_h-1;
     count_o++;
   }
 }
@@ -578,8 +692,8 @@ void find_green_objs(void){
   uint8_t top_l;
 
   // Get floor index
-  for (int16_t x = 0; x < 520; x++){
-    for (int16_t y =239; y > -1; y--){
+  for (int16_t x = 0; x < new_h; x++){
+    for (int16_t y =new_w-1; y > -1; y--){
       sum = 0;
       // the first white pixel
       if ((mask_g[x][y] == 1)){
@@ -646,7 +760,7 @@ void find_green_objs(void){
   // Only perform gradient based object search if inside circle and looking 
   // inside to avoid detecting the edge of the floor
   if (check_green){
-    for (uint16_t x = 2; x < 518; x++){
+    for (uint16_t x = 2; x < new_h-2; x++){
 
       // LOGIC WITH THRESHOLD ON 1st DERIVATIVE
       der1 = floors[x+2] + floors[x+1] - floors[x-1] - floors[x-2];
@@ -666,10 +780,10 @@ void find_green_objs(void){
       }
     }
 
-    // if an object has detected to begin, but its end has not been found, set end
-    // of image as end of obejct
+    // if an object has detected to begin, but its end has not been found, set
+    // end of image as end of obejct
     if (started){
-      poles[idx_g+count_g][1] = 519;
+      poles[idx_g+count_g][1] = new_h-1;
       count_g++;
     }
   }
@@ -678,8 +792,9 @@ void find_green_objs(void){
 // Find poles from edge mask
 void find_edge_objs(struct image_t *input){
   // angle from pose to start/end of curtain
-  float head_c1 = atan2(( 4.35-y_loc), ( -5.35-x_loc)); // start of curtain (-, +) 
-  float head_c2 = atan2((-4.35-y_loc), (  5.35-x_loc)); // end of curtain (+, -)
+
+  float head_c1 = atan2(( 4.35-y_loc), ( -5.35-x_loc)); // curtain start (-, +) 
+  float head_c2 = atan2((-4.35-y_loc), (  5.35-x_loc)); // curtain end (+, -)
   count_e = 0;
 
   // if looking at: curtain, free, or mix
@@ -690,12 +805,12 @@ void find_edge_objs(struct image_t *input){
     // if pointing at crossing 1 (-, +)
     if ((head - 0.6981 < head_c1) && (head + 0.6981 > head_c1)){
       edge_search_type = 2;
-      px_change = (head_c1 - head + 0.6981)*372.4;
+      px_change = (head_c1 - head + 0.6981)*0.716197*new_h;
     } else {
       // if pointing at crossing 2 (+, -)
       if ((head - 0.6981 < head_c2) && (head + 0.6981 > head_c2)){
         edge_search_type = 3;
-        px_change = (head_c2 - head)*372.6*0.94 + 260;
+        px_change = (head_c2 - head)*0.716197*new_h*0.94 + new_h/2;
         // 0.94 is the correction factor because mapping is not linear
       } else {
         // if pointing to the curtain-free sides
@@ -704,10 +819,14 @@ void find_edge_objs(struct image_t *input){
     }
   }
 
+  if (px_change == 0){
+    px_change = 1;
+  }
+
   // Get number of appearances (integral of white pixels per column)
-  for (uint16_t x = 0; x < 520; x++){
+  for (uint16_t x = 0; x < new_h; x++){
     sums_e[x] = 0;
-    for (uint16_t y = 0; y < 240; y++){
+    for (uint16_t y = 0; y < new_w; y++){
       sums_e[x] += mask_e[x][y];
     }
   }
@@ -717,14 +836,14 @@ void find_edge_objs(struct image_t *input){
   uint16_t sum;
 
   // Smooth the sums_e function to get clearer derivatives
-  for (uint16_t x = 0; x < 520; x++){
+  for (uint16_t x = 0; x < new_h; x++){
     if (x < 2){
       min_smooth = -x;
     } else {
       min_smooth = -2;
     }
-    if (x > 517){
-      max_smooth = 520-x;
+    if (x > new_h-3){
+      max_smooth = new_h-x;
     } else{
       max_smooth = 3;
     }
@@ -734,36 +853,37 @@ void find_edge_objs(struct image_t *input){
     }
     sums_e_smooth[x] = sum/(max_smooth - min_smooth);
   }
-
   // temp to identify if object has started/finished to be detected
   started_edge = false;
 
   // curtain all over logic
   if (edge_search_type == 1){
-    logic_curtain(1, 519, input);
+    logic_curtain(1, new_h-1, input);
   }
 
   // curtain on the left, free on the right logic
   if (edge_search_type == 2){
     logic_curtain(1, px_change-1, input);
-    logic_free(px_change, 520);
+    logic_free(px_change, new_h);
   }
 
   // free on the left, curtain on the right logic
   if (edge_search_type == 3){
     logic_free(1, px_change);
-    logic_curtain(px_change+1, 520, input);
+    logic_curtain(px_change+1, new_h, input);
   }
 
   // free all over logic
   if (edge_search_type == 4){
-    logic_free(1, 520);
+    logic_free(1, new_h);
   }
+
+
 
   // if an object has detected to begin, but its end has not been found, set end
   // of image as end of obejct
   if (started_edge){
-    poles[idx_e+count_e][1] = 519;
+    poles[idx_e+count_e][1] = new_h-1;
     count_e++;
   }
 
@@ -773,7 +893,7 @@ void find_edge_objs(struct image_t *input){
       poles[idx_e+x][0] = poles[idx_e+x-1][1];
     }
 
-    if ((x < count_e-1) && (poles[idx_e+x][1] == 519)){
+    if ((x < count_e-1) && (poles[idx_e+x][1] == new_h-1)){
       poles[idx_e+x][1] = poles[idx_e+x+1][0];
     }
   }
@@ -795,7 +915,7 @@ void logic_curtain(uint16_t idx1, uint16_t idx2, struct image_t *input){
     // Get derivative in number of appearances
     der = sums_e_smooth[x+1] - sums_e_smooth[x-1];
     // if the gradient is enough
-    if (abs(der) > 40) {
+    if (abs(der) > 25) {
 
       // identify if start or end object by comparing the colors 
       // (backgroun -> darker)
@@ -813,9 +933,9 @@ void logic_curtain(uint16_t idx1, uint16_t idx2, struct image_t *input){
       sum_cc_top = 0;
 
       for (int8_t x_sum = lim_sum; x_sum < 0; x_sum++){
-        // color diff at vertical pixel 160/240 (from bottom)
-        sum_cc_bot += (source + 2*160 + 2*(x+x_sum)*input->w)[1];
-        sum_cc_top += (source + 2*160 + 2*(x-x_sum)*input->w)[1];
+        // color diff at vertical pixel 0.8*img_w (from bottom)
+        sum_cc_bot += (source + 2*(new_w-30) + 2*(x+x_sum)*input->w)[1];
+        sum_cc_top += (source + 2*(new_w-30) + 2*(x-x_sum)*input->w)[1];
       }
 
       // If bottom is darker, object starts
@@ -858,11 +978,11 @@ void logic_free(uint16_t idx1, uint16_t idx2){
 
     // Calculate object only if there is a hole (stop) in the edges noise (due
     // to huge amount of noise on curtain-free edge)
-    if (sums_e_smooth[x] < 15){
+    if (sums_e_smooth[x] < 30){
       obj_width = 0;
 
       for (x_run = x; x_run < idx2; x_run++){
-        if (sums_e_smooth[x_run] < 10){
+        if (sums_e_smooth[x_run] < 15){
           obj_width++;
         } else {
           break;
@@ -871,7 +991,7 @@ void logic_free(uint16_t idx1, uint16_t idx2){
 
       // If no more than 10 pixel edges for 15 pixels width, consider it an
       // object
-      if (obj_width > 15){
+      if (obj_width > 8){
 
         // if object already started
         if (x == idx1){
@@ -902,9 +1022,6 @@ void logic_free(uint16_t idx1, uint16_t idx2){
       }
     }
   }
-
-  printf("\n");
-
 }
 
 // Associate measurements from different readings
@@ -1009,6 +1126,33 @@ void combine_measurements(void){
       }
     }
   }
+
+  // printf("Combined measurements\n");
+  // for (uint16_t x = 0; x < 10; x++){
+  //   printf("[%d, %d] \n", poles_comb[x][0], poles_comb[x][1]);
+  // }
+  // printf("\n");
+
+  // printf("Orange measurements\n");
+  // for (uint16_t x = 0; x < 10; x++){
+  //   printf("[%d, %d] \n", poles[idx_o+x][0], poles[idx_o+x][1]);
+  // }
+  // printf("\n");
+
+  // printf("Green measurements\n");
+  // for (uint16_t x = 0; x < 10; x++){
+  //   printf("[%d, %d] \n", poles[idx_g+x][0], poles[idx_g+x][1]);
+  // }
+  // printf("\n");
+
+
+  // printf("Edge measurements\n");
+  // for (uint16_t x = 0; x < 10; x++){
+  //   printf("[%d, %d] \n", poles[idx_e+x][0], poles[idx_e+x][1]);
+  // }
+  // printf("\n");
+
+
 }
 
 // If an object is detected more than XX times in the last XX views
@@ -1135,7 +1279,7 @@ void delete_outliers(void){
 
   for (uint8_t c_rm = 0; c_rm < elem_to_rm; c_rm++){
     rm_idx_i = idx_to_rm[c_rm];
-    for (uint8_t c_mv = rm_idx_i; c_mv < count_inertia-1; c_mv++){
+    for (uint8_t c_mv = rm_idx_i; c_mv < last_idx; c_mv++){
       poles_w_inertia[c_mv][0] = poles_w_inertia[c_mv+1][0];
       poles_w_inertia[c_mv][1] = poles_w_inertia[c_mv+1][1];
       poles_w_inertia[c_mv][2] = poles_w_inertia[c_mv+1][2];
@@ -1149,6 +1293,14 @@ void delete_outliers(void){
   }
 
   count_inertia -= elem_to_rm;
+
+  // printf("Intertial measurements\n");
+  // for (uint16_t x = 0; x < 10; x++){
+  //   printf("[%d, %d, %d] \n", poles_w_inertia[x][0], poles_w_inertia[x][1], poles_w_inertia[x][3]);
+  // }
+  // printf("\n");
+
+
 }
 
 // Estimate distance to object
@@ -1177,7 +1329,7 @@ void find_distances(void){
     avg_px = (final_objs[idx][1]+final_objs[idx][0])/2;
     if (floors[avg_px] != 0){
       // Get angle to obj from linear mapping on the pixel location
-      head_obj = head + (-40+4*avg_px/26) * 0.017453;
+      head_obj = head + (-40+4*avg_px*2/new_h) * 0.017453;
 
       // if pointing to top edge
       if ((head_obj < head_1) && (head_obj > head_4)){
@@ -1197,15 +1349,15 @@ void find_distances(void){
       }
 
       // aritmetic expression that yields approximate results for pole distance
-      dist1 = 2*9*d_to_edge/(floors[(uint16_t)final_objs[idx][0]] 
-                           + floors[(uint16_t)final_objs[idx][1]]);
+      dist1 = 2*9*d_to_edge/scale_w/(floors[(uint16_t)final_objs[idx][0]] 
+                                   + floors[(uint16_t)final_objs[idx][1]]);
       dist1 = sin(dist1);
       dist1 = floors[avg_px]*dist1/9 + 0.9;
     }
 
     // Find distance from object thickness 
     // (assuming thickness of 0.3 m -> pole thickness)
-    dist2 = px_dist_scale/(final_objs[idx][1]-final_objs[idx][0]);
+    dist2 = px_dist_scale/(final_objs[idx][1]-final_objs[idx][0])/2;
 
     // Only compute distance from width if object was detected by orange filter
     if ((uint8_t)(final_objs[idx][3]) == 1){
@@ -1222,6 +1374,14 @@ void find_distances(void){
     if (!(final_objs[idx][2] > 0.01)){
       final_objs[idx][2] = 1;
     }
+  }
+}
+
+// Map object coordinates to original image size
+void remap_to_original_img(void){
+  for (uint8_t x = 0; x < final_count; x++){
+    final_objs[x][0] = final_objs[x][0]*scale_h;
+    final_objs[x][1] = final_objs[x][1]*scale_h;
   }
 }
 

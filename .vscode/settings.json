@@ -81,6 +81,8 @@
         "cinttypes": "cpp",
         "typeindex": "cpp",
         "typeinfo": "cpp",
-        "trajectory.h": "c"
+        "trajectory.h": "c",
+        "*.ipp": "c",
+        "state.h": "c"
     },
 }

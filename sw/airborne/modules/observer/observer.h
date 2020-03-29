@@ -25,7 +25,7 @@
 
 
 #include "modules/computer_vision/cv.h"
-// #include "generated/flight_plan.h"
+#include "generated/flight_plan.h"
 #include "state.h"
 #include <stdio.h>
 #include <time.h>
@@ -57,6 +57,21 @@ void read_drone_state(void);
    * @return: void.
 */
 void create_img(struct image_t *input, struct image_t *output);
+
+/**
+   * @brief define the shape of the reduced output image
+   * @param output: pointer to output image
+   * @return: void.
+*/
+void create_small_img(struct image_t *output);
+
+/**
+   * @brief decrease image resolution of input image to 'new_h' and 'new_w'
+   * @param input: pointer to input image
+   * @param output: pointer to output image
+   * @return: void.
+*/
+void downsize_img(struct image_t *input, struct image_t *output);
 
 /**
    * @brief copy content of input image to output image
@@ -184,8 +199,15 @@ void delete_outliers(void);
 */
 void find_distances(void);
 
+/**
+   * @brief Map the coordinates of the detected objects to those of the original 
+   *        image
+   * @return: void
+*/
+void remap_to_original_img(void);
+
 //
-extern float final_objs[100][4];
+extern float final_objs[50][4];
 
 /**
    * @brief Initialise the 'observer_func' service
