@@ -47,7 +47,7 @@ enum safety_mode_t {
 // set initial trajectory and safety modes
 enum trajectory_mode_t trajectory_mode = TAKE_OFF;
 enum safety_mode_t safety_mode = SAFE;
-void switch_path(enum trajectory_mode_t next_mode);
+void switch_path(enum trajectory_mode_t next_mode, float switch_time);
 
 // define and initialise global variables
 // ***** TRAJECTORY variables *****
@@ -56,7 +56,7 @@ float TRAJECTORY_Y = 0.0;                       // y coodinate for trajectory in
 float TRAJECTORY_LOCAL_X = 0.0;                 // x coodinate for trajectory in cyberzoo reference system
 float TRAJECTORY_LOCAL_Y = 0.0;                 // x coodinate for trajectory in cyberzoo reference system
 int TRAJECTORY_L = 1800;                        // cyberzoo length in given coordinate system
-float TRAJECTORY_SWITCHING_TIME=2.9;             // time after which trajectory switches mode
+float TRAJECTORY_SWITCHING_TIME = 2.9;             // time after which trajectory switches mode
 int TRAJECTORY_RADIUS;                          // radius of the trajectory  
 int square_mode = 1;                            // indication of which part of the square trajectory to follow
 float current_time = 0;                         // elapsed time
@@ -116,11 +116,11 @@ switch (trajectory_mode){
     break;
   case CIRCLE:
     circle(current_time, &TRAJECTORY_X, &TRAJECTORY_Y);
-    switch_path(SQUARE);
+    switch_path(SQUARE, 30.0);
     break;
   case SQUARE:
     square(dt, &TRAJECTORY_X, &TRAJECTORY_Y);
-    switch_path(CIRCLE);
+    switch_path(CIRCLE, TRAJECTORY_SWITCHING_TIME);
     break;
   default:
     break;
@@ -152,9 +152,9 @@ nav_set_heading_towards_waypoint(WP_GOAL);
 //printf("\n Distance tavelled= %f \n", distance_travelled);
 
 // update time
-printf("dt: %f\n", dt);
+//printf("dt: %f\n", dt);
 current_time += dt;
-printf("\ncurrent time: %f\n ", current_time);
+//printf("\ncurrent time: %f\n ", current_time);
 return;
 }
 
@@ -217,7 +217,7 @@ return;
  */
 void square(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y)
 {
-    printf("SQUARE\n");
+    //printf("SQUARE\n");
   // choose the speed factor
   int V = 700;
 
@@ -299,7 +299,7 @@ void square(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y)
  * Function that updates the trajectory to safely take-off and join the next trajectory
  */
 void take_off(float *TRAJECTORY_X, float *TRAJECTORY_Y){
-  printf("TAKING OFF\n");
+  //printf("TAKING OFF\n");
 
   // distance to travel to complete take-off procedure
   float distance_forward = 2.0;
@@ -355,8 +355,8 @@ void take_off(float *TRAJECTORY_X, float *TRAJECTORY_Y){
 /*
  * Function that switches trajectory when a certain time has passed
  */
-void switch_path(enum trajectory_mode_t next_mode){
-  if (current_time > TRAJECTORY_SWITCHING_TIME){
+void switch_path(enum trajectory_mode_t next_mode, float switch_time){
+  if (current_time > switch_time){
       current_time=0;
       TRAJECTORY_Y=0;
       TRAJECTORY_X=0;  
@@ -399,7 +399,7 @@ void determine_if_safe(float dist_stop_escape, float dist_threat){
     if(trajectory_mode==TAKE_OFF){
       if(isCoordOutsideRadius(&AVOID_start_avoid_coord, dist_stop_escape) == true){
         AVOID_keep_escape_count = 0;
-        trajectory_mode = SQUARE;
+        trajectory_mode = CIRCLE;
         current_time = 0;
       }
     }
