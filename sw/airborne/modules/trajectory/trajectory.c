@@ -115,11 +115,11 @@ switch (trajectory_mode){
     break;
   case CIRCLE:
     circle(current_time, &TRAJECTORY_X, &TRAJECTORY_Y);
-    switch_path(SQUARE, 19.0);
+    switch_path(SQUARE, 30.0);
     break;
   case SQUARE:
     square(dt, &TRAJECTORY_X, &TRAJECTORY_Y);
-    switch_path(CIRCLE, 2.9);
+    switch_path(CIRCLE, 7.0);
     break;
   default:
     break;
