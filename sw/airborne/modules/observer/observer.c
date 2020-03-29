@@ -27,12 +27,12 @@
 #include "modules/observer/observer.h"
 
 
-#ifndef OPENCVDEMO_FPS
-#define OPENCVDEMO_FPS 0
+#ifndef OBSERVER_FPS
+#define OBSERVER_FPS 15
 #endif
 
-#ifndef COLORFILTER_CAMERA
-#define COLORFILTER_CAMERA front_camera
+#ifndef OBSERVER_CAMERA
+#define OBSERVER_CAMERA front_camera
 #endif
 
 // Resized image size
@@ -43,11 +43,11 @@
 // #define new_h 173 // 520/scale_h
 // #define new_w 80  // 240/scale_w
 
-// #define scale_h 2
-// #define scale_w 2
+#define scale_h 2
+#define scale_w 2
 
-// #define new_h 260 // 520/scale_h
-// #define new_w 120 // 240/scale_w
+#define new_h 260 // 520/scale_h
+#define new_w 120 // 240/scale_w
 
 // #define scale_h 4
 // #define scale_w 4
@@ -55,11 +55,11 @@
 // #define new_h 130 // 520/scale_h
 // #define new_w 60  // 240/scale_w
 
-#define scale_h 1
-#define scale_w 1
+// #define scale_h 1
+// #define scale_w 1
 
-#define new_h 520 // 520/scale_h
-#define new_w 240  // 240/scale_w
+// #define new_h 520 // 520/scale_h
+// #define new_w 240  // 240/scale_w
 
 
 
@@ -70,7 +70,7 @@
   float head;
   float vx_loc;
   float vy_loc;
-  float v_tot;
+  float v_tot; 
   float rot_loc;
 
   // color filters        y_m  y_M  u_m  u_M  v_m  v_M
@@ -1388,5 +1388,5 @@ void remap_to_original_img(void){
 
 // Initialisation function
 void observer_node_init(void){
-  cv_add_to_device(&COLORFILTER_CAMERA, observer_func, OPENCVDEMO_FPS);
+  cv_add_to_device(&OBSERVER_CAMERA, observer_func, OBSERVER_FPS);
 }

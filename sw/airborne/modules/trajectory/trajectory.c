@@ -66,8 +66,8 @@ int dt;                                         // time steo
 float AVOID_objects[50][3];                    // 2D array storing objects' relative heading and distance
 int AVOID_number_of_objects = 0;                // count for the number of detected objects 
 int AVOID_biggest_threat;                       // index of objetc representing the biggest threat
-float AVOID_safety_angle = 15 * M_PI/180;       // angle within which objects are considered a threat
-float AVOID_dist_threat = 1.2;                  // distance at which objects are considered a threat
+float AVOID_safety_angle = 10 * M_PI/180;       // angle within which objects are considered a threat
+float AVOID_dist_threat = 1.3;                  // distance at which objects are considered a threat
 int AVOID_keep_escape_count = 0;                // number of iterations since the avoidance trajectory has started
 int AVOID_keep_escape_count_max = 2200;         // maximum number of iterations to keep following the avoidance trajectory
 float AVOID_dist_stop_escape = 1.4;             // maximum travelled distance to keep following the avoidance trajectory
@@ -153,8 +153,8 @@ waypoint_set_xy_i(WP_GOAL,TRAJECTORY_X,TRAJECTORY_Y);
 nav_set_heading_towards_waypoint(WP_GOAL);
 
 // update the travelled distance counter (removed for the competition)
-//distance_travelled+=distance_travelled_last_iteration();
-//printf("\n Distance tavelled= %f \n", distance_travelled);
+distance_travelled+=distance_travelled_last_iteration();
+// printf("\n Distance travelled= %f \n", distance_travelled);
 
 // update time
 current_time += dt;
@@ -241,12 +241,12 @@ void square(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y)
 
     // high radius reduction if the right side has a relative heading smaller than 40 deg
     if(AVOID_objects[AVOID_biggest_threat][0]<-0.70){
-      TRAJECTORY_RADIUS = TRAJECTORY_L/2 - 400;   
+      TRAJECTORY_RADIUS = TRAJECTORY_L/2 - 450;   
     }
 
     // smaller radius reduction otherwise
     else{
-      TRAJECTORY_RADIUS = TRAJECTORY_L/2 - 300;   
+      TRAJECTORY_RADIUS = TRAJECTORY_L/2 - 350;   
     }
 
     // keep the escape trajectory by setting the safety mode and iteration count
@@ -400,7 +400,7 @@ void determine_if_safe(float dist_stop_escape, float dist_threat){
     if(trajectory_mode==TAKE_OFF){
       if(isCoordOutsideRadius(&AVOID_start_avoid_coord, dist_stop_escape) == true){
         AVOID_keep_escape_count = 0;
-        trajectory_mode = SQUARE;
+        trajectory_mode = CIRCLE;
         current_time = 0;
       }
     }
