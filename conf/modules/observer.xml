@@ -9,7 +9,7 @@
     </description>
 
     <define name="OBSERVER_CAMERA" value="front_camera|bottom_camera" description="Video device to use"/>
-    <define name="OBSERVER_FPS" value="15" description="The (maximum) frequency to run the calculations at. If zero, it will max out at the camera frame rate"/>
+    <define name="OBSERVER_FPS" value="20" description="The (maximum) frequency to run the calculations at. If zero, it will max out at the camera frame rate"/>
   </doc>
 
   <header>

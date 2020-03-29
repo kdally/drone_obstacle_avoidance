@@ -23,9 +23,7 @@
  * Just pathing in TRAJECTORY
  */
 
-
 #include "modules/computer_vision/cv.h"
-#include "generated/flight_plan.h"
 #include "state.h"
 #include <stdio.h>
 #include <time.h>

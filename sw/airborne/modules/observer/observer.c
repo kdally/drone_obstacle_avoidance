@@ -28,7 +28,7 @@
 
 
 #ifndef OBSERVER_FPS
-#define OBSERVER_FPS 15
+#define OBSERVER_FPS 20
 #endif
 
 #ifndef OBSERVER_CAMERA
@@ -37,31 +37,11 @@
 
 // Resized image size
 
-// #define scale_h 3
-// #define scale_w 3
-
-// #define new_h 173 // 520/scale_h
-// #define new_w 80  // 240/scale_w
-
 #define scale_h 2
 #define scale_w 2
 
 #define new_h 260 // 520/scale_h
 #define new_w 120 // 240/scale_w
-
-// #define scale_h 4
-// #define scale_w 4
-
-// #define new_h 130 // 520/scale_h
-// #define new_w 60  // 240/scale_w
-
-// #define scale_h 1
-// #define scale_w 1
-
-// #define new_h 520 // 520/scale_h
-// #define new_w 240  // 240/scale_w
-
-
 
 // Variables declaration
   // Drone state
@@ -179,32 +159,13 @@
 
   struct image_t processed;
   struct image_t blurred;
-
-  // Initialise the image transforms
-  bool first_time = true;
 //
 
 ////////////////////////////////////////////////////////////////////////////////
 // MAIN FUNCTION
 struct image_t *observer_func(struct image_t *img){
 
-// nav_set_heading_towards_waypoint(WP_STDBY);
-
   if (img->type == IMAGE_YUV422) {
-
-    // Take the time
-    clock_t begin = clock();
-
-    // Copy input image to processed, blurred
-    if (first_time){
-      // create_img(img, &processed);
-      // create_img(img, &blurred);
-
-      create_small_img(&processed);
-      create_small_img(&blurred);
-
-      first_time = false;
-    }
 
     // Clean pole lists data
     for (uint16_t x = 0; x < 50; x++) {
@@ -245,10 +206,6 @@ struct image_t *observer_func(struct image_t *img){
     // Blur the processed image
     blur_big(&processed, &blurred);
 
-
-    // copy2img(&processed, &blurred);
-    // convolve_big(&processed, &processed);
-
     // Convolve the blurred image and find objects from edge mask
     convolve_big(&blurred, &processed);
     find_edge_objs(img);
@@ -260,46 +217,9 @@ struct image_t *observer_func(struct image_t *img){
     delete_outliers();
     find_distances();
     remap_to_original_img();
-
-    // copy processed to img for output
-    // copy2img(&blurred, img);
-
-    // printf("Final measurements\n");
-    // for (uint16_t x = 0; x < 10; x++){
-    //   printf("[%.1lf, %.1lf, %.1lf] \n", final_objs[x][0], final_objs[x][1], final_objs[x][2]);
-    // }
-
-    // printf("\n");
-    // printf("////////////////////////////////////////////////////////////\n");
-    // copy2img(&processed, img);
-
-
-
-
-    // copy2bigimg(&processed, img);
-
-    // This is just to show the mask
-    // for (uint16_t x=0; x<520; x++){
-    //   sum = 0;
-    //   for (uint16_t y=0; y<240; y++){
-    //     printf("%d ",mask_r[x][y]);
-    //     sum += mask_r[x][y];
-    //   }
-    //   printf("\t %d\n", sum);
-    // }
-
-
-
-
-    clock_t end = clock();
-    //double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
-    //printf("Time: %lf \n", time_spent);
-    // printf("////////////////////////////////////////////////////////////\n");
   }
 
-  return &processed;
-  // return img;
-  // return NULL;
+  return img;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -370,7 +290,6 @@ void downsize_img(struct image_t *input, struct image_t *output){
     }
   }
 }
-
 
 // copy output of input image to output image
 void copy2img(struct image_t *input, struct image_t *output){
@@ -1127,33 +1046,6 @@ void combine_measurements(void){
       }
     }
   }
-
-  // printf("Combined measurements\n");
-  // for (uint16_t x = 0; x < 10; x++){
-  //   printf("[%d, %d] \n", poles_comb[x][0], poles_comb[x][1]);
-  // }
-  // printf("\n");
-
-  // printf("Orange measurements\n");
-  // for (uint16_t x = 0; x < 10; x++){
-  //   printf("[%d, %d] \n", poles[idx_o+x][0], poles[idx_o+x][1]);
-  // }
-  // printf("\n");
-
-  // printf("Green measurements\n");
-  // for (uint16_t x = 0; x < 10; x++){
-  //   printf("[%d, %d] \n", poles[idx_g+x][0], poles[idx_g+x][1]);
-  // }
-  // printf("\n");
-
-
-  // printf("Edge measurements\n");
-  // for (uint16_t x = 0; x < 10; x++){
-  //   printf("[%d, %d] \n", poles[idx_e+x][0], poles[idx_e+x][1]);
-  // }
-  // printf("\n");
-
-
 }
 
 // If an object is detected more than XX times in the last XX views
@@ -1294,14 +1186,6 @@ void delete_outliers(void){
   }
 
   count_inertia -= elem_to_rm;
-
-  // printf("Intertial measurements\n");
-  // for (uint16_t x = 0; x < 10; x++){
-  //   printf("[%d, %d, %d] \n", poles_w_inertia[x][0], poles_w_inertia[x][1], poles_w_inertia[x][3]);
-  // }
-  // printf("\n");
-
-
 }
 
 // Estimate distance to object
@@ -1388,5 +1272,10 @@ void remap_to_original_img(void){
 
 // Initialisation function
 void observer_node_init(void){
+
+  // Initialise processed and blurred images to correct size
+  create_small_img(&processed);
+  create_small_img(&blurred);
+
   cv_add_to_device(&OBSERVER_CAMERA, observer_func, OBSERVER_FPS);
 }
