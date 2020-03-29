@@ -309,27 +309,25 @@ void take_off(float *TRAJECTORY_X, float *TRAJECTORY_Y){
   dt = AVOID_slow_dt;
 
   // check if threatening objects are present, or if one is currently being avoided. 
-  // Leave the take-off mode after having travelled 1.7m, and consider obstacles up to a 5m distance a threat (entire cyberzoo)
-  AVOID_safety_angle = 40*M_PI/180;
-  
+  // Leave the take-off mode after having travelled 1.5m, and consider obstacles up to a 4m distance a threat (entire cyberzoo)
   determine_if_safe(1.5, 4.0);
 
   if(safety_mode==HOLD){
-    float new_heading = 100*M_PI/180;
+    float new_heading = 150*M_PI/180;
     FLOAT_ANGLE_NORMALIZE(new_heading);
     nav_heading = ANGLE_BFP_OF_REAL(new_heading);
     *TRAJECTORY_X = 0.0;
     *TRAJECTORY_Y = 0.0;
   }
-  //printf("\n dist %f \n", final_objs[AVOID_biggest_threat][2]);
+  printf("\n dist %f \n", final_objs[AVOID_biggest_threat][2]);
  
   if(safety_mode==THREAT){
     
     // choose next heading 45 deg to the right of the right edge of the closest obstacle
-    float new_heading = stateGetNedToBodyEulers_f()->psi + AVOID_objects[AVOID_biggest_threat][0] - 15*M_PI/180;
+    float new_heading = stateGetNedToBodyEulers_f()->psi + AVOID_objects[AVOID_biggest_threat][0] - 35*M_PI/180;
     FLOAT_ANGLE_NORMALIZE(new_heading);
     nav_heading = ANGLE_BFP_OF_REAL(new_heading);
-    //printf("\n %f \n", new_heading*180/M_PI);
+    printf("\n %f \n", new_heading*180/M_PI);
 
     // update trajectory coordinates based on the new heading and distance forward
     *TRAJECTORY_X = stateGetPositionEnu_i()->x + POS_BFP_OF_REAL(sinf(new_heading) * (distance_forward));
@@ -388,7 +386,7 @@ void determine_if_safe(float dist_stop_escape, float dist_threat){
     safety_mode = HOLD;
     AVOID_hold_position += 1;
 
-    if(AVOID_hold_position>2000){
+    if(AVOID_hold_position>3000){
       AVOID_hold_position = 0; 
     }
   return;
@@ -400,7 +398,6 @@ void determine_if_safe(float dist_stop_escape, float dist_threat){
     AVOID_keep_escape_count += 1;
 
     if(trajectory_mode==TAKE_OFF){
-      //if(isCoordOutsideRadius(&AVOID_start_avoid_coord, dist_stop_escape) == true || AVOID_keep_escape_count > AVOID_keep_escape_count_max){
       if(isCoordOutsideRadius(&AVOID_start_avoid_coord, dist_stop_escape) == true){
         AVOID_keep_escape_count = 0;
         trajectory_mode = SQUARE;
