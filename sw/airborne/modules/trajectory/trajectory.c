@@ -56,7 +56,6 @@ float TRAJECTORY_Y = 0.0;                       // y coodinate for trajectory in
 float TRAJECTORY_LOCAL_X = 0.0;                 // x coodinate for trajectory in cyberzoo reference system
 float TRAJECTORY_LOCAL_Y = 0.0;                 // x coodinate for trajectory in cyberzoo reference system
 int TRAJECTORY_L = 1800;                        // cyberzoo length in given coordinate system
-float TRAJECTORY_SWITCHING_TIME = 2.9;             // time after which trajectory switches mode
 int TRAJECTORY_RADIUS;                          // radius of the trajectory  
 int square_mode = 1;                            // indication of which part of the square trajectory to follow
 float current_time = 0;                         // elapsed time
@@ -116,11 +115,11 @@ switch (trajectory_mode){
     break;
   case CIRCLE:
     circle(current_time, &TRAJECTORY_X, &TRAJECTORY_Y);
-    switch_path(SQUARE, 30.0);
+    switch_path(SQUARE, 19.0);
     break;
   case SQUARE:
     square(dt, &TRAJECTORY_X, &TRAJECTORY_Y);
-    switch_path(CIRCLE, TRAJECTORY_SWITCHING_TIME);
+    switch_path(CIRCLE, 2.9);
     break;
   default:
     break;
@@ -152,9 +151,8 @@ nav_set_heading_towards_waypoint(WP_GOAL);
 //printf("\n Distance tavelled= %f \n", distance_travelled);
 
 // update time
-//printf("dt: %f\n", dt);
 current_time += dt;
-//printf("\ncurrent time: %f\n ", current_time);
+
 return;
 }
 
@@ -164,7 +162,6 @@ return;
  */
 void circle(float current_time, float *TRAJECTORY_X, float *TRAJECTORY_Y)
 {
-    printf("CIRCLE\n");
   // choose the ecentricty
   double e = 1;
 
@@ -217,7 +214,6 @@ return;
  */
 void square(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y)
 {
-    //printf("SQUARE\n");
   // choose the speed factor
   int V = 700;
 
@@ -299,7 +295,6 @@ void square(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y)
  * Function that updates the trajectory to safely take-off and join the next trajectory
  */
 void take_off(float *TRAJECTORY_X, float *TRAJECTORY_Y){
-  //printf("TAKING OFF\n");
 
   // distance to travel to complete take-off procedure
   float distance_forward = 2.0;
@@ -309,7 +304,7 @@ void take_off(float *TRAJECTORY_X, float *TRAJECTORY_Y){
 
   // check if threatening objects are present, or if one is currently being avoided. 
   // leave the take-off mode after having travelled 1.5m, and consider obstacles up to a 4m distance a threat (entire cyberzoo)
-  determine_if_safe(1.5, 4.0);
+  determine_if_safe(1.6, 4.0);
 
   // when the drone has taken-off, point towards start of the global trajectory but remain static
   if(safety_mode==HOLD){
