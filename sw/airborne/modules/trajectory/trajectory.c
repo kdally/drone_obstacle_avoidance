@@ -326,7 +326,6 @@ void take_off(float *TRAJECTORY_X, float *TRAJECTORY_Y){
     float new_heading = stateGetNedToBodyEulers_f()->psi + AVOID_objects[AVOID_biggest_threat][0] - 35*M_PI/180;
     FLOAT_ANGLE_NORMALIZE(new_heading);
     nav_heading = ANGLE_BFP_OF_REAL(new_heading);
-    printf("\n %f \n", new_heading*180/M_PI);
 
     // update trajectory coordinates based on the new heading and distance forward
     *TRAJECTORY_X = stateGetPositionEnu_i()->x + POS_BFP_OF_REAL(sinf(new_heading) * (distance_forward));
@@ -461,7 +460,6 @@ bool safety_check_optical_flow(float *AVOID_safety_optical_flow, float x2, float
  * - saffest heading is the middle value of the i-th partition with span="angular_span"
  */
 float safe_heading(float array_of[]){
-  //printf("\nOF activated\n");
   float field_of_view=M_PI/2;
   float angular_span=field_of_view/NUMBER_OF_PARTITIONS;
   
