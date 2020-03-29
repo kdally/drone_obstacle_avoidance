@@ -39,7 +39,9 @@ enum trajectory_mode_t {
 enum safety_mode_t {
   SAFE,
   THREAT,
-  ESCAPE_IN_PROGRESS
+  ESCAPE_IN_PROGRESS,
+  HOLD,
+  WAIT
 };
 
 // set initial trajectory and safety modes
@@ -66,15 +68,16 @@ int AVOID_number_of_objects = 0;                // count for the number of detec
 int AVOID_biggest_threat;                       // index of objetc representing the biggest threat
 float AVOID_safety_angle = 15 * M_PI/180;       // angle within which objects are considered a threat
 float AVOID_dist_threat = 1.2;                  // distance at which objects are considered a threat
-int AVOID_keep_escape_count = 0;                 // number of iterations since the avoidance trajectory has started
-int AVOID_keep_escape_count_max = 2200;             // maximum number of iterations to keep following the avoidance trajectory
+int AVOID_keep_escape_count = 0;                // number of iterations since the avoidance trajectory has started
+int AVOID_keep_escape_count_max = 2200;         // maximum number of iterations to keep following the avoidance trajectory
 float AVOID_dist_stop_escape = 1.4;             // maximum travelled distance to keep following the avoidance trajectory
 struct EnuCoor_i AVOID_start_avoid_coord;       // coordinate of the location where the avoidance trajectory has started
 float AVOID_normal_dt = 0.0003;                 // time step when no threatening object is dectected
 float AVOID_slow_dt = 0.00003;                  // time step when a threatening object is dectected
+int AVOID_hold_position = 1;
 
 // ***** OPTICAL FLOW-BASED AVOIDANCE variables *****
-float AVOID_OF_angle = 3.5 * M_PI/180;          //
+float AVOID_OF_angle = 3.5 * M_PI/180;          // 
 bool safe_mode_previous=false;                  //
 int last_iteration_safe_heading=0;              //
 float OF_NEXT_HEADING_INFLUENCE = 0.25;         // gain of escpae route from the optical flow-based avoidance
@@ -131,29 +134,26 @@ switch (trajectory_mode){
 // update goal waypoint based on trajectory
 waypoint_set_xy_i(WP_GOAL,TRAJECTORY_X,TRAJECTORY_Y);
 
-// use optical flow-based avoidance right after take-off and when the trajectory mode is changed
-if(safety_mode!=ESCAPE_IN_PROGRESS){  
-  if(current_time<2.0){
-      bool change_heading = safety_check_optical_flow(GLOBAL_OF_VECTOR, TRAJECTORY_X, TRAJECTORY_Y);
-    
-    // explain
-    if(change_heading){
-      moveWaypointForwardWithDirection(WP_GOAL,OF_NEXT_HEADING_INFLUENCE,safe_heading(GLOBAL_OF_VECTOR));
-      safe_mode_previous=true;
-    }
-
-    // explain
-    else{
-      safe_mode_previous=false;
-    }
-  }
-}
+// DISABLED FOR COMPETITION BECAUSE OF OPTICAL-FLOW FUNCTIONHIGH RUN TIME
+// use optical flow-based avoidance right after take-off and when the trajectory mode is changed 
+// if(safety_mode!=ESCAPE_IN_PROGRESS){  
+//   if(current_time<2.0){
+//       bool change_heading = safety_check_optical_flow(GLOBAL_OF_VECTOR, TRAJECTORY_X, TRAJECTORY_Y);
+//     if(change_heading){
+//       moveWaypointForwardWithDirection(WP_GOAL,OF_NEXT_HEADING_INFLUENCE,safe_heading(GLOBAL_OF_VECTOR));
+//       safe_mode_previous=true;
+//     }
+//     else{
+//       safe_mode_previous=false;
+//     }
+//   }
+// }
 
 // align drone with goal
 nav_set_heading_towards_waypoint(WP_GOAL);
 
-// update the travelled distance counter
-distance_travelled+=distance_travelled_last_iteration();
+// update the travelled distance counter (removed for the competition)
+//distance_travelled+=distance_travelled_last_iteration();
 //printf("\n Distance tavelled= %f \n", distance_travelled);
 
 // update time
@@ -300,90 +300,63 @@ void square(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y)
 /*
  * Function that updates the trajectory to safely take-off and join the next trajectory
  */
-// void take_off(float *TRAJECTORY_X, float *TRAJECTORY_Y){
-
-//   // distance to travel to complete take-off procedure
-//   float distance_forward = 0.8;
-
-//   // use a small time step during take-off the remain slow
-//   dt = AVOID_slow_dt;
-
-//   // check if threatening objects are present, or if one is currently being avoided. 
-//   // Leave the take-off mode after having travelled 1.7m, and consider obstacles up to a 5m distance a threat (entire cyberzoo)
-//   AVOID_safety_angle = 40*M_PI/180;
-//   determine_if_safe(1.7, 5.0);
-//   printf("\n dist %f \n", final_objs[AVOID_biggest_threat][2]);
- 
-//   if(safety_mode==THREAT){
-    
-//     // choose next heading 45 deg to the right of the right edge of the closest obstacle
-//     float new_heading = stateGetNedToBodyEulers_f()->psi + AVOID_objects[AVOID_biggest_threat][1] + 45*M_PI/180;
-//     FLOAT_ANGLE_NORMALIZE(new_heading);
-//     nav_heading = ANGLE_BFP_OF_REAL(new_heading);
-//     printf("\n %f %f \n", new_heading*180/M_PI, nav_heading*180/M_PI);
-
-//     // update trajectory coordinates based on the new heading and distance forward
-//     *TRAJECTORY_X = stateGetPositionEnu_i()->x + POS_BFP_OF_REAL(sinf(new_heading) * (distance_forward));
-//     *TRAJECTORY_Y = stateGetPositionEnu_i()->y + POS_BFP_OF_REAL(cosf(new_heading) * (distance_forward));
-    
-//     // keep the escape trajectory by setting the safety mode and iteration count
-//     safety_mode = ESCAPE_IN_PROGRESS;
-//     AVOID_keep_escape_count += 1;
-//     waypoint_set_xy_i(WP_GOAL,*TRAJECTORY_X,*TRAJECTORY_Y);
-//   }
-//   else if(safety_mode==SAFE){
-    
-//     // set current heading to next heading since no obstacles forward
-//     float new_heading  = stateGetNedToBodyEulers_f()->psi;
-//     printf("\n safe %f \n", new_heading*180/M_PI);
-
-//     // update trajectory coordinates based on the new heading and distance forward
-//     *TRAJECTORY_X = stateGetPositionEnu_i()->x + POS_BFP_OF_REAL(sinf(new_heading) * (distance_forward));
-//     *TRAJECTORY_Y = stateGetPositionEnu_i()->y + POS_BFP_OF_REAL(cosf(new_heading) * (distance_forward));
-
-//     // keep the escape trajectory by setting the safety mode and iteration count
-//     safety_mode = ESCAPE_IN_PROGRESS;
-//     AVOID_keep_escape_count += 1;
-//     }
-//   // if a threatening object is currently being avoided, keep the same radius
-//   //else if(safety_mode==ESCAPE_IN_PROGRESS){}
-//   //float TRAJECTORY_LOCAL_X = *TRAJECTORY_X;
-//   //float TRAJECTORY_LOCAL_Y = *TRAJECTORY_Y;
-//   //waypoint_set_xy_i(WP_GOAL,*TRAJECTORY_X,*TRAJECTORY_Y);
-
-//   // *TRAJECTORY_X = TRAJECTORY_LOCAL_X*0.5+TRAJECTORY_LOCAL_Y*0.866025;
-//   // *TRAJECTORY_Y = -TRAJECTORY_LOCAL_X*0.866025+TRAJECTORY_LOCAL_Y*0.5;
-
-// }
-
-
 void take_off(float *TRAJECTORY_X, float *TRAJECTORY_Y){
 
-  dt = AVOID_slow_dt;
-  AVOID_safety_angle = 40*M_PI/180;
-  determine_if_safe(1.7, 5.0);
+  // distance to travel to complete take-off procedure
+  float distance_forward = 2.0;
 
-  if(safety_mode==THREAT){
-    
-    float distance_forward = 2.5;
-    float new_heading = stateGetNedToBodyEulers_f()->psi + AVOID_objects[AVOID_biggest_threat][1] + 90*M_PI/180;
+  // use a small time step during take-off the remain slow
+  dt = AVOID_slow_dt;
+
+  // check if threatening objects are present, or if one is currently being avoided. 
+  // Leave the take-off mode after having travelled 1.7m, and consider obstacles up to a 5m distance a threat (entire cyberzoo)
+  AVOID_safety_angle = 40*M_PI/180;
+  
+  determine_if_safe(1.5, 4.0);
+
+  if(safety_mode==HOLD){
+    float new_heading = 100*M_PI/180;
     FLOAT_ANGLE_NORMALIZE(new_heading);
     nav_heading = ANGLE_BFP_OF_REAL(new_heading);
+    *TRAJECTORY_X = 0.0;
+    *TRAJECTORY_Y = 0.0;
+  }
+  //printf("\n dist %f \n", final_objs[AVOID_biggest_threat][2]);
+ 
+  if(safety_mode==THREAT){
+    
+    // choose next heading 45 deg to the right of the right edge of the closest obstacle
+    float new_heading = stateGetNedToBodyEulers_f()->psi + AVOID_objects[AVOID_biggest_threat][0] - 15*M_PI/180;
+    FLOAT_ANGLE_NORMALIZE(new_heading);
+    nav_heading = ANGLE_BFP_OF_REAL(new_heading);
+    //printf("\n %f \n", new_heading*180/M_PI);
+
+    // update trajectory coordinates based on the new heading and distance forward
     *TRAJECTORY_X = stateGetPositionEnu_i()->x + POS_BFP_OF_REAL(sinf(new_heading) * (distance_forward));
     *TRAJECTORY_Y = stateGetPositionEnu_i()->y + POS_BFP_OF_REAL(cosf(new_heading) * (distance_forward));
-    waypoint_set_xy_i(WP_GOAL,*TRAJECTORY_X,*TRAJECTORY_Y);
+    
+    // keep the escape trajectory by setting the safety mode and iteration count
+    safety_mode = ESCAPE_IN_PROGRESS;
     AVOID_keep_escape_count += 1;
   }
   else if(safety_mode==SAFE){
-    float distance_forward = 2.5;
-    float heading  = stateGetNedToBodyEulers_f()->psi;
-    *TRAJECTORY_X = stateGetPositionEnu_i()->x + POS_BFP_OF_REAL(sinf(heading) * (distance_forward));
-    *TRAJECTORY_Y = stateGetPositionEnu_i()->y + POS_BFP_OF_REAL(cosf(heading) * (distance_forward));
-    waypoint_set_xy_i(WP_GOAL,*TRAJECTORY_X,*TRAJECTORY_Y);
-    AVOID_keep_escape_count += 1;
+    
+    // set current heading to next heading since no obstacles forward
+    float new_heading  = stateGetNedToBodyEulers_f()->psi;
+    //printf("\n safe %f \n", new_heading*180/M_PI);
+
+    // update trajectory coordinates based on the new heading and distance forward
+    *TRAJECTORY_X = stateGetPositionEnu_i()->x + POS_BFP_OF_REAL(sinf(new_heading) * (distance_forward));
+    *TRAJECTORY_Y = stateGetPositionEnu_i()->y + POS_BFP_OF_REAL(cosf(new_heading) * (distance_forward));
+
+    // keep the escape trajectory by setting the safety mode and iteration count
     safety_mode = ESCAPE_IN_PROGRESS;
+    AVOID_keep_escape_count += 1;
     }
-  else if(safety_mode==ESCAPE_IN_PROGRESS){}
+  
+  // if a threatening object is currently being avoided, keep the same radius
+  //else if(safety_mode==ESCAPE_IN_PROGRESS){}
+
 }
 
 /*
@@ -406,18 +379,39 @@ return;
  */
 void determine_if_safe(float dist_stop_escape, float dist_threat){
 
+  if(stateGetPositionEnu_f()->z < 0.1){
+    safety_mode = WAIT;
+    return;
+  }
+
+  if(AVOID_hold_position!=0){
+    safety_mode = HOLD;
+    AVOID_hold_position += 1;
+
+    if(AVOID_hold_position>2000){
+      AVOID_hold_position = 0; 
+    }
+  return;
+  }
+
   // if the trajectory function has determined an escpae trajectory
   if(AVOID_keep_escape_count!=0){
     safety_mode = ESCAPE_IN_PROGRESS;
     AVOID_keep_escape_count += 1;
 
-  // if the drone has travelled more than a certain distance or enough iterations have passed, leave the escape mode
-   if(isCoordOutsideRadius(&AVOID_start_avoid_coord, dist_stop_escape) == true || AVOID_keep_escape_count > AVOID_keep_escape_count_max){
+    if(trajectory_mode==TAKE_OFF){
+      //if(isCoordOutsideRadius(&AVOID_start_avoid_coord, dist_stop_escape) == true || AVOID_keep_escape_count > AVOID_keep_escape_count_max){
+      if(isCoordOutsideRadius(&AVOID_start_avoid_coord, dist_stop_escape) == true){
         AVOID_keep_escape_count = 0;
-        
-        // if the drone is performing take-off procedures, it switches to normal trajectory
-        if (trajectory_mode==TAKE_OFF){trajectory_mode=SQUARE;}
-        }
+        trajectory_mode = SQUARE;
+        current_time = 0;
+      }
+    }
+    else{
+      if(isCoordOutsideRadius(&AVOID_start_avoid_coord, dist_stop_escape) == true || AVOID_keep_escape_count > AVOID_keep_escape_count_max){
+          AVOID_keep_escape_count = 0;
+      }
+    }
     return;
   }
 
