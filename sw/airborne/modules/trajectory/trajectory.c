@@ -77,9 +77,9 @@ float AVOID_slow_dt = 0.00003;                  // time step when a threatening 
 int AVOID_hold_position = 1;
 
 // ***** OPTICAL FLOW-BASED AVOIDANCE variables *****
-float AVOID_OF_angle = 3.5 * M_PI/180;          // 
-bool safe_mode_previous=false;                  //
-int last_iteration_safe_heading=0;              //
+float AVOID_OF_angle = 3.5 * M_PI/180;          // Angle in front of the drone in which the OF is tested to test if it's safe to move forward
+bool safe_mode_previous=false;                  // has the value of true if optical flow based safe mode was activated in the last iteration
+int last_iteration_safe_heading=0;              // influence that the safest heading computed based on OF has on the trajectory  
 float OF_NEXT_HEADING_INFLUENCE = 0.25;         // gain of escpae route from the optical flow-based avoidance
 float OPTICAL_FLOW_THRESHOLD=0.6;               // optical flow above which it's dangerous to move forward
 
@@ -445,12 +445,6 @@ return;
 bool safety_check_optical_flow(float *AVOID_safety_optical_flow, float x2, float y2){
   int i1=convert_heading_to_index(-AVOID_OF_angle, OF_NUMBER_ELEMENTS);
   int i2=convert_heading_to_index(AVOID_OF_angle, OF_NUMBER_ELEMENTS);
-
-  //array with the positions
-  int indecis[OF_NUMBER_ELEMENTS];
-  for(int i=0;i<OF_NUMBER_ELEMENTS;i++){
-      indecis[i]=i;
-  }
 
   bool change_heading=false;
   for (int i = i1; i <= i2; i++){
