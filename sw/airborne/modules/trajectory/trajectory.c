@@ -47,7 +47,7 @@ enum safety_mode_t {
 // set initial trajectory and safety modes
 enum trajectory_mode_t trajectory_mode = TAKE_OFF;
 enum safety_mode_t safety_mode = SAFE;
-void switch_path(enum trajectory_mode_t next_mode);
+void switch_path(enum trajectory_mode_t next_mode, float switch_time);
 
 // define and initialise global variables
 // ***** TRAJECTORY variables *****
@@ -56,11 +56,11 @@ float TRAJECTORY_Y = 0.0;                       // y coodinate for trajectory in
 float TRAJECTORY_LOCAL_X = 0.0;                 // x coodinate for trajectory in cyberzoo reference system
 float TRAJECTORY_LOCAL_Y = 0.0;                 // x coodinate for trajectory in cyberzoo reference system
 int TRAJECTORY_L = 1800;                        // cyberzoo length in given coordinate system
-float TRAJECTORY_SWITCHING_TIME=19;             // time after which trajectory switches mode
+float TRAJECTORY_SWITCHING_TIME = 2.9;             // time after which trajectory switches mode
 int TRAJECTORY_RADIUS;                          // radius of the trajectory  
 int square_mode = 1;                            // indication of which part of the square trajectory to follow
-float current_time;                             // elapsed time
-int dt;                                         // time steo
+float current_time = 0;                         // elapsed time
+float dt=0.0003;                                // time steo
 
 // ***** COLOR-FILTERS BASED-AVOIDANCE variables *****
 float AVOID_objects[50][3];                    // 2D array storing objects' relative heading and distance
@@ -89,14 +89,9 @@ float last_x;
 float last_y;
 
 /*
- * Initialisation function, setting the initial time variables and distance tracker
+ * Initialisation function, setting the initial distance tracker
  */
 void trajectory_init(void){
-
-  // initialize time variables
-  current_time = 0;
-  dt = AVOID_normal_dt;
-
   // initialise the distance tracker
   distance_travelled=0;
   last_x=stateGetPositionEnu_f()->x;
@@ -121,11 +116,11 @@ switch (trajectory_mode){
     break;
   case CIRCLE:
     circle(current_time, &TRAJECTORY_X, &TRAJECTORY_Y);
-    switch_path(SQUARE);
+    switch_path(SQUARE, 30.0);
     break;
   case SQUARE:
     square(dt, &TRAJECTORY_X, &TRAJECTORY_Y);
-    switch_path(CIRCLE);
+    switch_path(CIRCLE, TRAJECTORY_SWITCHING_TIME);
     break;
   default:
     break;
@@ -157,8 +152,9 @@ distance_travelled+=distance_travelled_last_iteration();
 // printf("\n Distance travelled= %f \n", distance_travelled);
 
 // update time
+//printf("dt: %f\n", dt);
 current_time += dt;
-
+//printf("\ncurrent time: %f\n ", current_time);
 return;
 }
 
@@ -168,6 +164,7 @@ return;
  */
 void circle(float current_time, float *TRAJECTORY_X, float *TRAJECTORY_Y)
 {
+    printf("CIRCLE\n");
   // choose the ecentricty
   double e = 1;
 
@@ -220,6 +217,7 @@ return;
  */
 void square(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y)
 {
+    //printf("SQUARE\n");
   // choose the speed factor
   int V = 700;
 
@@ -301,6 +299,7 @@ void square(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y)
  * Function that updates the trajectory to safely take-off and join the next trajectory
  */
 void take_off(float *TRAJECTORY_X, float *TRAJECTORY_Y){
+  //printf("TAKING OFF\n");
 
   // distance to travel to complete take-off procedure
   float distance_forward = 2.0;
@@ -322,7 +321,7 @@ void take_off(float *TRAJECTORY_X, float *TRAJECTORY_Y){
   }
   if(safety_mode==THREAT){
     
-    // choose next heading 45 deg to the right of the right edge of the closest obstacle
+    // choose next heading 35 deg to the left of the left edge of the closest obstacle
     float new_heading = stateGetNedToBodyEulers_f()->psi + AVOID_objects[AVOID_biggest_threat][0] - 35*M_PI/180;
     FLOAT_ANGLE_NORMALIZE(new_heading);
     nav_heading = ANGLE_BFP_OF_REAL(new_heading);
@@ -356,8 +355,8 @@ void take_off(float *TRAJECTORY_X, float *TRAJECTORY_Y){
 /*
  * Function that switches trajectory when a certain time has passed
  */
-void switch_path(enum trajectory_mode_t next_mode){
-  if (current_time > TRAJECTORY_SWITCHING_TIME){
+void switch_path(enum trajectory_mode_t next_mode, float switch_time){
+  if (current_time > switch_time){
       current_time=0;
       TRAJECTORY_Y=0;
       TRAJECTORY_X=0;  
