@@ -41,24 +41,26 @@ extern float *GLOBAL_OF_VECTOR;
 // functions
 extern void trajectory_init();
 extern void trajectory_periodic();
-extern float distance_travelled_last_iteration();
-extern void circle(float current_time, float *TRAJECTORY_X, float *TRAJECTORY_Y);
-extern void square(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y);
-extern void take_off(float *TRAJECTORY_X, float *TRAJECTORY_Y);
-extern void lace(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r);
-extern void lace_inverted(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r);
-extern float convert_index_to_heading(int index, int N);
-extern int convert_heading_to_index(float heading, int N);
-extern void quickSort(float array[], int indecis[], int first,int last);
-extern bool safety_check_optical_flow(float *AVOID_safety_optical_flow, float x2, float y2);
-extern float safe_heading(float array_of[]);
-extern void unpack_object_list();
-extern void count_objects();
-extern uint8_t moveWaypointForward(uint8_t waypoint, float distanceMeters);
-extern uint8_t moveWaypoint(uint8_t waypoint, struct EnuCoor_i *new_coor);
-extern uint8_t increase_nav_heading(float incrementDegrees);
-extern uint8_t moveWaypointForwardWithDirection(uint8_t waypoint, float distanceMeters, float direction);
-extern bool isCoordOutsideRadius(struct EnuCoor_i *new_coor, float radius);
+float distance_travelled_last_iteration();
+void circle(float current_time, float *TRAJECTORY_X, float *TRAJECTORY_Y);
+void square(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y);
+void take_off(float *TRAJECTORY_X, float *TRAJECTORY_Y);
+void lace(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r);
+void lace_inverted(float dt, float *TRAJECTORY_X, float *TRAJECTORY_Y, int r);
+float convert_index_to_heading(int index, int N);
+int convert_heading_to_index(float heading, int N);
+void quickSort(float array[], int indecis[], int first,int last);
+bool safety_check_optical_flow(float *AVOID_safety_optical_flow, float x2, float y2);
+float safe_heading(float array_of[]);
+void unpack_object_list();
+void count_objects();
+void determine_if_safe(float dist_stop_escape, float dist_threat);
+void setCoordHere(struct EnuCoor_i *coord);
+uint8_t moveWaypointForward(uint8_t waypoint, float distanceMeters);
+uint8_t moveWaypoint(uint8_t waypoint, struct EnuCoor_i *new_coor);
+uint8_t increase_nav_heading(float incrementDegrees);
+uint8_t moveWaypointForwardWithDirection(uint8_t waypoint, float distanceMeters, float direction);
+bool isCoordOutsideRadius(struct EnuCoor_i *new_coor, float radius);
 
 #endif
 

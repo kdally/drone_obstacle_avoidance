@@ -213,8 +213,8 @@ struct image_t *observer_func(struct image_t *img){
     // copy2img(&blurred, img);
 
     clock_t end = clock();
-    double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
-    printf("Time: %lf \n", time_spent);
+    //double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+    //printf("Time: %lf \n", time_spent);
     // printf("////////////////////////////////////////////////////////////\n");
   }
   return img;
@@ -903,7 +903,7 @@ void logic_free(uint16_t idx1, uint16_t idx2){
     }
   }
 
-  printf("\n");
+  //printf("\n");
 
 }
 
