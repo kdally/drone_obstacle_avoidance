@@ -132,16 +132,6 @@ switch (trajectory_mode){
   }
 
 // update goal waypoint based on trajectory
-<<<<<<< HEAD
-waypoint_set_xy_i(WP_GOAL,x_rotated,y_rotated);
-
-// // use optical flow-based avoidance right after take-off and when the trajectory mode is changed
-// if(safety_mode!=ESCAPE_IN_PROGRESS){  
-//   if(current_time<2.0){
-//       bool change_heading = safety_check_optical_flow(GLOBAL_OF_VECTOR, x_rotated, y_rotated);
-
-//     // explain
-=======
 waypoint_set_xy_i(WP_GOAL,TRAJECTORY_X,TRAJECTORY_Y);
 
 // DISABLED FOR COMPETITION BECAUSE OF OPTICAL-FLOW FUNCTIONHIGH RUN TIME
@@ -149,16 +139,10 @@ waypoint_set_xy_i(WP_GOAL,TRAJECTORY_X,TRAJECTORY_Y);
 // if(safety_mode!=ESCAPE_IN_PROGRESS){  
 //   if(current_time<2.0){
 //       bool change_heading = safety_check_optical_flow(GLOBAL_OF_VECTOR, TRAJECTORY_X, TRAJECTORY_Y);
->>>>>>> 19468c2552657b587b2d259425e1d6a95310dab4
 //     if(change_heading){
 //       moveWaypointForwardWithDirection(WP_GOAL,OF_NEXT_HEADING_INFLUENCE,safe_heading(GLOBAL_OF_VECTOR));
 //       safe_mode_previous=true;
 //     }
-<<<<<<< HEAD
-
-//     // explain
-=======
->>>>>>> 19468c2552657b587b2d259425e1d6a95310dab4
 //     else{
 //       safe_mode_previous=false;
 //     }
@@ -168,15 +152,9 @@ waypoint_set_xy_i(WP_GOAL,TRAJECTORY_X,TRAJECTORY_Y);
 // align drone with goal
 nav_set_heading_towards_waypoint(WP_GOAL);
 
-<<<<<<< HEAD
-// update the travelled distance counter
-distance_travelled+=distance_travelled_last_iteration();
-// printf("\n Distance travelled= %f \n", distance_travelled);
-=======
 // update the travelled distance counter (removed for the competition)
 //distance_travelled+=distance_travelled_last_iteration();
 //printf("\n Distance tavelled= %f \n", distance_travelled);
->>>>>>> 19468c2552657b587b2d259425e1d6a95310dab4
 
 // update time
 current_time += dt;
@@ -482,10 +460,6 @@ bool safety_check_optical_flow(float *AVOID_safety_optical_flow, float x2, float
  * - saffest heading is the middle value of the i-th partition with span="angular_span"
  */
 float safe_heading(float array_of[]){
-<<<<<<< HEAD
-  // printf("\nOF activated\n");
-=======
->>>>>>> 19468c2552657b587b2d259425e1d6a95310dab4
   float field_of_view=M_PI/2;
   float angular_span=field_of_view/NUMBER_OF_PARTITIONS;
   
