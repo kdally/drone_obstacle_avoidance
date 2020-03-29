@@ -27,7 +27,7 @@
 #include "generated/flight_plan.h"
 #include "firmwares/rotorcraft/navigation.h"
 #include "state.h"
-#include "modules/observer/node.h"
+#include "modules/observer/observer.h"
 #define NUMBER_OF_PARTITIONS 10
 
 enum trajectory_mode_t {
