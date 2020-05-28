@@ -1,5 +1,7 @@
 # MAIN README
 
+This version of Paparazzi has been suplemented with an obstacle-avoidance feature, based on color filters and optical flow. To be run on Parrot's BePop drone. Code develloped as part of an internal competition at Delft University of Technology.
+
 Paparazzi UAS
 =============
 
